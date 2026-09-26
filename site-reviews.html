@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reviews — Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.mkt-nav{ position: sticky; top:0; z-index: 60; background: rgba(11,12,31,0.85); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.mkt-nav-inner{ display:flex; align-items:center; justify-content:space-between; padding: 16px 0; }
+.mkt-logo{ display:flex; align-items:center; gap:10px; text-decoration:none; }
+.mkt-logo-word{ font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:16px; letter-spacing:0.06em; color: var(--text); }
+.mkt-links{ display:flex; align-items:center; gap:28px; }
+.mkt-link{ font-family:'Manrope', sans-serif; font-size:13.5px; color: var(--text-dim); text-decoration:none; }
+.mkt-link.active, .mkt-link:hover{ color: var(--gold); }
+.mkt-cta{ display:flex; align-items:center; gap:14px; }
+.mkt-cta-signup{ background: linear-gradient(135deg, #F7C878, #EAA23C); color:#241704; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px; padding:9px 20px; border-radius:999px; text-decoration:none; }
+
+.rev-head{ padding: 64px 0 8px; text-align:center; }
+.rev-head .eyebrow{ font-family:'JetBrains Mono', monospace; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color: var(--gold); margin-bottom:16px; }
+.rev-head h1{ font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:42px; color:var(--text); margin:0 0 14px; letter-spacing:-0.01em; }
+.rev-head p{ font-family:'Manrope', sans-serif; font-size:15px; color:var(--text-dim); max-width:520px; margin:0 auto 12px; line-height:1.6; }
+.rev-disclosure{ display:inline-block; font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); background: var(--void); border: 1px solid var(--line-soft); border-radius: 999px; padding: 7px 16px; margin-bottom: 40px; }
+
+.role-tabs{ display:flex; justify-content:center; gap:8px; margin-bottom: 44px; flex-wrap:wrap; }
+.role-tabs button{ background: var(--panel); border: 1px solid var(--line); border-radius: 999px; color: var(--text-dim); font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 13px; padding: 10px 22px; cursor:pointer; }
+.role-tabs button.active{ background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+.reviews-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding-bottom: 80px; }
+@media (max-width: 900px){ .reviews-grid{ grid-template-columns: 1fr; } }
+.review-card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; }
+.review-stars{ color: var(--gold); font-size: 13px; letter-spacing: 2px; margin-bottom: 14px; }
+.review-quote{ font-family:'Manrope', sans-serif; font-size:14px; color:var(--text); line-height:1.6; margin: 0 0 20px; }
+.review-person{ display:flex; align-items:center; gap:12px; }
+.review-avatar{ width:36px; height:36px; border-radius:50%; background: var(--void); border: 1px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px; color: var(--gold); flex-shrink:0; }
+.review-name{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:13px; color:var(--text); }
+.review-role{ font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--text-faint); }
+
+.mkt-footer{ border-top: 1px solid var(--line-soft); padding: 40px 0; }
+.mkt-footer-inner{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+.mkt-footer-links{ display:flex; gap:24px; }
+.mkt-footer-links a{ font-family:'Manrope', sans-serif; font-size:12.5px; color: var(--text-faint); text-decoration:none; }
+.mkt-footer-links a:hover{ color: var(--text-dim); }
+
+/* ---------- Interactive / reveal enhancements ---------- */
+.reveal{ opacity:0; transform: translateY(28px); transition: opacity .7s cubic-bezier(.2,.7,.3,1), transform .7s cubic-bezier(.2,.7,.3,1); }
+.reveal.seen{ opacity:1; transform:none; }
+.reveal.d1{ transition-delay:.06s;} .reveal.d2{ transition-delay:.12s;} .reveal.d3{ transition-delay:.18s;} .reveal.d4{ transition-delay:.24s;} .reveal.d5{ transition-delay:.30s;} .reveal.d6{ transition-delay:.36s;}
+@media (prefers-reduced-motion: reduce){ .reveal{ opacity:1; transform:none; transition:none; } }
+.review-card{ transition: transform .22s cubic-bezier(.2,.7,.3,1), border-color .2s ease, box-shadow .2s ease; }
+.review-card:hover{ transform: translateY(-5px); border-color: var(--gold); box-shadow: 0 22px 46px -28px rgba(240,178,78,0.45); }
+.review-card .review-stars{ transition: letter-spacing .25s ease; }
+.review-card:hover .review-stars{ letter-spacing: 4px; }
+/* rating summary */
+.rating-summary{ display:flex; align-items:center; justify-content:center; gap: 40px; margin: 8px auto 44px; flex-wrap:wrap; }
+.rating-big{ text-align:center; }
+.rating-score{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:64px; line-height:1; background: linear-gradient(120deg,#F7C878,#9B87F5,#5FE0B8); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.rating-stars-lg{ color: var(--gold); font-size:20px; letter-spacing:4px; margin-top:8px; }
+.rating-caption{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); margin-top:8px; }
+.rating-bars{ display:flex; flex-direction:column; gap:7px; min-width:220px; }
+.rating-bar-row{ display:flex; align-items:center; gap:10px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint); }
+.rating-bar-track{ flex:1; height:7px; background: var(--void); border:1px solid var(--line-soft); border-radius:999px; overflow:hidden; }
+.rating-bar-fill{ height:100%; background: linear-gradient(90deg, var(--gold), var(--violet)); width:0%; border-radius:999px; transition: width 1s cubic-bezier(.2,.7,.3,1); }
+
+/* Mobile nav: prevent horizontal overflow on phones (real bug found in audit) */
+@media (max-width: 560px){
+  .mkt-links{ display:none; }
+  .mkt-nav-inner{ padding: 12px 0; gap: 10px; }
+  .mkt-cta{ gap: 10px; }
+  .mkt-cta-signup{ padding: 8px 14px; font-size: 12.5px; }
+  .mkt-logo-word{ font-size: 15px; }
+}
+
+/* ==== SHARED VISUAL ELEVATION (marketing) ==== */
+.nebula{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.neb{ position:absolute; border-radius:50%; filter: blur(90px); opacity:0.45; will-change:transform; }
+.neb-aurora{ width:620px; height:620px; top:-160px; right:-120px; background: radial-gradient(circle, rgba(95,224,184,0.26), transparent 68%); animation: nebFloatA 26s ease-in-out infinite; }
+.neb-violet{ width:720px; height:720px; top:220px; left:-260px; background: radial-gradient(circle, rgba(155,135,245,0.28), transparent 68%); animation: nebFloatB 32s ease-in-out infinite; }
+.neb-gold{ width:460px; height:460px; top:60%; right:6%; background: radial-gradient(circle, rgba(240,178,78,0.16), transparent 70%); animation: nebFloatC 38s ease-in-out infinite; }
+@keyframes nebFloatA{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-40px,50px) scale(1.08);} }
+@keyframes nebFloatB{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(60px,-40px) scale(1.1);} }
+@keyframes nebFloatC{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-30px,-30px) scale(1.05);} }
+@media (prefers-reduced-motion: reduce){ .neb{ animation:none; } }
+.mkt-nav, .wrap, .mkt-footer, .plan-page{ position:relative; z-index:2; }
+#starfield{ z-index:1; }
+.mkt-nav{ background: rgba(11,12,31,0.72); backdrop-filter: blur(16px) saturate(1.2); }
+.mkt-cta-signup, .hero-cta-primary{ box-shadow: 0 8px 24px -6px rgba(240,178,78,0.5), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease; }
+.mkt-cta-signup:hover, .hero-cta-primary:hover{ transform: translateY(-2px); box-shadow: 0 14px 34px -6px rgba(240,178,78,0.65), inset 0 1px 0 rgba(255,255,255,0.4); }
+html{ scroll-behavior:smooth; }
+
+/* ==== CRAFT REFINEMENT (shared marketing) ==== */
+h1{ letter-spacing:-0.025em; }
+h2{ letter-spacing:-0.022em; }
+.section-eyebrow, .compare-sub, .pricing-eyebrow, [class*="eyebrow"]{ font-weight:600; }
+/* refined section eyebrow tick where an eyebrow class exists */
+.pricing-eyebrow::before, .reviews-eyebrow::before{
+  content:''; width:22px; height:1px; background:linear-gradient(90deg,var(--gold),transparent); display:inline-block; margin-right:9px; vertical-align:middle;
+}
+/* brighter primary / dimmer secondary text rhythm */
+.plan-name, .cmp-label{ letter-spacing:-0.01em; }
+.plan-desc, .cmp-desc, .compare-sub{ color: var(--text-dim); }
+/* nav + footer refinement */
+.mkt-logo-word{ letter-spacing:0.10em; }
+.mkt-link{ font-weight:600; transition:color .16s ease; }
+.mkt-link:hover{ color:var(--text); }
+.neb{ filter:none !important; }
+</style>
+<style>
+/* --- Flagship marketing polish (loads last, overrides inline) --- */
+.mkt-nav{ border-bottom:1px solid rgba(240,178,78,0.16)!important; box-shadow:0 12px 40px -30px rgba(240,178,78,0.5)!important; backdrop-filter:blur(18px) saturate(1.3)!important; }
+.rev-head h1{
+  background:linear-gradient(96deg,#FCE7B4 0%,#F7C878 44%,#EAA23C 100%)!important;
+  -webkit-background-clip:text!important; background-clip:text!important; color:transparent!important; -webkit-text-fill-color:transparent!important;
+  filter:drop-shadow(0 0 22px rgba(240,178,78,0.30)); }
+.review-card{ position:relative; overflow:hidden; background:linear-gradient(180deg,rgba(30,33,64,0.55),rgba(23,25,51,0.78))!important; }
+.review-card::after{ content:''; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background:linear-gradient(135deg,rgba(155,135,245,0.45),rgba(95,224,184,0.18) 50%,transparent 76%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; opacity:0.5; pointer-events:none; }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div class="nebula" aria-hidden="true">
+  <div class="neb neb-aurora"></div>
+  <div class="neb neb-violet"></div>
+  <div class="neb neb-gold"></div>
+</div>
+
+<nav class="mkt-nav">
+  <div class="wrap mkt-nav-inner">
+    <a class="mkt-logo" href="site-home.html" id="mktLogo"><span class="mkt-logo-word">KAIDOSTAR</span></a>
+    <div class="mkt-links">
+      <a class="mkt-link" href="site-home.html">Product</a>
+      <a class="mkt-link" href="site-pricing.html">Pricing</a>
+      <a class="mkt-link active" href="site-reviews.html">Reviews</a>
+    </div>
+    <div class="mkt-cta">
+      <a class="mkt-link" href="login.html">Log in</a>
+      <a class="mkt-cta-signup" href="login.html?mode=signup">Get started</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="rev-head">
+    <div class="eyebrow">REVIEWS</div>
+    <h1 class="reveal">What people are saying</h1>
+    <p>A sample of the kind of feedback Kaidostar is built to earn.</p>
+    <div class="rev-disclosure">&#9432; Illustrative examples - Kaidostar is a demo product, these are not verified customer accounts</div>
+  </div>
+
+  <div class="rating-summary reveal">
+    <div class="rating-big">
+      <div class="rating-score" data-count="4.9">0</div>
+      <div class="rating-stars-lg">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      <div class="rating-caption">based on illustrative feedback</div>
+    </div>
+    <div class="rating-bars" id="ratingBars"></div>
+  </div>
+
+  <div class="reviews-grid" id="reviewsGrid"></div>
+</div>
+
+<div class="mkt-footer">
+  <div class="wrap mkt-footer-inner">
+    <span class="mkt-logo-word" style="font-size:13px;">KAIDOSTAR</span>
+    <div class="mkt-footer-links">
+      <a href="site-home.html">Product</a>
+      <a href="site-pricing.html">Pricing</a>
+      <a href="site-reviews.html">Reviews</a>
+      <a href="login.html">Log in</a>
+    </div>
+    <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint);">Kaidostar is a demo product - reviews shown are illustrative, not real accounts.</span>
+  </div>
+</div>
+
+<script src="state.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof initStarfield === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+document.getElementById('mktLogo').insertAdjacentHTML('afterbegin', kaidostarMark(28));
+
+const REVIEWS = [
+  { initials: 'J.M.', role: 'Recent grad, candidate', quote: 'The roadmap actually told me what to do this week, not just "network more." The first-step field is what got me to actually start.' },
+  { initials: 'A.T.', role: 'Career switcher, candidate', quote: 'I liked seeing why a match scored well instead of just trusting a number. It caught a role I would have skipped otherwise.' },
+  { initials: 'S.K.', role: 'Student, candidate', quote: 'Turned on Auto before a busy exam week and came back to three drafted applications waiting for review. Didn\'t miss a deadline.' },
+  { initials: 'D.R.', role: 'College athlete', quote: 'It was honest that a couple of programs were a reach for my level - and told me exactly what to work on instead of just hyping me up.' },
+  { initials: 'M.P.', role: 'Bootcamp grad, candidate', quote: 'The résumé builder never invented numbers I did not give it. That honesty is the whole reason I trusted the rest of it.' },
+  { initials: 'L.C.', role: 'Returning to work', quote: 'Seeing the seniority and location flags saved me from wasting a week on roles that were never going to fit. Refreshingly blunt.' },
+];
+
+function renderReviews(){
+  document.getElementById('reviewsGrid').innerHTML = REVIEWS.map((r,i) => `
+    <div class="review-card reveal d${(i%3)+1}">
+      <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      <p class="review-quote">"${r.quote}"</p>
+      <div class="review-person">
+        <div class="review-avatar">${r.initials}</div>
+        <div><div class="review-name">${r.initials}</div><div class="review-role">${r.role}</div></div>
+      </div>
+    </div>`).join('');
+}
+
+// rating distribution bars
+const RATING_DIST = [ {s:5, pct:86}, {s:4, pct:11}, {s:3, pct:2}, {s:2, pct:1}, {s:1, pct:0} ];
+function renderRatingBars(){
+  document.getElementById('ratingBars').innerHTML = RATING_DIST.map(r =>
+    `<div class="rating-bar-row"><span>${r.s}&#9733;</span><div class="rating-bar-track"><div class="rating-bar-fill" data-w="${r.pct}"></div></div><span>${r.pct}%</span></div>`
+  ).join('');
+}
+
+// reveal-on-scroll + count-up + bar-fill
+function observeReveals(){
+  const els = document.querySelectorAll('.reveal:not(.seen)');
+  if(!('IntersectionObserver' in window)){ els.forEach(e=>{e.classList.add('seen'); triggerAnims(e);}); return; }
+  const io = new IntersectionObserver((ents)=>{
+    ents.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('seen'); triggerAnims(en.target); io.unobserve(en.target); } });
+  }, {threshold:0.15});
+  els.forEach(e=>io.observe(e));
+}
+function triggerAnims(el){
+  // float count-up for the 4.9
+  el.querySelectorAll('[data-count]').forEach(n=>{
+    if(n._c) return; n._c=true;
+    const target=parseFloat(n.getAttribute('data-count')); const start=performance.now();
+    (function tick(now){ const t=Math.min(1,(now-start)/1000); const e=1-Math.pow(1-t,3); n.textContent=(target*e).toFixed(1); if(t<1) requestAnimationFrame(tick); else n.textContent=target.toFixed(1); })(start);
+  });
+  // fill rating bars
+  el.querySelectorAll('.rating-bar-fill').forEach(f=>{ setTimeout(()=>{ f.style.width = f.getAttribute('data-w')+'%'; }, 150); });
+}
+
+renderReviews();
+renderRatingBars();
+observeReveals();
+</script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing — Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.mkt-nav{ position: sticky; top:0; z-index: 60; background: rgba(11,12,31,0.85); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.mkt-nav-inner{ display:flex; align-items:center; justify-content:space-between; padding: 16px 0; }
+.mkt-logo{ display:flex; align-items:center; gap:10px; text-decoration:none; }
+.mkt-logo-word{ font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:16px; letter-spacing:0.06em; color: var(--text); }
+.mkt-links{ display:flex; align-items:center; gap:28px; }
+.mkt-link{ font-family:'Manrope', sans-serif; font-size:13.5px; color: var(--text-dim); text-decoration:none; }
+.mkt-link.active, .mkt-link:hover{ color: var(--gold); }
+.mkt-cta{ display:flex; align-items:center; gap:14px; }
+.mkt-cta-signup{ background: linear-gradient(135deg, #F7C878, #EAA23C); color:#241704; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px; padding:9px 20px; border-radius:999px; text-decoration:none; }
+
+.pricing-head{ padding: 64px 0 8px; text-align:center; }
+.pricing-head .eyebrow{ font-family:'JetBrains Mono', monospace; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color: var(--gold); margin-bottom:16px; }
+.pricing-head h1{ font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:42px; color:var(--text); margin:0 0 14px; letter-spacing:-0.01em; }
+.pricing-head p{ font-family:'Manrope', sans-serif; font-size:15.5px; color:var(--text-dim); max-width:520px; margin:0 auto 36px; line-height:1.6; }
+
+.role-tabs{ display:flex; justify-content:center; gap:8px; margin-bottom: 50px; flex-wrap:wrap; }
+.role-tabs button{ background: var(--panel); border: 1px solid var(--line); border-radius: 999px; color: var(--text-dim); font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 13px; padding: 10px 22px; cursor:pointer; }
+.role-tabs button.active{ background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+.plans-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 22px; padding-bottom: 80px; }
+@media (max-width: 900px){ .plans-grid{ grid-template-columns: 1fr; } }
+.plan-card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 32px 28px; display:flex; flex-direction:column; }
+.plan-card.featured{ border-color: var(--gold); background: linear-gradient(180deg, rgba(240,178,78,0.06), var(--panel) 40%); position:relative; transform: translateY(-8px); box-shadow: 0 20px 50px -24px rgba(240,178,78,0.4), 0 0 0 1px rgba(240,178,78,0.15); }
+.plan-badge{ position:absolute; top:-12px; left:28px; background: var(--gold); color:#241704; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase; padding:5px 14px; border-radius:999px; }
+.plan-name{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:17px; color:var(--text); margin:0 0 6px; }
+.plan-price{ font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:34px; color:var(--text); margin:0 0 4px; }
+.plan-price span{ font-family:'Manrope', sans-serif; font-weight:500; font-size:13px; color: var(--text-faint); }
+.plan-desc{ font-family:'Manrope', sans-serif; font-size:13px; color:var(--text-dim); margin:0 0 24px; line-height:1.5; }
+.plan-features{ list-style:none; padding:0; margin: 0 0 28px; flex:1; }
+.plan-features li{ font-family:'Manrope', sans-serif; font-size:13px; color:var(--text); padding: 9px 0; border-top: 1px solid var(--line-soft); display:flex; gap:10px; align-items:flex-start; }
+.plan-features li:first-child{ border-top:none; }
+.plan-features li .check{ color: var(--aurora); flex-shrink:0; margin-top:1px; }
+.plan-cta{ display:block; text-align:center; padding: 12px; border-radius: 999px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px; text-decoration:none; border: 1px solid var(--line); color: var(--text-dim); }
+.plan-cta.primary{ background: linear-gradient(135deg, #F7C878, #EAA23C); color:#241704; border:none; }
+.plan-cta:hover{ border-color: var(--gold); color: var(--gold); }
+
+.faq-section{ padding: 0 0 80px; max-width: 720px; margin: 0 auto; }
+.faq-section h2{ font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:24px; color:var(--text); margin:0 0 28px; text-align:center; }
+.faq-item{ border-top: 1px solid var(--line-soft); padding: 20px 0; }
+.faq-item h4{ font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:700; color:var(--text); margin:0 0 8px; }
+.faq-item p{ font-family:'Manrope', sans-serif; font-size:13px; color:var(--text-dim); line-height:1.6; margin:0; }
+
+.mkt-footer{ border-top: 1px solid var(--line-soft); padding: 40px 0; }
+.mkt-footer-inner{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+.mkt-footer-links{ display:flex; gap:24px; }
+.mkt-footer-links a{ font-family:'Manrope', sans-serif; font-size:12.5px; color: var(--text-faint); text-decoration:none; }
+.mkt-footer-links a:hover{ color: var(--text-dim); }
+
+/* ---------- Interactive / reveal enhancements ---------- */
+.reveal{ opacity:0; transform: translateY(28px); transition: opacity .7s cubic-bezier(.2,.7,.3,1), transform .7s cubic-bezier(.2,.7,.3,1); }
+.reveal.seen{ opacity:1; transform:none; }
+.reveal.d1{ transition-delay:.08s; } .reveal.d2{ transition-delay:.16s; } .reveal.d3{ transition-delay:.24s; }
+@media (prefers-reduced-motion: reduce){ .reveal{ opacity:1; transform:none; transition:none; } }
+.plan-card{ transition: transform .22s cubic-bezier(.2,.7,.3,1), border-color .2s ease, box-shadow .2s ease; }
+.plan-card:hover{ transform: translateY(-6px); border-color: var(--gold); box-shadow: 0 24px 50px -28px rgba(240,178,78,0.5); }
+.plan-card.featured:hover{ transform: translateY(-12px); box-shadow: 0 28px 56px -26px rgba(240,178,78,0.55), 0 0 0 1px rgba(240,178,78,0.2); }
+.plan-cta{ transition: all .15s ease; }
+.plan-card:hover .plan-cta{ border-color: var(--gold); color: var(--gold); }
+.plan-card:hover .plan-cta.primary{ filter: brightness(1.07); transform: translateY(-1px); }
+/* billing toggle */
+.bill-toggle{ display:inline-flex; align-items:center; gap:0; background: var(--void); border:1px solid var(--line); border-radius:999px; padding:4px; margin: 20px auto 0; }
+.bill-toggle button{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px; padding:8px 20px; border-radius:999px; border:none; background:transparent; color:var(--text-dim); cursor:pointer; transition: all .18s ease; }
+.bill-toggle button.on{ background: var(--gold-dim); color: var(--gold); }
+.bill-save{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--aurora); margin-left:7px; }
+.plan-price{ transition: opacity .2s ease; }
+/* FAQ accordion */
+.faq-item{ cursor:pointer; }
+.faq-item h4{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.faq-item h4::after{ content:'+'; font-family:'Space Grotesk',sans-serif; font-weight:400; font-size:20px; color:var(--gold); transition: transform .25s ease; flex-shrink:0; }
+.faq-item.open h4::after{ transform: rotate(45deg); }
+.faq-item p{ max-height:0; overflow:hidden; opacity:0; margin:0; transition: max-height .3s ease, opacity .25s ease, margin .25s ease; }
+.faq-item.open p{ max-height:200px; opacity:1; margin-top:10px; }
+
+/* ---- Feature comparison table ---- */
+.compare-section{ max-width: 860px; margin: 0 auto 80px; padding: 0 16px; }
+.compare-section h2{ font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:24px; color:var(--text); margin:0 0 8px; text-align:center; }
+.compare-sub{ font-family:'Manrope', sans-serif; font-size:14px; color:var(--text-dim); text-align:center; margin:0 0 28px; }
+.compare-wrap{ overflow-x:auto; }
+.cmp-table{ width:100%; border-collapse:collapse; }
+.cmp-table th{ font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-dim); padding:12px 10px; text-align:center; border-bottom:2px solid var(--line,#333); }
+.cmp-table td{ padding:14px 10px; text-align:center; border-bottom:1px solid var(--line-soft,#242430); font-family:'Manrope',sans-serif; font-size:14px; color:var(--text); vertical-align:top; }
+.cmp-table th:first-child, .cmp-table td:first-child{ width:52%; }
+.cmp-label{ font-weight:600; color:var(--text); font-size:14px; }
+.cmp-desc{ font-size:12px; color:var(--text-dim); margin-top:2px; line-height:1.45; }
+.cmp-table tr:last-child td{ border-bottom:none; }
+
+/* Mobile nav: prevent horizontal overflow on phones (real bug found in audit) */
+@media (max-width: 560px){
+  .mkt-links{ display:none; }
+  .mkt-nav-inner{ padding: 12px 0; gap: 10px; }
+  .mkt-cta{ gap: 10px; }
+  .mkt-cta-signup{ padding: 8px 14px; font-size: 12.5px; }
+  .mkt-logo-word{ font-size: 15px; }
+}
+
+/* ==== SHARED VISUAL ELEVATION (marketing) ==== */
+.nebula{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.neb{ position:absolute; border-radius:50%; filter: blur(90px); opacity:0.45; will-change:transform; }
+.neb-aurora{ width:620px; height:620px; top:-160px; right:-120px; background: radial-gradient(circle, rgba(95,224,184,0.26), transparent 68%); animation: nebFloatA 26s ease-in-out infinite; }
+.neb-violet{ width:720px; height:720px; top:220px; left:-260px; background: radial-gradient(circle, rgba(155,135,245,0.28), transparent 68%); animation: nebFloatB 32s ease-in-out infinite; }
+.neb-gold{ width:460px; height:460px; top:60%; right:6%; background: radial-gradient(circle, rgba(240,178,78,0.16), transparent 70%); animation: nebFloatC 38s ease-in-out infinite; }
+@keyframes nebFloatA{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-40px,50px) scale(1.08);} }
+@keyframes nebFloatB{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(60px,-40px) scale(1.1);} }
+@keyframes nebFloatC{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-30px,-30px) scale(1.05);} }
+@media (prefers-reduced-motion: reduce){ .neb{ animation:none; } }
+.mkt-nav, .wrap, .mkt-footer, .plan-page{ position:relative; z-index:2; }
+#starfield{ z-index:1; }
+.mkt-nav{ background: rgba(11,12,31,0.72); backdrop-filter: blur(16px) saturate(1.2); }
+.mkt-cta-signup, .hero-cta-primary{ box-shadow: 0 8px 24px -6px rgba(240,178,78,0.5), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease; }
+.mkt-cta-signup:hover, .hero-cta-primary:hover{ transform: translateY(-2px); box-shadow: 0 14px 34px -6px rgba(240,178,78,0.65), inset 0 1px 0 rgba(255,255,255,0.4); }
+html{ scroll-behavior:smooth; }
+
+/* ==== CRAFT REFINEMENT (shared marketing) ==== */
+h1{ letter-spacing:-0.025em; }
+h2{ letter-spacing:-0.022em; }
+.section-eyebrow, .compare-sub, .pricing-eyebrow, [class*="eyebrow"]{ font-weight:600; }
+/* refined section eyebrow tick where an eyebrow class exists */
+.pricing-eyebrow::before, .reviews-eyebrow::before{
+  content:''; width:22px; height:1px; background:linear-gradient(90deg,var(--gold),transparent); display:inline-block; margin-right:9px; vertical-align:middle;
+}
+/* brighter primary / dimmer secondary text rhythm */
+.plan-name, .cmp-label{ letter-spacing:-0.01em; }
+.plan-desc, .cmp-desc, .compare-sub{ color: var(--text-dim); }
+/* nav + footer refinement */
+.mkt-logo-word{ letter-spacing:0.10em; }
+.mkt-link{ font-weight:600; transition:color .16s ease; }
+.mkt-link:hover{ color:var(--text); }
+.neb{ filter:none !important; }
+</style>
+<style>
+/* --- Flagship marketing polish (loads last, overrides inline) --- */
+.mkt-nav{ border-bottom:1px solid rgba(240,178,78,0.16)!important; box-shadow:0 12px 40px -30px rgba(240,178,78,0.5)!important; backdrop-filter:blur(18px) saturate(1.3)!important; }
+.pricing-head h1, .compare-section h2, .faq-section h2{
+  background:linear-gradient(96deg,#FCE7B4 0%,#F7C878 44%,#EAA23C 100%)!important;
+  -webkit-background-clip:text!important; background-clip:text!important; color:transparent!important; -webkit-text-fill-color:transparent!important;
+  filter:drop-shadow(0 0 22px rgba(240,178,78,0.30)); }
+.plan-card{ position:relative; overflow:hidden; background:linear-gradient(180deg,rgba(30,33,64,0.6),rgba(23,25,51,0.82))!important; }
+.plan-card::after{ content:''; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background:linear-gradient(135deg,rgba(155,135,245,0.5),rgba(95,224,184,0.2) 50%,transparent 76%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; opacity:0.55; pointer-events:none; }
+.plan-card.featured::after{ background:linear-gradient(135deg,rgba(240,178,78,0.75),rgba(155,135,245,0.28) 50%,transparent 76%); opacity:0.95; }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div class="nebula" aria-hidden="true">
+  <div class="neb neb-aurora"></div>
+  <div class="neb neb-violet"></div>
+  <div class="neb neb-gold"></div>
+</div>
+
+<nav class="mkt-nav">
+  <div class="wrap mkt-nav-inner">
+    <a class="mkt-logo" href="site-home.html" id="mktLogo"><span class="mkt-logo-word">KAIDOSTAR</span></a>
+    <div class="mkt-links">
+      <a class="mkt-link" href="site-home.html">Product</a>
+      <a class="mkt-link active" href="site-pricing.html">Pricing</a>
+      <a class="mkt-link" href="site-reviews.html">Reviews</a>
+    </div>
+    <div class="mkt-cta">
+      <a class="mkt-link" href="login.html">Log in</a>
+      <a class="mkt-cta-signup" href="login.html?mode=signup">Get started</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="pricing-head">
+    <div class="eyebrow">PRICING</div>
+    <h1 class="reveal">Simple pricing</h1>
+    <p>Every plan includes the roadmap engine and Metis. Pick the tier that matches how deep you want the automation.</p>
+    <div class="bill-toggle"><button class="on" id="billMonthly">Monthly</button><button id="billAnnual">Annual<span class="bill-save">save 20%</span></button></div>
+  </div>
+
+  <div class="plans-grid" id="plansGrid"></div>
+
+  <div class="compare-section reveal">
+    <h2>Everything each plan does</h2>
+    <p class="compare-sub">Exactly what you get at each tier - no asterisks.</p>
+    <div id="compareTable" class="compare-wrap"></div>
+  </div>
+
+  <div class="faq-section">
+    <h2 class="reveal">Common questions</h2>
+    <div class="faq-item">
+      <h4>Can I switch plans later?</h4>
+      <p>Yes - upgrade or downgrade at any time from your account. Changes apply to your next billing cycle.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Does Auto mode cost extra?</h4>
+      <p>Auto mode (unattended drafting of applications and outreach) is included on Pro and above for every role. It's not available on free tiers.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Is there a free trial for paid plans?</h4>
+      <p>Every paid plan starts with a 14-day trial - no card required to start, cancel anytime before it ends.</p>
+    </div>
+  </div>
+</div>
+
+<div class="mkt-footer">
+  <div class="wrap mkt-footer-inner">
+    <span class="mkt-logo-word" style="font-size:13px;">KAIDOSTAR</span>
+    <div class="mkt-footer-links">
+      <a href="site-home.html">Product</a>
+      <a href="site-pricing.html">Pricing</a>
+      <a href="site-reviews.html">Reviews</a>
+      <a href="login.html">Log in</a>
+    </div>
+    <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint);">Kaidostar is a demo product - pricing shown is illustrative.</span>
+  </div>
+</div>
+
+<script src="state.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof initStarfield === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+document.getElementById('mktLogo').insertAdjacentHTML('afterbegin', kaidostarMark(28));
+
+// Pricing is driven by the SAME TIERS data (from state.js) that gates features
+// in the app, so what's advertised here can never drift from what you actually
+// get. Annual prices are a ~20% discount, rounded.
+const _annual = { free: 0, pro: 19, max: 76 };
+const PLANS = ['free','pro','max'].map(k => {
+  const t = TIERS[k];
+  return {
+    key: k, name: t.name, monthly: t.price, annual: _annual[k],
+    desc: t.tagline, features: t.display.filter(d => d[1]).map(d => d[0]),
+    featured: k === 'pro',
+    cta: k === 'free' ? 'Get started' : 'Choose ' + t.name,
+    href: 'login.html?mode=signup',
+  };
+});
+let billing = 'monthly';
+
+function renderPlans(){
+  document.getElementById('plansGrid').innerHTML = PLANS.map((p,i) => {
+    const amt = billing === 'monthly' ? p.monthly : p.annual;
+    const price = amt === 0 ? '$0' : '$'+amt;
+    const period = amt === 0 ? '' : '/mo';
+    return `
+    <div class="plan-card reveal d${i+1} ${p.featured ? 'featured' : ''}">
+      ${p.featured ? '<div class="plan-badge">Most popular</div>' : ''}
+      <p class="plan-name">${p.name}</p>
+      <p class="plan-price">${price}<span>${period}${amt!==0 && billing==='annual' ? ', billed yearly' : ''}</span></p>
+      <p class="plan-desc">${p.desc}</p>
+      <ul class="plan-features">
+        ${p.features.map(f => `<li><span class="check">&#10003;</span>${f}</li>`).join('')}
+      </ul>
+      <a class="plan-cta ${p.featured ? 'primary' : ''}" href="${p.href}">${p.cta}</a>
+    </div>`;
+  }).join('');
+  renderComparison();
+  observeReveals();
+}
+
+// A full "what everything does" comparison table, built from the real tier
+// feature flags so it's always accurate. Every row is an actual gated feature.
+function renderComparison(){
+  const el = document.getElementById('compareTable');
+  if(!el) return;
+  const rows = [
+    ['opportunity_watch', 'Continuous opportunity watch', 'Always-on matching of new opportunities to your profile'],
+    ['roadmap', 'Roadmap engine', 'A staged, personalized plan with resources and honest risks'],
+    ['metis', 'Metis AI guide', 'An always-available assistant that knows your profile and goals'],
+    ['school_readiness', 'School fit & readiness', 'Honest, evidence-based read of where you stand per target school'],
+    ['manual_drafting', 'Drafting & essay tools', 'Draft applications and essays yourself, with structure and scored feedback'],
+    ['deep_match_explanations', 'Deep AI match explanations', 'Detailed, specific reasons each opportunity fits you'],
+    ['outreach_drafting', 'Referral & cold-outreach drafting', 'Specific, honest outreach emails built from your real profile'],
+    ['auto_mode', 'Auto mode', 'Drafts applications and outreach for you while you are away'],
+    ['priority_metis', 'Priority Metis response', 'Faster responses from the AI guide at peak times'],
+    ['early_access', 'Early access to new features', 'Try new tools before they roll out widely'],
+  ];
+  const tiers = ['free','pro','max'];
+  const yes = '<span style="color:var(--aurora);font-weight:700;">&#10003;</span>';
+  const no  = '<span style="color:var(--text-faint,#667);">&mdash;</span>';
+  const head = `<tr><th style="text-align:left;">What it does</th>${tiers.map(t=>`<th>${TIERS[t].name}</th>`).join('')}</tr>`;
+  const body = rows.map(r => {
+    const [key,label,desc] = r;
+    return `<tr>
+      <td style="text-align:left;">
+        <div class="cmp-label">${label}</div>
+        <div class="cmp-desc">${desc}</div>
+      </td>
+      ${tiers.map(t => `<td>${TIERS[t].features[key] ? yes : no}</td>`).join('')}
+    </tr>`;
+  }).join('');
+  // Concrete per-feature daily limits make the tiers tangible (not just "usage").
+  const capRows = ['roadmaps','essay reviews','match explanations'].map(cap => {
+    const label = 'Daily ' + cap;
+    return `<tr>
+      <td style="text-align:left;"><div class="cmp-label">${label}</div><div class="cmp-desc">How many ${cap} you can generate per day</div></td>
+      ${tiers.map(t => { const v = (TIERS[t].featureCaps||{})[cap]; return `<td>${v==null?'\u2014':v}</td>`; }).join('')}
+    </tr>`;
+  }).join('');
+  const limitRow = capRows + `<tr>
+      <td style="text-align:left;"><div class="cmp-label">Total AI actions / day</div><div class="cmp-desc">Overall daily limit across all features</div></td>
+      ${tiers.map(t => { const n = TIERS[t].limits.ai_actions_per_day; return `<td>${n>=1000?'Unlimited':n}</td>`; }).join('')}
+    </tr>`;
+  el.innerHTML = `<table class="cmp-table">${head}${body}${limitRow}</table>`;
+}
+
+// billing toggle
+document.getElementById('billMonthly').addEventListener('click', () => setBilling('monthly'));
+document.getElementById('billAnnual').addEventListener('click', () => setBilling('annual'));
+function setBilling(b){
+  billing = b;
+  document.getElementById('billMonthly').classList.toggle('on', b==='monthly');
+  document.getElementById('billAnnual').classList.toggle('on', b==='annual');
+  renderPlans();
+}
+
+// FAQ accordion - keyboard + screen-reader accessible (focusable, Enter/Space
+// toggles, aria-expanded announces state)
+document.querySelectorAll('.faq-item').forEach(item => {
+  item.setAttribute('tabindex', '0');
+  item.setAttribute('role', 'button');
+  item.setAttribute('aria-expanded', item.classList.contains('open') ? 'true' : 'false');
+  const toggle = () => {
+    const open = item.classList.toggle('open');
+    item.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+  item.addEventListener('click', toggle);
+  item.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar' || e.key === 'Space') {
+      e.preventDefault();
+      toggle();
+    }
+  });
+});
+
+// reveal-on-scroll (shared)
+let _io;
+function observeReveals(){
+  const els = document.querySelectorAll('.reveal:not(.seen)');
+  if(!('IntersectionObserver' in window)){ els.forEach(e=>e.classList.add('seen')); return; }
+  if(!_io){ _io = new IntersectionObserver((ents)=>{ ents.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('seen'); _io.unobserve(en.target);} }); }, {threshold:0.12}); }
+  els.forEach(e=>_io.observe(e));
+}
+
+renderPlans();
+observeReveals();
+</script>
+</body>
+</html>

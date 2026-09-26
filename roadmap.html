@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap — Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.roadmap-wrap{ max-width: 800px; }
+.summary-panel{ background: var(--panel); border: 1px solid var(--gold); border-radius: var(--radius); padding: 24px; margin-bottom: 28px; }
+.summary-panel h2{ font-family:'Space Grotesk', sans-serif; font-size: 13px; font-weight:700; letter-spacing:0.05em; text-transform: uppercase; color: var(--gold); margin: 0 0 10px; }
+.summary-panel p{ font-family:'Manrope', sans-serif; font-size: 15px; line-height: 1.65; color: var(--text); margin: 0; }
+
+.roadmap-overall-progress{ display:flex; align-items:center; gap: 14px; margin-bottom: 28px; }
+.roadmap-progress-track{ flex:1; height: 10px; background: var(--line-soft); border-radius: 999px; overflow: hidden; }
+.roadmap-progress-fill{ height:100%; background: linear-gradient(90deg, var(--aurora), var(--gold)); border-radius: 999px; transition: width .4s ease; }
+.roadmap-progress-label{ font-family:'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-dim); white-space: nowrap; }
+
+.milestone-card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; margin-bottom: 18px; position: relative; }
+.milestone-card.status-done{ border-color: rgba(95,224,184,0.5); }
+.milestone-card.status-in_progress{ border-color: rgba(240,178,78,0.5); }
+.milestone-head{ display:flex; justify-content: space-between; align-items:flex-start; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
+.milestone-stage-num{ font-family:'Space Grotesk', sans-serif; font-weight: 800; font-size: 13px; color: var(--gold); letter-spacing: 0.04em; text-transform: uppercase; }
+.milestone-title{ font-family:'Space Grotesk', sans-serif; font-weight: 700; font-size: 19px; margin: 6px 0 0; color: var(--text); }
+.milestone-status-select{ font-family:'JetBrains Mono', monospace; font-size: 11px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--void); color: var(--text-dim); cursor: pointer; }
+.milestone-desc{ font-family:'Manrope', sans-serif; font-size: 14.5px; line-height: 1.65; color: var(--text-dim); margin: 12px 0 18px; }
+
+.milestone-detail-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media (max-width: 640px){ .milestone-detail-grid{ grid-template-columns: 1fr; } }
+.milestone-branch-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media (max-width: 640px){ .milestone-branch-grid{ grid-template-columns: 1fr; } }
+.branch-block{ border-radius: 10px; padding: 14px 16px; }
+.branch-block .dlabel{ font-family:'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.branch-block p{ font-family:'Manrope', sans-serif; font-size: 13px; line-height: 1.55; color: var(--text); margin: 0; }
+.branch-block.works{ background: rgba(95,224,184,0.08); border: 1px solid rgba(95,224,184,0.35); }
+.branch-block.works .dlabel{ color: var(--aurora); }
+.branch-block.stalls{ background: rgba(242,122,107,0.08); border: 1px solid rgba(242,122,107,0.35); }
+.branch-block.stalls .dlabel{ color: var(--danger); }
+.detail-block{ background: var(--void); border: 1px solid var(--line-soft); border-radius: 10px; padding: 14px 16px; }
+.detail-block .dlabel{ font-family:'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.detail-block p{ font-family:'Manrope', sans-serif; font-size: 13px; line-height: 1.55; color: var(--text); margin: 0; }
+.detail-block.success .dlabel{ color: var(--aurora); }
+.detail-block.action .dlabel{ color: var(--gold); }
+.detail-block.resource .dlabel{ color: var(--comet); }
+.detail-block.risk .dlabel{ color: var(--danger); }
+
+.milestone-footer{ display:flex; align-items:center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.milestone-timeframe{ font-family:'JetBrains Mono', monospace; font-size: 10.5px; color: var(--gold); border: 1px solid rgba(240,178,78,0.35); background: var(--gold-dim); padding: 4px 11px; border-radius: 999px; }
+.milestone-matches{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); }
+
+.roadmap-actions{ display:flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; }
+
+/* ============================================================
+   ROADMAP TIMELINE — turn the stack of stage boxes into a legible
+   journey: a connective spine + a numbered node per stage, colored
+   by status. Uses existing markup (data-stage + status classes).
+   ============================================================ */
+/* give each stage card room for the node + rail on the left */
+.milestone-card{
+  margin-left: 34px;
+  overflow: visible;
+}
+/* the numbered node, sitting on the spine to the left of the card */
+.milestone-card::before{
+  content: '';
+  position: absolute;
+  left: -34px;
+  top: 26px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--void);
+  border: 2px solid var(--line);
+  z-index: 2;
+}
+/* the connective spine: a line running from this node down to the next */
+.milestone-card::after{
+  content: '';
+  position: absolute;
+  left: -25px;
+  top: 46px;
+  bottom: -18px;   /* reach into the margin toward the next card */
+  width: 2px;
+  background: linear-gradient(180deg, var(--line-soft), rgba(48,52,99,0.3));
+  z-index: 1;
+}
+.milestone-card:last-child::after{ display: none; }  /* no line after the final stage */
+/* status coloring of the node */
+.milestone-card.status-done::before{
+  background: var(--aurora); border-color: var(--aurora);
+  box-shadow: 0 0 12px -2px var(--aurora);
+}
+.milestone-card.status-in_progress::before{
+  background: var(--gold); border-color: var(--gold);
+  box-shadow: 0 0 12px -2px var(--gold);
+}
+/* the spine segment turns aurora once a stage is done (progress made visible) */
+.milestone-card.status-done::after{ background: linear-gradient(180deg, var(--aurora), rgba(48,52,99,0.3)); }
+@media (max-width: 560px){
+  .milestone-card{ margin-left: 26px; }
+  .milestone-card::before{ left: -26px; width: 16px; height: 16px; }
+  .milestone-card::after{ left: -19px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow">Roadmap</div>
+      <h1>Your blueprint to the goal</h1>
+      <p>Every stage, in detail - what to do, how you'll know it's done, what to use, and what commonly goes wrong.</p>
+    </div>
+
+    <div id="noRoadmap" class="empty-state hidden">
+      <div class="glyph">&#10022;</div>
+      No roadmap yet.
+      <div class="sub">Complete the survey first so a roadmap can be built around your actual goal.</div>
+      <a class="btn" href="survey.html">Go to survey &rarr;</a>
+    </div>
+
+    <div class="roadmap-wrap" id="roadmapContent">
+      <div class="roadmap-actions">
+        <button class="btn ghost" id="regenerateBtn">Regenerate from latest matches</button>
+      </div>
+
+      <div class="summary-panel">
+        <h2>Overall strategy</h2>
+        <p id="summaryText"></p>
+      </div>
+
+      <div class="roadmap-overall-progress">
+        <div class="roadmap-progress-track"><div class="roadmap-progress-fill" id="overallProgressFill"></div></div>
+        <span class="roadmap-progress-label" id="overallProgressLabel"></span>
+      </div>
+
+      <div id="milestonesList"></div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo - resource and risk suggestions are illustrative guidance, not guaranteed outcomes.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script src="charts.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof renderNav === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+renderNav('roadmap');
+_safeSetItem('kaidostar_role', 'candidate');
+
+const profile = getProfile();
+const lastScored = getMatches();
+
+if(!profile){
+  document.getElementById('noRoadmap').classList.remove('hidden');
+  document.getElementById('roadmapContent').classList.add('hidden');
+}
+
+function computeSkillGaps(){
+  if(!lastScored.length) return [];
+  const skillTokens = tokenize(profile.skills || '');
+  const goalTokens = tokenize(profile.northstar + ' ' + profile.finalidea);
+  const freq = {};
+  lastScored.slice(0,8).forEach(l => l.tags.forEach(tag => {
+    // Mirrors the exact fix already applied to dashboard.html's
+    // equivalent function - termsMatch (word-boundary-safe) instead
+    // of the raw substring check, which let "art" falsely match
+    // "startup".
+    const known = skillTokens.some(t => termsMatch(t, tag)) || goalTokens.some(t => termsMatch(t, tag));
+    if(!known) freq[tag] = (freq[tag] || 0) + 1;
+  }));
+  return Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,4).map(([tag]) => tag);
+}
+
+/* Real, per-milestone gap detection - which of the person's actual,
+   already-computed skill gaps (from real listing tags) genuinely
+   apply to THIS specific milestone. Reuses computeSkillGaps' output
+   rather than parsing this milestone's free-text description for
+   skill mentions. Returns the single best-matching gap, or null. */
+function milestoneSkillGap(milestone, globalGaps){
+  const milestoneTokens = tokenize((milestone.title || '') + ' ' + (milestone.description || ''));
+  const applicable = globalGaps.filter(gap => milestoneTokens.some(t => termsMatch(t, gap)));
+  return applicable.length ? applicable[0] : null;
+}
+
+async function runAssistanceSearch(panel, gap, budget){
+  const searchBtn = panel.querySelector('.assistance-search-btn');
+  searchBtn.disabled = true;
+  searchBtn.textContent = 'Searching...';
+  panel.insertAdjacentHTML('beforeend', `<p class="assistance-loading" style="margin-top:10px; color:var(--text-faint); font-style:italic;">Searching the web for real, credible options within your budget...</p>`);
+
+  const needDescription = `help improving skills in "${gap || 'this area'}" for a job search`;
+  const result = await findAssistanceOptions(needDescription, budget, profile.loc || '');
+
+  const loadingEl = panel.querySelector('.assistance-loading');
+  if(loadingEl) loadingEl.remove();
+  searchBtn.disabled = false;
+  searchBtn.textContent = 'Search';
+
+  const resultsHtml = result
+    ? `<div class="assistance-results" style="margin-top:12px; padding-top:12px; border-top:1px solid var(--line);">
+        ${renderAssistanceText(result.text)}
+        ${result.sources.length ? `<div class="assistance-sources" style="margin-top:10px; font-size:13px;">
+          <span style="color:var(--text-faint);">Sources: </span>
+          ${result.sources.map(s => `<a href="${safeHref(s.url)}" target="_blank" rel="noopener" style="color:var(--gold); margin-right:10px;">${escapeForAttr(s.title)}</a>`).join('')}
+        </div>` : ''}
+      </div>`
+    : `<p class="assistance-results" style="margin-top:12px; color:var(--danger);">Couldn't complete this search just now - try again in a moment.</p>`;
+  panel.insertAdjacentHTML('beforeend', resultsHtml);
+}
+
+function escapeForAttr(str){
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* A simple, dedicated markdown-lite renderer for assistance-search
+   results - escapes HTML first (real, external content, not trusted
+   markup), then handles basic bold and paragraph breaks. */
+function renderAssistanceText(text){
+  const escaped = document.createElement('div');
+  escaped.textContent = text;
+  const safe = escaped.innerHTML;
+  return safe.split('\n').filter(line => line.trim()).map(line => {
+    const bolded = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    return `<p style="margin:6px 0;">${bolded}</p>`;
+  }).join('');
+}
+
+function matchesForMilestone(milestone){
+  if(!lastScored.length) return [];
+  const milestoneTokens = tokenize(milestone.title + ' ' + milestone.description);
+  return lastScored.filter(l => {
+    return l.tags.some(tag => milestoneTokens.some(t => termsMatch(t, tag)));
+  }).slice(0, 2);
+}
+
+function statusCycle(current){
+  const order = ['planned', 'in_progress', 'done'];
+  const idx = order.indexOf(current);
+  return order[(idx + 1) % order.length];
+}
+function statusLabel(s){ return {planned: 'Not started', in_progress: 'In progress', done: 'Done'}[s] || s; }
+
+function render(){
+  const roadmap = getRoadmap();
+  if(!roadmap || !roadmap.milestones || !roadmap.milestones.length){
+    document.getElementById('noRoadmap').classList.remove('hidden');
+    document.getElementById('roadmapContent').classList.add('hidden');
+    return;
+  }
+  document.getElementById('noRoadmap').classList.add('hidden');
+  document.getElementById('roadmapContent').classList.remove('hidden');
+
+  document.getElementById('summaryText').textContent = roadmap.summary;
+
+  const milestones = roadmap.milestones;
+  const doneCount = milestones.filter(m => m.status === 'done').length;
+  document.getElementById('overallProgressFill').style.width = Math.round((doneCount/milestones.length)*100) + '%';
+  document.getElementById('overallProgressLabel').textContent = `${doneCount} of ${milestones.length} stages complete`;
+
+  const globalSkillGaps = computeSkillGaps();
+  document.getElementById('milestonesList').innerHTML = milestones.map(m => {
+    const supportingMatches = matchesForMilestone(m);
+    const gap = milestoneSkillGap(m, globalSkillGaps);
+    return `<div class="milestone-card status-${m.status}" data-stage="${m.stage}">
+      <div class="milestone-head">
+        <div>
+          <div class="milestone-stage-num">Stage ${m.stage} of ${milestones.length}</div>
+          <h3 class="milestone-title">${escapeForAttr(m.title)}</h3>
+        </div>
+        <select class="milestone-status-select" data-stage="${m.stage}">
+          <option value="planned" ${m.status==='planned'?'selected':''}>Not started</option>
+          <option value="in_progress" ${m.status==='in_progress'?'selected':''}>In progress</option>
+          <option value="done" ${m.status==='done'?'selected':''}>Done</option>
+        </select>
+      </div>
+      <p class="milestone-desc">${escapeForAttr(m.description)}</p>
+      <div class="milestone-detail-grid">
+        <div class="detail-block success"><div class="dlabel">Done when</div><p>${escapeForAttr(m.success_criteria || '-')}</p></div>
+        <div class="detail-block action"><div class="dlabel">First step</div><p>${escapeForAttr(m.first_action || '-')}</p></div>
+        <div class="detail-block resource"><div class="dlabel">Use this</div><p>${escapeForAttr(m.resource || '-')}</p></div>
+        <div class="detail-block risk"><div class="dlabel">Common failure mode</div><p>${escapeForAttr(m.risk || '-')}</p></div>
+      </div>
+      ${(m.if_it_works || m.if_it_stalls) ? `
+      <div class="milestone-branch-grid">
+        ${m.if_it_works ? `<div class="branch-block works"><div class="dlabel">If this works out</div><p>${escapeForAttr(m.if_it_works)}</p></div>` : ''}
+        ${m.if_it_stalls ? `<div class="branch-block stalls"><div class="dlabel">If this stalls</div><p>${escapeForAttr(m.if_it_stalls)}</p></div>` : ''}
+      </div>` : ''}
+      <div class="milestone-footer">
+        ${m.estimated_timeframe ? `<span class="milestone-timeframe">${escapeForAttr(m.estimated_timeframe)}</span>` : ''}
+        ${supportingMatches.length ? `<span class="milestone-matches">Supported by: ${supportingMatches.map(sm => escapeForAttr(sm.title)).join(', ')}</span>` : ''}
+        ${gap ? `<button class="btn ghost get-assistance-btn" data-stage="${m.stage}" data-gap="${escapeForAttr(gap)}">Get assistance with ${escapeForAttr(gap)} &rarr;</button>` : ''}
+      </div>
+      <div class="assistance-panel hidden" data-stage="${m.stage}"></div>
+      <div class="milestone-reflection-prompt hidden" data-stage="${m.stage}">
+        <div class="detail-block success">
+          <div class="dlabel">You just completed this stage - worth a real note?</div>
+          <p style="margin-bottom:8px;">What genuinely worked, what didn't, or what would you tell someone else starting "${escapeForAttr(m.title)}"? Saved to your Waypoint, tagged to this exact stage.</p>
+          <textarea class="milestone-reflection-input" data-stage="${m.stage}" rows="3" placeholder="Optional, but this is what makes your own history worth re-reading later..." style="width:100%; box-sizing:border-box; font-family:inherit; padding:8px; border-radius:8px; border:1px solid var(--line); background:var(--void); color:var(--text);"></textarea>
+          <div style="margin-top:8px; display:flex; gap:8px;">
+            <button class="btn save-reflection-btn" data-stage="${m.stage}">Save reflection &amp; mark done</button>
+            <button class="btn ghost skip-reflection-btn" data-stage="${m.stage}">Just mark done</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.querySelectorAll('.get-assistance-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const stage = btn.dataset.stage;
+      const gap = btn.dataset.gap;
+      const panel = document.querySelector(`.assistance-panel[data-stage="${stage}"]`);
+      panel.classList.remove('hidden');
+      panel.innerHTML = `
+        <div class="detail-block action">
+          <div class="dlabel">Find real help with ${gap}</div>
+          <p style="margin-bottom:10px;">What's your budget for this? Kaidostar will search for credible tutors or coaches within it.</p>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input type="text" class="assistance-budget-input" placeholder="e.g. $30/hr, or $200 total" style="flex:1; min-width:160px; box-sizing:border-box; font-family:inherit; padding:8px; border-radius:8px; border:1px solid var(--line); background:var(--void); color:var(--text);">
+            <button class="btn assistance-search-btn" data-stage="${stage}" data-gap="${escapeForAttr(gap)}">Search</button>
+          </div>
+        </div>`;
+      panel.querySelector('.assistance-search-btn').addEventListener('click', async (e) => {
+        const budget = panel.querySelector('.assistance-budget-input').value.trim();
+        if(!budget) return;
+        await runAssistanceSearch(panel, gap, budget);
+      });
+    });
+  });
+
+  document.querySelectorAll('.milestone-status-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const stage = parseInt(sel.dataset.stage);
+      const rm = getRoadmap();
+      const milestone = rm.milestones.find(m => m.stage === stage);
+      if(!milestone) return;
+      if(sel.value === 'done' && milestone.status !== 'done'){
+        // Doesn't save yet - reveals the reflection prompt instead.
+        // Either button below is what actually commits the change,
+        // avoiding a confusing state where the dropdown already says
+        // "Done" but nothing's been saved.
+        const prompt = document.querySelector(`.milestone-reflection-prompt[data-stage="${stage}"]`);
+        if(prompt) prompt.classList.remove('hidden');
+        sel.value = milestone.status; // revert visually until they actually commit below
+        return;
+      }
+      milestone.status = sel.value;
+      saveRoadmap(rm);
+      // Persist to the real backend by the milestone's real id.
+      const session = getSession();
+      const userId = session && session.user_id;
+      if(userId && milestone.id){ apiUpdateMilestoneStatus(milestone.id, sel.value); }
+      render();
+    });
+  });
+
+  function commitMilestoneDone(stage, reflectionText){
+    const rm = getRoadmap();
+    const milestone = rm.milestones.find(m => m.stage === stage);
+    if(!milestone) return;
+    milestone.status = 'done';
+    saveRoadmap(rm);
+    // Persist to the real backend by real milestone id, including the
+    // reflection - the backend records it precisely when status
+    // becomes 'done'.
+    const session = getSession();
+    const userId = session && session.user_id;
+    if(userId && milestone.id){ apiUpdateMilestoneStatus(milestone.id, 'done', reflectionText && reflectionText.trim() ? reflectionText.trim() : null); }
+    if(reflectionText && reflectionText.trim()){
+      // The real, substantial part: a genuine, linked Waypoint entry,
+      // tagged to this exact stage and title - grounded in the real
+      // milestone just completed, not a generic prompt on a separate
+      // page. Mirrors the exact shape waypoint.html itself uses.
+      saveOwnWaypointPost({
+        id: 'entry_' + Date.now(),
+        body: reflectionText.trim(),
+        video_url: null,
+        tag_value: stage,
+        tag_label: `Stage ${stage}: ${milestone.title}`,
+        created_at: new Date().toISOString(),
+      });
+    }
+    render();
+  }
+
+  document.querySelectorAll('.save-reflection-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const stage = parseInt(btn.dataset.stage);
+      const input = document.querySelector(`.milestone-reflection-input[data-stage="${stage}"]`);
+      commitMilestoneDone(stage, input ? input.value : '');
+    });
+  });
+  document.querySelectorAll('.skip-reflection-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      commitMilestoneDone(parseInt(btn.dataset.stage), null);
+    });
+  });
+}
+
+document.getElementById('regenerateBtn').addEventListener('click', async () => {
+  if(!profile) return;
+  const session = getSession();
+  const userId = session && session.user_id;
+  const btn = document.getElementById('regenerateBtn');
+
+  if(userId){
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+    const backendRoadmap = await apiGenerateRoadmap(userId);
+    btn.disabled = false;
+    btn.textContent = originalText;
+    if(backendRoadmap && backendRoadmap.milestones && backendRoadmap.milestones.length){
+      saveRoadmap(backendRoadmap);   // real server roadmap, with real milestone ids
+      render();
+      return;
+    }
+    // Backend failed - fall through to the local generator so the
+    // person still gets a roadmap rather than nothing.
+  }
+
+  const skillGaps = computeSkillGaps();
+  const topMatch = lastScored.length ? lastScored[0] : null;
+  const roadmap = generateRoadmapLocal(profile, skillGaps, topMatch);
+  saveRoadmap(roadmap);
+  render();
+});
+
+if(profile){
+  render();  // instant render from local state
+
+  // Backend hydration: pull the real server roadmap (with real
+  // milestone ids) when logged in, then re-render. Best-effort and
+  // async, so the page never blocks on the network.
+  (async () => {
+    const session = getSession();
+    const userId = session && session.user_id;
+    if(!userId) return;
+    try{
+      const backendRoadmap = await apiGetRoadmap(userId);
+      if(backendRoadmap && backendRoadmap.milestones && backendRoadmap.milestones.length){
+        saveRoadmap(backendRoadmap);
+        render();
+      }
+    }catch(e){ /* best-effort - local roadmap already rendered */ }
+  })();
+}
+</script>
+<script>
+// Visible tier switcher (preview - no payment) so plan differences are testable everywhere.
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+</body>
+</html>

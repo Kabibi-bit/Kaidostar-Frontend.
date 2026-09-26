@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap — Kaidostar Admissions</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.rm-summary{ background: var(--panel); border:1px solid var(--violet); border-radius: var(--radius); padding: 22px; margin-bottom: 22px; font-family:'Manrope',sans-serif; font-size:14px; line-height:1.65; color:var(--text); }
+.ms-card{ background: var(--panel); border:1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-bottom: 14px; }
+.ms-card.done{ border-color: rgba(95,224,184,0.5); opacity:0.82; }
+.ms-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.ms-stage{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--violet); background:var(--violet-dim); border:1px solid rgba(155,135,245,0.4); padding:4px 11px; border-radius:999px; }
+.ms-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; color:var(--text); margin:10px 0 8px; }
+.ms-desc{ font-family:'Manrope',sans-serif; font-size:13.5px; line-height:1.6; color:var(--text-dim); margin:0 0 16px; }
+.ms-fields{ display:grid; gap:12px; }
+.ms-field{ background:var(--void); border:1px solid var(--line-soft); border-radius:10px; padding:13px 15px; }
+.ms-field .lbl{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:6px; }
+.ms-field .val{ font-family:'Manrope',sans-serif; font-size:13px; line-height:1.55; color:var(--text); }
+.ms-field.first .lbl{ color:var(--aurora); } .ms-field.risk .lbl{ color:var(--gold); } .ms-field.crit .lbl{ color:var(--violet); }
+.ms-actions{ margin-top:16px; }
+.done-btn{ background:transparent; border:1px solid var(--aurora); color:var(--aurora); border-radius:999px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px; padding:8px 16px; cursor:pointer; }
+.done-btn.is-done{ background:var(--aurora-dim); }
+.hint{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-faint); }
+</style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow" style="color:var(--violet);">ADMISSIONS TRACK</div>
+      <h1>Your admissions blueprint</h1>
+      <p>A stage-by-stage plan to build a genuinely standout application - depth over breadth, every step grounded in your real major and target schools.</p>
+    </div>
+
+    <div id="noProfile" class="ms-card hidden" style="border-color:var(--violet);">
+      <p class="hint" style="margin-bottom:14px;">Build your admissions profile first so this roadmap is tailored to you.</p>
+      <a class="btn" href="survey.html">Go to the survey &rarr;</a>
+    </div>
+
+    <div id="genPanel" class="ms-card hidden" style="border-color:var(--violet); text-align:center;">
+      <h2 style="font-family:'Space Grotesk',sans-serif; margin:0 0 8px;">Generate your roadmap</h2>
+      <p class="hint" style="margin-bottom:16px;">A tailored, five-stage plan for <span id="genMajor"></span>.</p>
+      <button class="btn" id="genBtn">Build my roadmap &rarr;</button>
+    </div>
+
+    <div id="rmContent" class="hidden">
+      <div class="rm-summary" id="rmSummary"></div>
+      <div id="rmStages"></div>
+      <button class="btn" id="regenBtn" style="margin-top:8px; background:transparent; border:1px solid var(--line); color:var(--text-dim);">Regenerate roadmap</button>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script>
+window.addEventListener("error", function(e){ var m="Script error: "+e.message; var b=document.getElementById("diagBanner"); if(!b){b=document.createElement("div");b.id="diagBanner";b.style.cssText="position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";b.textContent="Kaidostar failed to load - "+m;document.body.prepend(b);} });
+</script>
+<script>
+initStarfield();
+renderNav('admissions-roadmap');
+const esc = s => { const d=document.createElement('div'); d.textContent=String(s==null?'':s); return d.innerHTML; };
+const admProfile = getAdmissionsProfile();
+
+if(!admProfile){
+  document.getElementById('noProfile').classList.remove('hidden');
+} else {
+  const existing = getAdmissionsRoadmap();
+  if(existing){ showRoadmap(existing); }
+  else {
+    document.getElementById('genPanel').classList.remove('hidden');
+    document.getElementById('genMajor').textContent = admProfile.intendedMajor || 'your field';
+  }
+}
+
+document.getElementById('genBtn')?.addEventListener('click', buildRoadmap);
+document.getElementById('regenBtn')?.addEventListener('click', buildRoadmap);
+
+function buildRoadmap(){
+  // Local generate first = instant + offline fallback (parity-verified with backend).
+  const opps = runAdmissionsMatchCycle(admProfile);
+  const rm = generateAdmissionsRoadmapLocal(admProfile, opps[0]);
+  saveAdmissionsRoadmap(rm);
+  showRoadmap(rm);
+  // Then try the backend as the source of truth when logged in.
+  (async () => {
+    const s = (typeof getSession === 'function') ? getSession() : null;
+    const uid = s && s.user_id;
+    if(!uid || typeof apiAdmissionsRoadmap !== 'function') return;
+    try {
+      const beRm = await apiAdmissionsRoadmap(uid);
+      if(beRm && beRm.milestones){
+        // Stamp the local version so getAdmissionsRoadmap() accepts it, then persist + show.
+        beRm.version = (typeof ROADMAP_VERSION !== 'undefined') ? ROADMAP_VERSION : rm.version;
+        beRm.milestones = beRm.milestones.map(m => Object.assign({ status:'planned' }, m));
+        saveAdmissionsRoadmap(beRm);
+        showRoadmap(beRm);
+      }
+    } catch(e){ /* backend unreachable - local roadmap already shown */ }
+  })();
+}
+
+function showRoadmap(rm){
+  const gp = document.getElementById('genPanel'); if(gp) gp.classList.add('hidden');
+  document.getElementById('rmContent').classList.remove('hidden');
+  document.getElementById('rmSummary').textContent = rm.summary;
+  const el = document.getElementById('rmStages');
+  el.innerHTML = rm.milestones.map(m => {
+    const done = m.status === 'done';
+    return `<div class="ms-card ${done?'done':''}">
+      <div class="ms-head">
+        <span class="ms-stage">Stage ${esc(m.stage)}</span>
+        <button class="done-btn ${done?'is-done':''}" data-done="${esc(m.stage)}">${done ? '&#10003; Done' : 'Mark done'}</button>
+      </div>
+      <h3 class="ms-title">${esc(m.title)}</h3>
+      <p class="ms-desc">${esc(m.description)}</p>
+      <div class="ms-fields">
+        <div class="ms-field crit"><div class="lbl">What "done" looks like</div><div class="val">${esc(m.success_criteria)}</div></div>
+        <div class="ms-field first"><div class="lbl">First action</div><div class="val">${esc(m.first_action)}</div></div>
+        <div class="ms-field"><div class="lbl">Timeframe</div><div class="val">${esc(m.estimated_timeframe)}</div></div>
+        <div class="ms-field"><div class="lbl">Resource</div><div class="val">${esc(m.resource)}</div></div>
+        <div class="ms-field risk"><div class="lbl">Most common way this stalls</div><div class="val">${esc(m.risk)}</div></div>
+        ${m.if_it_works ? `<div class="ms-field"><div class="lbl">If it works</div><div class="val">${esc(m.if_it_works)}</div></div>` : ''}
+        ${m.if_it_stalls ? `<div class="ms-field"><div class="lbl">If it stalls</div><div class="val">${esc(m.if_it_stalls)}</div></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('[data-done]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const stage = parseInt(btn.dataset.done);
+      const roadmap = getAdmissionsRoadmap();
+      const ms = roadmap.milestones.find(m => m.stage === stage);
+      if(ms){ ms.status = ms.status === 'done' ? 'planned' : 'done'; saveAdmissionsRoadmap(roadmap); showRoadmap(roadmap); }
+    });
+  });
+}
+
+// School-aware Metis guide (shared context - consistent across every admissions page).
+if(typeof admProfile !== 'undefined' ? admProfile : (typeof getAdmissionsProfile==='function' && getAdmissionsProfile())){
+  injectMetisWidget(admissionsMetisContext, {
+    subtitle: 'Your AI admissions guide',
+    greeting: "Hi - I can help with your target schools, essays, your roadmap, or deadlines. What's on your mind?",
+    suggestions: [ { label: 'Explain a stage', q: 'Can you explain why the first stage of my roadmap matters for my target schools?' }, { label: 'What if I am behind?', q: "I feel behind - what's the most important thing to focus on right now?" } ],
+  });
+}
+</script>
+<script>
+// Visible tier switcher (preview - no payment) so plan differences are testable everywhere.
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+</body>
+</html>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overview — Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.potential-grid{ display:grid; grid-template-columns: 160px 1fr; gap: 24px; align-items:center; }
+@media (max-width: 640px){ .potential-grid{ grid-template-columns: 1fr; } }
+.potential-breakdown{ display:flex; flex-direction:column; gap: 12px; }
+.insight-card{ background: var(--void); border: 1px solid var(--violet); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+.insight-card p{ font-family:'Manrope', sans-serif; font-size: 13px; line-height: 1.55; color: var(--text); margin: 0; }
+.insight-card p b{ color: var(--violet); }
+.insight-neutral-note{ font-family:'Manrope', sans-serif; font-size: 12.5px; color: var(--text-faint); line-height: 1.5; }
+.deep-insight-item{ background: var(--void); border: 1px solid var(--comet); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+.deep-insight-item p{ font-family:'Manrope', sans-serif; font-size: 13px; line-height: 1.55; color: var(--text); margin: 0; }
+.confidence-tag{ font-family:'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 10px; border-radius: 999px; display: inline-block; margin-bottom: 12px; }
+.confidence-tag.low{ color: var(--text-faint); background: var(--line-soft); }
+.confidence-tag.moderate{ color: var(--gold); background: var(--gold-dim); }
+.confidence-tag.high{ color: var(--aurora); background: var(--aurora-dim); }
+.audit-verdict-tag{ font-family:'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 10px; border-radius: 999px; display: inline-block; margin-bottom: 12px; }
+.audit-verdict-tag.helping{ color: var(--aurora); background: var(--aurora-dim); }
+.audit-verdict-tag.hurting{ color: var(--danger); background: rgba(242,122,107,0.15); }
+.audit-verdict-tag.neutral{ color: var(--text-faint); background: var(--line-soft); }
+.interaction-card{ background: var(--void); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+.interaction-card.synergy{ border: 1px solid var(--aurora); }
+.interaction-card.redundant{ border: 1px solid var(--line); }
+.interaction-card p{ font-family:'Manrope', sans-serif; font-size: 13px; line-height: 1.55; color: var(--text); margin: 0; }
+.interaction-card p b{ color: var(--aurora); }
+.interaction-type-tag{ font-family:'JetBrains Mono', monospace; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 8px; border-radius: 999px; margin-right: 8px; }
+.interaction-type-tag.synergy{ color: var(--aurora); background: var(--aurora-dim); }
+.interaction-type-tag.redundant{ color: var(--text-faint); background: var(--line-soft); }
+.pb-row{ display:grid; grid-template-columns: 110px 1fr 40px; align-items:center; gap: 10px; }
+.pb-label{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); }
+.pb-track{ height: 8px; background: var(--line-soft); border-radius: 999px; overflow:hidden; }
+.pb-fill{ height:100%; border-radius:999px; }
+.pb-val{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); text-align:right; }
+.pipeline-row{ display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; }
+.pipeline-box{ background: var(--void); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 16px; }
+.pipeline-box .pnum{ font-family:'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; color: var(--text); }
+.pipeline-box .plabel{ font-family:'JetBrains Mono', monospace; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-top: 4px; }
+.trajectory-panel svg{ width:100%; height: 90px; }
+.mini-label{ display:flex; justify-content:space-between; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-faint); margin-top:8px; }
+.type-bar-row{ margin-bottom: 12px; }
+.type-bar-head{ display:flex; justify-content:space-between; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-dim); margin-bottom:5px; }
+.type-bar-track{ height:7px; background: var(--line-soft); border-radius:999px; overflow:hidden; }
+.type-bar-fill{ height:100%; border-radius:999px; }
+.gap-tag{ display:inline-block; background: var(--void); border: 1px solid var(--line-soft); border-radius: 999px; padding: 5px 12px; margin: 0 6px 8px 0; font-family:'Manrope', sans-serif; font-size: 12px; color: var(--text-dim); }
+.gap-tag b{ color: var(--gold); }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow">Overview</div>
+      <h1>Mission control</h1>
+      <p>Everything the watch, roadmap, Workshop, and Auto mode have tracked so far.</p>
+    </div>
+
+    <div id="noProfile" class="empty-state hidden">
+      <div class="glyph">&#10022;</div>
+      No survey answers yet.
+      <div class="sub">Complete the survey first so your progress has something to track.</div>
+      <a class="btn" href="survey.html">Go to survey &rarr;</a>
+    </div>
+
+    <div id="overviewContent" class="hidden">
+      <div class="stat-row" style="margin-bottom:26px;">
+        <div class="stat-box"><div class="snum" id="statAvgMatch">-</div><div class="slabel">Avg match this cycle</div></div>
+        <div class="stat-box"><div class="snum" id="statSavedCount">0</div><div class="slabel">Saved opportunities</div></div>
+        <div class="stat-box"><div class="snum" id="statCyclesRun">0</div><div class="slabel">Scan cycles run</div></div>
+        <div class="stat-box"><div class="snum" id="statCurrentMatches">0</div><div class="slabel">Current matches</div></div>
+        <div class="stat-box"><div class="snum" id="statAppsSent">0</div><div class="slabel">Applications sent</div></div>
+        <div class="stat-box"><div class="snum" id="statOutreachSent">0</div><div class="slabel">Outreach sent</div></div>
+      </div>
+
+      <div class="chart-grid" style="margin-bottom:26px;">
+        <div class="chart-panel">
+          <h3>Application outcomes</h3>
+          <div class="sub">Where your applications have actually landed.</div>
+          <div class="donut-row" id="outcomeDonut"></div>
+        </div>
+        <div class="chart-panel">
+          <h3>Career potential</h3>
+          <div class="sub">A composite score, broken down into what's actually driving it.</div>
+          <div class="potential-grid">
+            <div class="gauge-wrap" id="potentialGauge"></div>
+            <div class="potential-breakdown" id="potentialBreakdown"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-panel" style="margin-bottom:26px; display:none; border-color: var(--gold);" id="searchStrainPanel">
+        <h3>A note on how it's going</h3>
+        <p id="searchStrainNote" style="font-family:'Manrope',sans-serif; font-size:13.5px; color:var(--text); line-height:1.6; margin:0;"></p>
+      </div>
+
+      <div class="chart-panel" style="margin-bottom:26px;" id="strategicPositionPanel">
+        <h3>Where you actually stand</h3>
+        <div class="sub">Not another match score - a real synthesis of everything you've actually done, and whether it's building toward something.</div>
+        <div id="strategicPositionContent">
+          <button class="btn" id="strategicPositionBtn">Analyze my real position &rarr;</button>
+        </div>
+      </div>
+
+      <div class="chart-panel" style="margin-bottom:26px;" id="engagementSummaryPanel">
+        <h3>Your real engagement activity</h3>
+        <div class="sub">Thoughtful replies drafted for posts you found, and what actually came of them.</div>
+        <div id="engagementSummaryContent"></div>
+      </div>
+
+      <div class="chart-panel" style="margin-bottom:26px;">
+        <h3>Monthly targets</h3>
+        <div class="sub">Applications actually sent vs. your target pace, by month.</div>
+        <div id="monthlyTargetChart"></div>
+        <div class="target-summary" id="targetSummary"></div>
+      </div>
+
+      <div class="chart-panel" style="margin-bottom:26px;">
+        <h3>Pipeline right now</h3>
+        <div class="sub">What's live in your Workshop and Auto queue.</div>
+        <div class="pipeline-row" id="pipelineRow"></div>
+      </div>
+
+      <div class="chart-grid" style="margin-bottom:26px;">
+        <div class="chart-panel trajectory-panel">
+          <h3>Trajectory</h3>
+          <div class="sub">Average match strength per cycle.</div>
+          <svg id="trajectorySvg" viewBox="0 0 260 90" preserveAspectRatio="none"></svg>
+          <div class="mini-label"><span>Cycle 1</span><span id="trajLatest">-</span></div>
+        </div>
+        <div class="chart-panel">
+          <h3>Mix this cycle</h3>
+          <div class="sub">Category breakdown of current matches.</div>
+          <div id="typeBreakdownArea"></div>
+        </div>
+      </div>
+
+      <div class="chart-panel" style="margin-bottom:26px;">
+        <h3>Roadmap progress</h3>
+        <div class="sub" id="roadmapProgressSub"></div>
+        <div class="pb-track" style="margin-bottom:10px;"><div class="pb-fill" id="roadmapProgressFill" style="background: linear-gradient(90deg, var(--aurora), var(--gold));"></div></div>
+        <a class="btn ghost" href="roadmap.html">View full roadmap &rarr;</a>
+      </div>
+
+      <div class="chart-panel" style="margin-bottom:26px;" id="calibrationPanel">
+        <h3>Is your match score actually trustworthy?</h3>
+        <div class="sub">Checked against your real logged outcomes - not assumed.</div>
+        <div id="calibrationContent"></div>
+      </div>
+
+      <div class="chart-panel" style="margin-bottom:26px;" id="intelligencePanel">
+        <h3>What Kaidostar has learned about your matches</h3>
+        <div class="sub">Not a generic algorithm - this is what your own real outcomes have taught it about you specifically.</div>
+        <div id="intelligenceContent"></div>
+      </div>
+
+      <div class="chart-panel" style="margin-bottom:26px;" id="auditPanel">
+        <h3>Is personalization actually helping you?</h3>
+        <div class="sub">Checks whether the learning above is genuinely making your scores more accurate - not just moving numbers around.</div>
+        <div id="auditContent"></div>
+      </div>
+
+      <div class="chart-panel" style="margin-bottom:26px;" id="deepInsightsPanel">
+        <h3>What's actually working in what you write</h3>
+        <div class="sub">Beyond the numbers above - real patterns in the actual applications you've sent, found by reading them, not counting keywords.</div>
+        <div id="deepInsightsContent"></div>
+      </div>
+
+      <div class="chart-panel" style="margin-bottom:26px;" id="interactionsPanel">
+        <h3>Signals that only work together for you</h3>
+        <div class="sub">Not just which single factor matters most - whether some combinations predict success far better than either signal alone would suggest.</div>
+        <div id="interactionsContent"></div>
+      </div>
+
+      <div class="chart-panel">
+        <h3>Skill gaps</h3>
+        <div class="sub">Common in your top matches, not yet in your stated skills.</div>
+        <div id="gapTags"><span class="hint">Run a scan on Job Search to see suggestions.</span></div>
+      </div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo - listings shown are illustrative, not live postings.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script src="charts.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof renderNav === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+renderNav('overview');
+
+// AI-generated text (deep personalization insights) is untrusted and
+// must be escaped before reaching innerHTML - a stray '<' or an
+// injected tag in model output would otherwise render as markup.
+function escapeForHtml(str){ const d = document.createElement('div'); d.textContent = String(str == null ? '' : str); return d.innerHTML; }
+_safeSetItem('kaidostar_role', 'candidate');
+
+const profile = getProfile();
+if(!profile){
+  document.getElementById('noProfile').classList.remove('hidden');
+} else {
+  document.getElementById('overviewContent').classList.remove('hidden');
+}
+
+async function renderOverview(){
+  if(!profile) return;
+
+  // Backend hydration: when logged in, pull the real analytics data
+  // into localStorage BEFORE the synchronous reads below run, so
+  // every panel reflects genuine server data, not just this browser.
+  // Best-effort - a failed fetch leaves local data in place.
+  const _session = getSession();
+  const _userId = _session && _session.user_id;
+  if(_userId){
+    try{
+      const [bApps, bSaved, bRoadmap] = await Promise.all([
+        apiListApplications(_userId),
+        apiGetSavedIds(_userId),
+        apiGetRoadmap(_userId),
+      ]);
+      if(Array.isArray(bApps) && bApps.length){ saveApplications(bApps); }
+      if(bSaved && bSaved.size > 0){ _safeSetItem('kaidostar_saved_ids', JSON.stringify([...bSaved])); }
+      if(bRoadmap && bRoadmap.milestones && bRoadmap.milestones.length){ saveRoadmap(bRoadmap); }
+    }catch(e){ /* best-effort - local data already available */ }
+  }
+
+  const lastScored = getMatches();
+  const cycleCount = getCycleCount();
+  const trajectory = getTrajectory();
+  const savedIds = new Set(JSON.parse(localStorage.getItem('kaidostar_saved_ids') || '[]'));
+  const apps = getApplications();
+  const outreach = getOutreachDrafts();
+
+  // ---- Top stat row ----
+  document.getElementById('statAvgMatch').textContent = (trajectory.length ? trajectory[trajectory.length-1] : 0) + '%';
+  document.getElementById('statSavedCount').textContent = savedIds.size;
+  document.getElementById('statCyclesRun').textContent = cycleCount;
+  document.getElementById('statCurrentMatches').textContent = lastScored.length;
+  document.getElementById('statAppsSent').textContent = apps.filter(a => a.status === 'sent').length;
+  document.getElementById('statOutreachSent').textContent = outreach.filter(o => o.status === 'sent').length;
+
+  // ---- Application outcomes donut ----
+  // Count each application ONCE by its latest status, not every outcome event.
+  // kaidostar_outcomes is an append-per-event log - logApplicationOutcome unshifts a
+  // new row every time a status is logged - so one application that went
+  // applied -> interview -> offer shows up as three separate entries. This donut
+  // means "where your applications have actually landed", so tally each
+  // application's single current outcome_status instead. That's the same
+  // per-application source every other chart on this page already trusts
+  // (calibration, factor reliability, personalization), so the page stays
+  // internally consistent.
+  const outcomeApps = getApplications().filter(a => a.outcome_status);
+  const statusColors = { offer: 'var(--aurora)', interview: 'var(--comet)', applied: 'var(--gold)', rejected: 'var(--danger)', ghosted: 'var(--text-faint)' };
+  const statusLabels = { offer: 'Offers', interview: 'Interviews', applied: 'Applied (pending)', rejected: 'Rejected', ghosted: 'Ghosted' };
+  const counts = {};
+  outcomeApps.forEach(a => { counts[a.outcome_status] = (counts[a.outcome_status] || 0) + 1; });
+  const segments = Object.keys(statusLabels).filter(k => counts[k]).map(k => ({ label: statusLabels[k], value: counts[k], color: statusColors[k] }));
+  document.getElementById('outcomeDonut').innerHTML = donutChart(segments, 130, 18) + donutLegend(segments);
+
+  // ---- Career potential, now with a real visible breakdown of the 3 components ----
+  const roadmapData = getRoadmap();
+  const roadmapMilestones = roadmapData ? roadmapData.milestones : [];
+  const roadmapDone = roadmapMilestones.filter(m => m.status === 'done').length;
+  const roadmapProgress = roadmapMilestones.length ? Math.round((roadmapDone / roadmapMilestones.length) * 100) : 0;
+  const skillTokens = tokenize(profile.skills || '');
+  const skillStrength = Math.min(100, skillTokens.length * 8);
+  const matchQuality = lastScored.length ? Math.round(lastScored.reduce((s,l)=>s+l.pct,0)/lastScored.length) : 40;
+  const potential = Math.round((roadmapProgress * 0.3) + (skillStrength * 0.3) + (matchQuality * 0.4));
+  document.getElementById('potentialGauge').innerHTML = gaugeChart(potential, 130, 'var(--gold)') +
+    `<div class="gauge-value">${potential}</div><div class="gauge-label">Potential score</div>`;
+  const pbRows = [
+    { label: 'Roadmap progress', val: roadmapProgress, color: 'var(--aurora)' },
+    { label: 'Skill strength', val: skillStrength, color: 'var(--comet)' },
+    { label: 'Match quality', val: matchQuality, color: 'var(--gold)' },
+  ];
+  document.getElementById('potentialBreakdown').innerHTML = pbRows.map(r => `
+    <div class="pb-row">
+      <span class="pb-label">${r.label}</span>
+      <div class="pb-track"><div class="pb-fill" style="width:${r.val}%; background:${r.color};"></div></div>
+      <span class="pb-val">${r.val}%</span>
+    </div>`).join('');
+
+  // ---- Monthly targets: real applications SENT per month, matching this panel's
+  // "Applications sent" label. Bucketed by each sent application's sent_at month -
+  // one row per application, never per outcome event, so a progression
+  // (applied -> interview -> offer) is not triple-counted. (Reuses `apps` above;
+  // `outcomes` is intentionally not used here - that was an event-count source.) ----
+  // The trailing 6 months ending with the CURRENT month (dynamic, not a hardcoded
+  // ['Jun','Jul','Aug'] that dropped every application sent outside summer). Records
+  // are windowed to the same span so a same-named month from a prior year can't leak in.
+  const MONTH_WINDOW = 6;
+  const months = lastNMonths(MONTH_WINDOW);
+  const monthCutoff = monthWindowStart(MONTH_WINDOW);
+  const sentRecords = apps
+    .filter(a => a.status === 'sent' && a.sent_at)
+    .map(a => { const d = new Date(a.sent_at); return (isNaN(d.getTime()) || d < monthCutoff) ? null : { month: d.toLocaleString('en-US', { month: 'short' }) }; })
+    .filter(Boolean);
+  const monthly = monthlyTargetData(sentRecords, 8, months);
+  document.getElementById('monthlyTargetChart').innerHTML = barChart(monthly, {width: 400, height: 130});
+  const totalActual = monthly.reduce((s,m)=>s+m.actual, 0);
+  const totalTarget = monthly.reduce((s,m)=>s+m.target, 0);
+  document.getElementById('targetSummary').innerHTML = `<span>Applications sent: <b>${totalActual}</b> of ${totalTarget} targeted</span><span>Pace: <b>${Math.round((totalActual/totalTarget)*100)}%</b> of target</span>`;
+
+  // ---- Pipeline snapshot (new - real Workshop/Auto data pulled together) ----
+  const pendingApps = apps.filter(a => a.status === 'pending_review').length;
+  const approvedApps = apps.filter(a => a.status === 'approved').length;
+  const sentApps = apps.filter(a => a.status === 'sent').length;
+  const draftedOutreach = outreach.filter(o => o.status === 'drafted').length;
+  const sentOutreach = outreach.filter(o => o.status === 'sent').length;
+  const autoSettings = getAutoApplySettings();
+  document.getElementById('pipelineRow').innerHTML = `
+    <div class="pipeline-box"><div class="pnum">${pendingApps}</div><div class="plabel">Apps needing review</div></div>
+    <div class="pipeline-box"><div class="pnum">${approvedApps}</div><div class="plabel">Apps approved</div></div>
+    <div class="pipeline-box"><div class="pnum">${sentApps}</div><div class="plabel">Apps sent</div></div>
+    <div class="pipeline-box"><div class="pnum">${draftedOutreach}</div><div class="plabel">Outreach drafted</div></div>
+    <div class="pipeline-box"><div class="pnum">${sentOutreach}</div><div class="plabel">Outreach sent</div></div>
+    <div class="pipeline-box"><div class="pnum" style="color:${autoSettings.enabled ? 'var(--aurora)' : 'var(--text-faint)'};">${autoSettings.enabled ? 'ON' : 'OFF'}</div><div class="plabel">Auto mode${autoSettings.enabled ? ' - ' + autoSettings.threshold + '%' : ''}</div></div>
+  `;
+
+  // ---- Trajectory ----
+  const svg = document.getElementById('trajectorySvg');
+  if(trajectory.length){
+    const w = 260, h = 90, pad = 8;
+    const stepX = trajectory.length>1 ? (w-pad*2)/(trajectory.length-1) : 0;
+    const pts = trajectory.map((v,i)=> [pad + i*stepX, h - pad - (v/100)*(h-pad*2)]);
+    const line = pts.map(p=>p.join(',')).join(' ');
+    const areaPath = `M${pad},${h-pad} L` + pts.map(p=>p.join(',')).join(' L') + ` L${pts[pts.length-1][0]},${h-pad} Z`;
+    svg.innerHTML = `<defs><linearGradient id="trajFade" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F0B24E" stop-opacity="0.3"/><stop offset="100%" stop-color="#F0B24E" stop-opacity="0"/></linearGradient></defs>
+      <path d="${areaPath}" fill="url(#trajFade)" stroke="none"/>
+      <polyline points="${line}" fill="none" stroke="#F0B24E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      ${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="2.4" fill="#F0B24E"/>`).join('')}`;
+    document.getElementById('trajLatest').textContent = `Cycle ${trajectory.length} - ${trajectory[trajectory.length-1]}%`;
+  } else {
+    document.getElementById('trajLatest').textContent = 'No cycles run yet';
+  }
+
+  // ---- Type mix ----
+  const total = lastScored.length || 1;
+  const jobs = lastScored.filter(l=>l.type==='job').length, interns = lastScored.filter(l=>l.type==='internship').length, college = lastScored.filter(l=>l.type==='college').length, athletic = lastScored.filter(l=>l.type==='athletic').length;
+  const mixRows = [
+    { label: 'Jobs', pct: Math.round(jobs/total*100), color: 'var(--gold)' },
+    { label: 'Internships', pct: Math.round(interns/total*100), color: 'var(--aurora)' },
+    { label: 'College / Fellowship', pct: Math.round(college/total*100), color: 'var(--comet)' },
+    { label: 'Athletics', pct: Math.round(athletic/total*100), color: 'var(--violet)' },
+  ];
+  document.getElementById('typeBreakdownArea').innerHTML = mixRows.map(r => `
+    <div class="type-bar-row">
+      <div class="type-bar-head"><span>${r.label}</span><span>${r.pct}%</span></div>
+      <div class="type-bar-track"><div class="type-bar-fill" style="width:${r.pct}%; background:${r.color};"></div></div>
+    </div>`).join('');
+
+  // ---- Roadmap progress ----
+  document.getElementById('roadmapProgressSub').textContent = roadmapMilestones.length
+    ? `${roadmapDone} of ${roadmapMilestones.length} stages complete.`
+    : 'No roadmap generated yet.';
+  document.getElementById('roadmapProgressFill').style.width = roadmapProgress + '%';
+
+  // ---- Skill gaps ----
+  const goalTokens = tokenize(profile.northstar + ' ' + profile.finalidea);
+  const freq = {};
+  lastScored.slice(0,6).forEach(l=> l.tags.forEach(tag=>{
+    const known = skillTokens.some(t=> termsMatch(t, tag)) || goalTokens.some(t=> termsMatch(t, tag));
+    if(!known) freq[tag] = (freq[tag]||0)+1;
+  }));
+  const topGaps = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  document.getElementById('gapTags').innerHTML = topGaps.length===0
+    ? `<span class="hint">${lastScored.length ? 'Your profile already covers what\'s showing up.' : 'Run a scan on Job Search to see suggestions.'}</span>`
+    : topGaps.map(([tag,count])=>`<span class="gap-tag"><b>${tag}</b> x${count}</span>`).join('');
+
+  // ---- Confidence calibration: is the match score actually trustworthy? ----
+  const calibration = computeCalibration();
+  const calContainer = document.getElementById('calibrationContent');
+  if(calibration.totalWithOutcomes === 0){
+    calContainer.innerHTML = `<span class="hint">Log a real outcome (interview, offer, rejected, or ghosted) on a sent application in the Workshop to start building this.</span>`;
+  } else {
+    const bucketColors = { '80-100%': 'var(--aurora)', '60-79%': 'var(--gold)', 'below 60%': 'var(--text-faint)' };
+    const rows = Object.entries(calibration.buckets).map(([label, b]) => {
+      if(b.total === 0) return `<div class="pb-row"><span class="pb-label">${label}</span><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint);">No outcomes logged yet</span></div>`;
+      return `<div class="pb-row">
+        <span class="pb-label">${label}</span>
+        <div class="pb-track"><div class="pb-fill" style="width:${b.positiveRate}%; background:${bucketColors[label]};"></div></div>
+        <span class="pb-val">${b.positiveRate}% (${b.total})</span>
+      </div>`;
+    }).join('');
+    const noteHtml = calibration.totalWithOutcomes < 5
+      ? `<p class="hint" style="margin-top:12px;">Based on only ${calibration.totalWithOutcomes} logged outcome${calibration.totalWithOutcomes===1?'':'s'} so far - not enough yet to draw a real conclusion. Keep logging outcomes as they happen.</p>`
+      : `<p class="hint" style="margin-top:12px;">Based on ${calibration.totalWithOutcomes} logged outcomes. If your 80-100% bucket isn't converting meaningfully better than your lower buckets, that's a real sign the score needs recalibrating for you specifically - not something to ignore.</p>`;
+    calContainer.innerHTML = `<div class="potential-breakdown">${rows}</div>${noteHtml}`;
+  }
+
+  // ---- Match Intelligence: makes the personalized-learning system
+  // actually visible and understandable, not just a silent
+  // adjustment happening invisibly under the hood. ----
+  const intelContainer = document.getElementById('intelligenceContent');
+  const appsWithBoth = getApplications().filter(a => a.outcome_status && a.factors_snapshot);
+  if(appsWithBoth.length < 3){
+    intelContainer.innerHTML = `<p class="insight-neutral-note">Log outcomes on at least 3 sent applications and Kaidostar will start learning which specific signals - your stated goal, your skills, location, timing - actually predict success for you. Right now your scores use standard weighting for everyone. You have ${appsWithBoth.length} of 3 needed.</p>`;
+  } else {
+    const factorLabels = { goalFit: 'your stated goal', skillFit: 'your listed skill set', priorityFit: 'your priority list', locationFit: 'location fit', deadlineUrgency: 'application timing', descriptionFit: 'listing description overlap', semanticFit: 'conceptual/semantic fit', roadmapFit: 'roadmap alignment' };
+    const reliabilityDetail = getFactorReliabilityDetail(appsWithBoth.map(a => ({ factors_snapshot: a.factors_snapshot, outcome_status: a.outcome_status, updated_at: a.outcome_logged_at })));
+    const insights = [];
+    Object.entries(reliabilityDetail).forEach(([factor, d]) => {
+      const weight = d.multiplier;
+      if(weight >= 1.15){
+        const pctUp = Math.round((weight - 1) * 100);
+        insights.push(`<div class="insight-card"><p><b>${factorLabels[factor]}</b> has predicted real success ${pctUp}% better than baseline for you specifically, based on ${d.engagedCount} of your applications where it was genuinely engaged - Kaidostar now weighs it more heavily in your scores.</p></div>`);
+      } else if(weight <= 0.85){
+        const pctDown = Math.round((1 - weight) * 100);
+        insights.push(`<div class="insight-card"><p><b>${factorLabels[factor]}</b> hasn't predicted success as reliably for you, based on ${d.engagedCount} of your applications where it was genuinely engaged - Kaidostar now weighs it ${pctDown}% less in your scores, based on your own real outcomes.</p></div>`);
+      }
+    });
+    const factorsAwaitingData = Object.entries(reliabilityDetail).filter(([f, d]) => !d.hasEnoughData).length;
+    const fallbackNote = factorsAwaitingData > 0
+      ? `<p class="insight-neutral-note">Based on ${appsWithBoth.length} applications with a logged outcome, no single factor stands out yet as more or less predictive for you - though ${factorsAwaitingData} of ${Object.keys(reliabilityDetail).length} factors genuinely haven't had enough of your applications engage them yet to say anything at all, not just landed at baseline. This will keep refining as you log more outcomes.</p>`
+      : `<p class="insight-neutral-note">Based on ${appsWithBoth.length} applications with a logged outcome, every factor genuinely has enough data behind it, and none stands out as more or less predictive for you than the default weighting - your scores are accurate as-is.</p>`;
+    intelContainer.innerHTML = insights.length
+      ? insights.join('') + `<p class="insight-neutral-note" style="margin-top:10px;">Based on ${appsWithBoth.length} applications with a logged outcome. This is unique to your account - not a generic model.</p>`
+      : fallbackNote;
+  }
+
+  // ---- Self-audit: is personalization actually helping? Free
+  // computation (no API call), so it renders immediately, same
+  // pattern as the interaction-effects panel below. ----
+  const auditContainer = document.getElementById('auditContent');
+  const audit = getPersonalizationAuditJS();
+  if(audit.verdict === 'insufficient_data'){
+    auditContainer.innerHTML = `<p class="insight-neutral-note">${audit.note}</p>`;
+  } else {
+    const VERDICT_COPY = {
+      helping: { label: 'Helping', text: `Personalization is measurably reducing your average calibration error - across ${audit.sampleSize} applications where it actually changed your score, the personalized number tracked your real outcomes more closely than a non-personalized score would have.` },
+      hurting: { label: 'Hurting', text: `Personalization is measurably making your scores LESS accurate right now - across ${audit.sampleSize} applications where it actually changed your score, a non-personalized number would have tracked your real outcomes more closely. This gets checked continuously and will correct itself as more outcomes come in.` },
+      neutral: { label: 'No clear effect yet', text: `Across ${audit.sampleSize} applications where personalization changed your score, it hasn't made a clear, consistent difference to how well your scores actually predicted what happened - not obviously helping, not obviously hurting.` },
+    };
+    const copy = VERDICT_COPY[audit.verdict];
+    const excludedNote = audit.totalWithData > audit.sampleSize
+      ? `<p class="insight-neutral-note" style="margin-top:8px;">Based on ${audit.sampleSize} of your ${audit.totalWithData} applications with a logged outcome - the rest weren't included because personalization didn't change their score enough to compare.</p>`
+      : '';
+    auditContainer.innerHTML = `<span class="audit-verdict-tag ${audit.verdict}">${copy.label}</span><p class="insight-neutral-note">${copy.text}</p><p class="insight-neutral-note" style="margin-top:8px;">Average error - personalized: ${audit.personalizedAvgError}, non-personalized: ${audit.baselineAvgError} (lower is better).</p>${excludedNote}`;
+  }
+
+  // ---- Deep, content-aware personalization insights - the genuine
+  // depth upgrade beyond factor-category multipliers above. On-demand
+  // since it's a real Claude call reading actual application text,
+  // not a free computation like the numeric panel above. ----
+  const deepContainer = document.getElementById('deepInsightsContent');
+  const appsWithDraftAndOutcome = getApplications().filter(a => a.draft && a.outcome_status);
+  if(appsWithDraftAndOutcome.length < 3){
+    deepContainer.innerHTML = `<p class="insight-neutral-note">Log outcomes on at least 3 applications with a real drafted application (not just a bare score) and Kaidostar can look for real patterns in what you've actually written - not just which categories of signal matter, but which specific phrasings, emphases, or structures correlate with success. You have ${appsWithDraftAndOutcome.length} of 3 needed.</p>`;
+  } else {
+    deepContainer.innerHTML = `<button class="btn ghost" id="deepInsightsBtn">Find patterns in what I've actually written</button><div id="deepInsightsResult"></div>`;
+    document.getElementById('deepInsightsBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('deepInsightsBtn');
+      const resultEl = document.getElementById('deepInsightsResult');
+      btn.disabled = true; btn.textContent = 'Reading your applications...';
+      resultEl.innerHTML = `<p class="insight-neutral-note" style="margin-top:12px;">Analyzing ${appsWithDraftAndOutcome.length} real applications...</p>`;
+      const result = await generateDeepPersonalizationInsightsJS();
+      btn.disabled = false; btn.textContent = 'Find patterns in what I\'ve actually written';
+      if(!result || !result.insights){
+        resultEl.innerHTML = `<p class="insight-neutral-note" style="margin-top:12px; color:var(--danger);">Couldn't generate this just now - try again in a moment.</p>`;
+        return;
+      }
+      const confidenceLabel = { low: 'Low confidence', moderate: 'Moderate confidence', high: 'High confidence' }[result.confidence] || '';
+      const flaggedSet = new Set(result.flaggedInsightIndices || []);
+      const insightsHtml = result.insights.map((text, i) => `<div class="deep-insight-item">${flaggedSet.has(i) ? `<p style="font-size:11px; color:var(--danger); margin-bottom:6px;">References an application number that couldn't be verified - double check this one.</p>` : ''}<p>${escapeForHtml(text)}</p></div>`).join('');
+      resultEl.innerHTML = `<div style="margin-top:14px;">${confidenceLabel ? `<span class="confidence-tag ${result.confidence}">${confidenceLabel}</span>` : ''}${insightsHtml}<p class="insight-neutral-note" style="margin-top:8px;">Based on reading ${result.sampleSize} real applications you actually sent.</p></div>`;
+    });
+  }
+
+  // ---- Genuine strategic-position synthesis - not another
+  // per-listing score, but a real read on where someone stands given
+  // everything they've actually done, and whether their real actions
+  // compound. On-demand since it's a real Claude call synthesizing
+  // across a person's full, real history. ----
+  document.getElementById('strategicPositionBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('strategicPositionBtn');
+    const contentEl = document.getElementById('strategicPositionContent');
+    btn.disabled = true; btn.textContent = 'Analyzing your real position...';
+    const realApplications = getApplications();
+    const realSavedListings = [...getSavedIds()].map(id => LISTINGS.find(l => String(l.id) === String(id))).filter(Boolean);
+    const result = await getOrAnalyzeStrategicPositionJS(profile, roadmapMilestones, realApplications, realSavedListings, getEngagementSuggestions());
+    if(!result){
+      contentEl.innerHTML = `<p class="insight-neutral-note" style="color:var(--danger);">Couldn't generate this just now - try again in a moment.</p>`;
+      return;
+    }
+    const compoundingHtml = result.has_genuine_compounding
+      ? `<div style="margin-top:12px;"><p style="font-weight:600; margin-bottom:6px;">How your real actions are building on each other:</p>${result.compounding_connections.map(c => `<p class="insight-neutral-note" style="margin-bottom:4px;">${escapeForHtml(c)}</p>`).join('')}</div>`
+      : `<p class="insight-neutral-note" style="margin-top:12px; font-style:italic;">Your real actions so far don't yet build on each other in a specific, checkable way - that's honest, useful information, not a failure.</p>`;
+    const momentum = result.momentum_since_last_check;
+    const momentumHtml = momentum
+      ? `<div style="margin-bottom:14px; padding:10px 14px; border-radius:10px; background:${momentum.changed ? 'rgba(63,185,80,0.08)' : 'var(--void)'}; border:1px solid ${momentum.changed ? 'rgba(63,185,80,0.3)' : 'var(--line)'};">
+          <p style="font-weight:600; margin-bottom:2px; color:${momentum.changed ? '#3fb950' : 'var(--text-faint)'};">${momentum.changed ? 'Since your last check' : 'Since your last check - no real change yet'}</p>
+          <p class="insight-neutral-note">${escapeForHtml(momentum.summary)}</p>
+        </div>`
+      : '';
+    contentEl.innerHTML = `
+      ${momentumHtml}
+      <p>${escapeForHtml(result.current_position)}</p>
+      ${compoundingHtml}
+      <div style="margin-top:14px; padding:14px; border-radius:10px; background:var(--void); border:1px solid var(--line);">
+        <p style="font-weight:600; margin-bottom:4px;">Your highest-leverage next move</p>
+        <p style="margin-bottom:6px;">${escapeForHtml(result.next_move.action)}</p>
+        <p class="insight-neutral-note">${escapeForHtml(result.next_move.why_this_compounds)}</p>
+      </div>`;
+  });
+
+  // ---- Interaction effects - a real step beyond the single-factor
+  // panel above. Free computation (no API call), so it renders
+  // immediately rather than needing a trigger button. ----
+  const interactionsContainer = document.getElementById('interactionsContent');
+  const appsForInteractions = getApplications().filter(a => a.outcome_status && a.factors_snapshot);
+  if(appsForInteractions.length < 6){
+    interactionsContainer.innerHTML = `<p class="insight-neutral-note">Interaction effects need more real data than single-factor learning to say anything concrete - at least 6 applications with a logged outcome. You have ${appsForInteractions.length}.</p>`;
+  } else {
+    const interactions = getFactorInteractionsJS();
+    if(interactions.length === 0){
+      const FACTOR_LABELS = { skillFit: 'skill overlap', semanticFit: 'conceptual fit', goalFit: 'stated goal match', descriptionFit: 'posting depth', locationFit: 'location match', deadlineUrgency: 'deadline timing', roadmapFit: 'roadmap alignment' };
+      const readiness = getInteractionReadiness(appsForInteractions);
+      const closest = readiness.filter(r => !r.ready).sort((a,b) => {
+        const aMax = Math.max(a.bothEngaged.stillNeeded, ...Object.keys(a).filter(k => k.endsWith('Only')).map(k => a[k].stillNeeded));
+        const bMax = Math.max(b.bothEngaged.stillNeeded, ...Object.keys(b).filter(k => k.endsWith('Only')).map(k => b[k].stillNeeded));
+        return aMax - bMax;
+      })[0];
+      let detailLine = '';
+      if(closest){
+        const bottlenecks = [['both signals together', closest.bothEngaged.stillNeeded], ...Object.keys(closest).filter(k => k.endsWith('Only')).map(k => [FACTOR_LABELS[k.replace('Only','')] || k.replace('Only',''), closest[k].stillNeeded])].filter(([,n]) => n > 0);
+        if(bottlenecks.length){
+          const parts = bottlenecks.map(([label, n]) => `${n} more with ${label}`).join(' and ');
+          detailLine = ` The closest is <b>${closest.pair}</b> - needs ${parts} to say anything concrete.`;
+        }
+      }
+      interactionsContainer.innerHTML = `<p class="insight-neutral-note">Based on ${appsForInteractions.length} applications with a logged outcome, no factor combination stands out yet as working together (or against each other) beyond what each predicts on its own.${detailLine} This isn't just about logging more outcomes in general - it specifically needs a wider mix of which signals show up together across your applications.</p>`;
+    } else {
+      const interactionsHtml = interactions.map(f => {
+        if(f.type === 'synergy'){
+          return `<div class="interaction-card synergy"><p><span class="interaction-type-tag synergy">Synergy</span>When <b>${f.pair}</b> are both strong together, your real success rate is ${Math.round(f.bothEngagedRate*100)}% - well above the ${Math.round(f.expectedIfAdditive*100)}% you'd expect if the two signals just added up independently. Kaidostar now specifically looks for this combination, not just either signal alone.</p></div>`;
+        }
+        return `<div class="interaction-card redundant"><p><span class="interaction-type-tag redundant">Overlapping</span><b>${f.pair}</b> mostly tell Kaidostar the same thing for you - when both are strong together, your real success rate is ${Math.round(f.bothEngagedRate*100)}%, versus the ${Math.round(f.expectedIfAdditive*100)}% you'd expect from either signal alone. Having both doesn't predict better than having just one.</p></div>`;
+      }).join('');
+      interactionsContainer.innerHTML = interactionsHtml + `<p class="insight-neutral-note" style="margin-top:8px;">Based on ${appsForInteractions.length} applications with a logged outcome.</p>`;
+    }
+  }
+
+  {
+    const engagementSuggestions = getEngagementSuggestions();
+    const engagementContainer = document.getElementById('engagementSummaryContent');
+    if(engagementSuggestions.length === 0){
+      engagementContainer.innerHTML = `<p class="insight-neutral-note">Nothing drafted yet. <a href="workshop.html" style="color:var(--gold);">Paste in a real post you found</a> to get a thoughtful reply drafted for you.</p>`;
+    } else {
+      const accepted = engagementSuggestions.filter(s => s.status === 'accepted');
+      const withFollowUp = accepted.filter(s => (s.communication_log || []).length > 0);
+      engagementContainer.innerHTML = `
+        <div class="pipeline-stats-row">
+          <div class="pipeline-stat"><p class="pipeline-stat-num">${engagementSuggestions.length}</p><p class="pipeline-stat-label">Drafted</p></div>
+          <div class="pipeline-stat"><p class="pipeline-stat-num">${accepted.length}</p><p class="pipeline-stat-label">Posted</p></div>
+          <div class="pipeline-stat"><p class="pipeline-stat-num">${withFollowUp.length}</p><p class="pipeline-stat-label">Led to a real reply</p></div>
+        </div>
+        <a href="workshop.html" style="color:var(--gold); font-size:12.5px; display:inline-block; margin-top:10px;">Review in Workshop &rarr;</a>`;
+    }
+  }
+
+  {
+    const strain = detectSearchStrainPattern();
+    if(strain){
+      document.getElementById('searchStrainNote').textContent = strain.note;
+      document.getElementById('searchStrainPanel').style.display = 'block';
+    }
+  }
+
+  injectMetisWidget(function(){
+    let ctx = `You are Metis, the built-in career guide inside "Kaidostar". Answer questions about the user's overall progress, statistics, and what to focus on next. Be concise and practical.\n\n`;
+    ctx += `The user's goal: "${profile.northstar}". Current potential score: ${potential}/100 (roadmap progress ${roadmapProgress}%, skill strength ${skillStrength}%, match quality ${matchQuality}%). ${pendingApps} applications need review, ${draftedOutreach} outreach emails are drafted and unsent.`;
+    return ctx;
+  }, {
+    subtitle: 'Your AI career guide',
+    greeting: "Hi - I can help you make sense of your overall progress and what to prioritize next. What's on your mind?",
+    suggestions: [
+      { label: "What should I focus on?", q: 'Looking at my overall stats, what should I actually focus on next?' },
+      { label: "Why is my potential score what it is?", q: 'Explain my potential score breakdown and what would move it up the most.' },
+    ],
+  });
+}
+
+renderOverview();
+</script>
+<script>
+// Visible tier switcher (preview - no payment) so plan differences are testable everywhere.
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+</body>
+</html>

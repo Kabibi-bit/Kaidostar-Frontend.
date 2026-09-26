@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your plan — Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .plan-page{ max-width: 860px; margin: 0 auto; }
+  .plan-hero{ display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+    background: var(--surface, #16161f); border:1px solid var(--line,#2a2a36); border-radius:18px; padding:24px 26px; margin-bottom:22px; position:relative; overflow:hidden; }
+  .plan-hero::after{ content:''; position:absolute; right:-50px; top:-50px; width:200px; height:200px; border-radius:50%; background:radial-gradient(circle, var(--pc-glow, rgba(139,124,246,.14)), transparent 70%); pointer-events:none; }
+  .plan-current{ position:relative; }
+  .plan-eyebrow{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.09em; text-transform:uppercase; color:var(--text-faint,#778); margin-bottom:6px; }
+  .plan-tier-name{ font-family:'Space Grotesk',sans-serif; font-size:32px; font-weight:800; color:var(--pc,#8B7CF6); line-height:1; }
+  .plan-tier-price{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-dim,#aab); margin-top:6px; }
+  .plan-tier-tagline{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-dim,#aab); margin-top:10px; max-width:440px; }
+  .plan-hero-cta{ position:relative; }
+  .plan-upgrade-btn{ display:inline-block; font-family:'Manrope',sans-serif; font-weight:700; font-size:13px; text-decoration:none; color:#0b0b0f; background:var(--gold,#F0B24E); border-radius:10px; padding:11px 20px; }
+  .plan-manage-note{ font-family:'Manrope',sans-serif; font-size:11px; color:var(--text-faint,#778); margin-top:8px; text-align:right; }
+  .plan-section-label{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-faint,#778); margin:26px 0 12px; }
+  /* usage cards */
+  .usage-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap:12px; }
+  .usage-card{ background:var(--surface,#16161f); border:1px solid var(--line,#2a2a36); border-radius:12px; padding:15px 16px; }
+  .usage-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:9px; }
+  .usage-name{ font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--text,#eee); }
+  .usage-count{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim,#aab); }
+  .usage-count .unl{ color:var(--aurora,#40C0A0); }
+  .usage-bar{ height:7px; border-radius:6px; background:var(--void,#0e0e14); overflow:hidden; }
+  .usage-bar > i{ display:block; height:100%; border-radius:6px; transition:width .8s cubic-bezier(.2,.8,.2,1); }
+  .usage-sub{ font-family:'Manrope',sans-serif; font-size:11px; color:var(--text-faint,#778); margin-top:7px; }
+  /* included features */
+  .feat-list{ display:grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap:8px 20px; }
+  .feat-item{ display:flex; align-items:flex-start; gap:9px; font-family:'Manrope',sans-serif; font-size:13px; line-height:1.4; padding:5px 0; }
+  .feat-item .mark{ flex:0 0 auto; margin-top:1px; }
+  .feat-item.on{ color:var(--text,#eee); }
+  .feat-item.off{ color:var(--text-faint,#667); }
+  .feat-item.on .mark{ color:var(--aurora,#40C0A0); }
+  .feat-item.off .mark{ color:var(--text-faint,#556); }
+  .plan-honest{ font-family:'Manrope',sans-serif; font-size:11.5px; font-style:italic; color:var(--text-faint,#778); margin-top:26px; line-height:1.6; }
+  .plan-compare-link{ color:var(--gold,#F0B24E); text-decoration:none; }
+  @media (max-width:560px){ .plan-hero{ flex-direction:column; align-items:flex-start; } .plan-hero-cta{ align-self:stretch; } .plan-upgrade-btn{ display:block; text-align:center; } .plan-manage-note{ text-align:left; } }
+
+/* ==== SHARED VISUAL ELEVATION (marketing) ==== */
+.nebula{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.neb{ position:absolute; border-radius:50%; filter: blur(90px); opacity:0.45; will-change:transform; }
+.neb-aurora{ width:620px; height:620px; top:-160px; right:-120px; background: radial-gradient(circle, rgba(95,224,184,0.26), transparent 68%); animation: nebFloatA 26s ease-in-out infinite; }
+.neb-violet{ width:720px; height:720px; top:220px; left:-260px; background: radial-gradient(circle, rgba(155,135,245,0.28), transparent 68%); animation: nebFloatB 32s ease-in-out infinite; }
+.neb-gold{ width:460px; height:460px; top:60%; right:6%; background: radial-gradient(circle, rgba(240,178,78,0.16), transparent 70%); animation: nebFloatC 38s ease-in-out infinite; }
+@keyframes nebFloatA{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-40px,50px) scale(1.08);} }
+@keyframes nebFloatB{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(60px,-40px) scale(1.1);} }
+@keyframes nebFloatC{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-30px,-30px) scale(1.05);} }
+@media (prefers-reduced-motion: reduce){ .neb{ animation:none; } }
+.mkt-nav, .wrap, .mkt-footer, .plan-page{ position:relative; z-index:2; }
+#starfield{ z-index:1; }
+.mkt-nav{ background: rgba(11,12,31,0.72); backdrop-filter: blur(16px) saturate(1.2); }
+.mkt-cta-signup, .hero-cta-primary{ box-shadow: 0 8px 24px -6px rgba(240,178,78,0.5), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease; }
+.mkt-cta-signup:hover, .hero-cta-primary:hover{ transform: translateY(-2px); box-shadow: 0 14px 34px -6px rgba(240,178,78,0.65), inset 0 1px 0 rgba(255,255,255,0.4); }
+html{ scroll-behavior:smooth; }
+.neb{ filter:none !important; }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div class="nebula" aria-hidden="true">
+  <div class="neb neb-aurora"></div>
+  <div class="neb neb-violet"></div>
+  <div class="neb neb-gold"></div>
+</div>
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page plan-page">
+    <div class="page-head">
+      <div class="eyebrow">Account</div>
+      <h1>Your membership</h1>
+      <p class="sub">What you're on, what it includes, and how much you've used today.</p>
+    </div>
+
+    <div id="planContent"></div>
+  </div>
+</div>
+
+<div id="diagRoot"></div>
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script>
+window.addEventListener("error", function(e){ var m="Script error: "+e.message; if(!document.getElementById("diagBanner")){var b=document.createElement("div");b.id="diagBanner";b.style.cssText="position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px;font-family:monospace;font-size:13px;text-align:center;";b.textContent="Kaidostar failed to load - "+m;document.body.prepend(b);} });
+</script>
+<script>
+initStarfield();
+renderNav('plan');
+
+// Colour per tier for the hero accent.
+const TIER_COLOR = { free: 'var(--aurora, #40C0A0)', pro: 'var(--violet, #8B7CF6)', max: 'var(--gold, #F0B24E)' };
+const TIER_GLOW = { free: 'rgba(64,192,160,.14)', pro: 'rgba(139,124,246,.14)', max: 'rgba(240,178,78,.14)' };
+
+// The per-feature usage rows we show (label -> tier caps live in TIERS[t].featureCaps).
+const USAGE_ROWS = [
+  { key: 'roadmaps', label: 'Roadmaps', action: 'roadmap-generate' },
+  { key: 'essay reviews', label: 'Essay reviews', action: 'essay-polish' },
+  { key: 'match explanations', label: 'Match explanations', action: 'deep-explain' },
+];
+
+function barColor(pct){
+  return pct >= 0.9 ? 'var(--gold, #F0B24E)' : pct >= 0.66 ? 'var(--violet, #8B7CF6)' : 'var(--aurora, #40C0A0)';
+}
+
+function render(tier, usageMap){
+  const info = (typeof getTierInfo === 'function') ? getTierInfo(tier) : (TIERS[tier] || TIERS.free);
+  const color = TIER_COLOR[tier] || TIER_COLOR.free;
+  const isTop = tier === 'max';
+
+  // Hero: current tier + upgrade path.
+  const nextTier = tier === 'free' ? 'pro' : tier === 'pro' ? 'max' : null;
+  const upgradeCta = nextTier
+    ? `<div class="plan-hero-cta"><a class="plan-upgrade-btn" href="site-pricing.html">Upgrade to ${TIERS[nextTier].name} &rarr;</a><div class="plan-manage-note">Billing isn't live yet - this is a preview.</div></div>`
+    : `<div class="plan-hero-cta"><div class="plan-manage-note">You're on the top plan. Thank you!</div></div>`;
+
+  const hero = `
+    <div class="plan-hero" style="--pc:${color}; --pc-glow:${TIER_GLOW[tier]};">
+      <div class="plan-current">
+        <div class="plan-eyebrow">Current plan</div>
+        <div class="plan-tier-name">${info.name}</div>
+        <div class="plan-tier-price">${info.price ? '$'+info.price+'/mo' : 'Free'}</div>
+        <div class="plan-tier-tagline">${info.tagline || ''}</div>
+      </div>
+      ${upgradeCta}
+    </div>`;
+
+  // Usage bars (only meaningful for gated/limited features; unlimited shows a full bar).
+  const usageCards = USAGE_ROWS.map(row => {
+    const cap = (info.featureCaps || {})[row.key];
+    const unlimited = cap === 'Unlimited' || (typeof cap === 'number' && cap >= 1000);
+    const used = usageMap ? (usageMap[row.action] || 0) : null;
+    if(cap == null) return '';
+    if(unlimited){
+      return `<div class="usage-card">
+        <div class="usage-top"><span class="usage-name">${row.label}</span><span class="usage-count"><span class="unl">Unlimited</span></span></div>
+        <div class="usage-bar"><i style="width:100%; background:var(--aurora,#40C0A0); opacity:.5;"></i></div>
+        <div class="usage-sub">No daily limit on your plan.</div>
+      </div>`;
+    }
+    const capNum = typeof cap === 'number' ? cap : parseInt(cap) || 0;
+    const known = used !== null;
+    const pct = known && capNum ? Math.min(1, used / capNum) : 0;
+    const countTxt = known ? `${used} / ${capNum} today` : `${capNum} / day`;
+    return `<div class="usage-card">
+      <div class="usage-top"><span class="usage-name">${row.label}</span><span class="usage-count">${countTxt}</span></div>
+      <div class="usage-bar"><i style="width:${known ? Math.max(4, pct*100) : 0}%; background:${barColor(pct)};"></i></div>
+      <div class="usage-sub">${known ? (used >= capNum ? "You've hit today's limit - resets tomorrow." : `${capNum - used} left today.`) : 'Your daily allowance.'}</div>
+    </div>`;
+  }).join('');
+
+  // Included features (from the tier display list).
+  const feats = (info.display || []).map(d =>
+    `<div class="feat-item ${d[1] ? 'on' : 'off'}"><span class="mark">${d[1] ? '&#10003;' : '&mdash;'}</span><span>${d[0]}</span></div>`
+  ).join('');
+
+  document.getElementById('planContent').innerHTML = `
+    ${hero}
+    <div class="plan-section-label">Daily usage</div>
+    <div class="usage-grid">${usageCards}</div>
+    <div class="plan-section-label">What ${info.name} includes</div>
+    <div class="feat-list">${feats}</div>
+    <p class="plan-honest">Usage counts reflect your real activity today and reset daily. Limits protect the service for everyone and keep costs honest - your plan's numbers are exactly what's enforced, nothing hidden. See the full <a class="plan-compare-link" href="site-pricing.html">plan comparison &rarr;</a>.</p>`;
+}
+
+// Render immediately from the local tier (instant, offline-safe), then refine
+// with real usage + tier from the backend when logged in.
+(function(){
+  const localTier = (typeof getTier === 'function') ? getTier() : 'free';
+  render(localTier, null);
+  (async () => {
+    try {
+      const s = (typeof getSession === 'function') ? getSession() : null;
+      if(!s || !s.user_id || typeof apiGetTier !== 'function') return;
+      const info = await apiGetTier(s.user_id);
+      if(!info) return;
+      const tier = info.tier || localTier;
+      // Build a usage map (display label -> used_today) from the backend's real
+      // per-feature counts, so the bars show actual usage, not just the caps.
+      let usageMap = null;
+      if(info.feature_usage){
+        usageMap = {};
+        // map display labels back to the action keys render() expects
+        const labelToAction = { 'roadmaps':'roadmap-generate', 'essay reviews':'essay-polish', 'match explanations':'deep-explain' };
+        for(const [label, u] of Object.entries(info.feature_usage)){
+          const action = labelToAction[label];
+          if(action) usageMap[action] = u.used_today || 0;
+        }
+      }
+      render(tier, usageMap);
+    } catch(e){ /* offline - local render already shown */ }
+  })();
+})();
+</script>
+</body>
+</html>

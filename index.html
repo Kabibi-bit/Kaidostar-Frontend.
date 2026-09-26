@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kaidostar — Find the direct path to your goal</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.mkt-nav{ position: sticky; top:0; z-index: 60; background: rgba(11,12,31,0.85); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.mkt-nav-inner{ display:flex; align-items:center; justify-content:space-between; padding: 16px 0; }
+.mkt-logo{ display:flex; align-items:center; gap:10px; text-decoration:none; }
+.mkt-logo-word{ font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:16px; letter-spacing:0.06em; color: var(--text); }
+.mkt-links{ display:flex; align-items:center; gap:28px; }
+.mkt-link{ font-family:'Manrope', sans-serif; font-size:13.5px; color: var(--text-dim); text-decoration:none; }
+.mkt-link:hover{ color: var(--text); }
+.mkt-cta{ display:flex; align-items:center; gap:14px; }
+.mkt-cta-signup{ background: linear-gradient(135deg, #F7C878, #EAA23C); color:#241704; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px; padding:9px 20px; border-radius:999px; text-decoration:none; }
+
+.hero{ padding: 90px 0 70px; position:relative; }
+.hero-grid{ display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 48px; align-items:center; }
+@media (max-width: 920px){ .hero-grid{ grid-template-columns: 1fr; gap: 24px; } }
+.hero-inner{ max-width: 620px; }
+.hero-eyebrow{ font-family:'JetBrains Mono', monospace; font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color: var(--gold); margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+.hero h1{ font-family:'Space Grotesk', sans-serif; font-weight:800; font-size: 52px; line-height:1.08; letter-spacing:-0.01em; color: var(--text); margin: 0 0 22px; }
+.hero h1 .accent{ background: linear-gradient(135deg, #F7C878, #EAA23C); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.hero p.lede{ font-family:'Manrope', sans-serif; font-size: 18px; line-height:1.6; color: var(--text-dim); max-width: 560px; margin: 0 0 34px; }
+.hero-ctas{ display:flex; gap:14px; flex-wrap:wrap; }
+.hero-cta-primary{ background: linear-gradient(135deg, #F7C878, #EAA23C); color:#241704; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; padding:14px 28px; border-radius:999px; text-decoration:none; }
+.hero-cta-secondary{ border: 1px solid var(--line); color: var(--text-dim); font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; padding:14px 28px; border-radius:999px; text-decoration:none; }
+.hero-cta-secondary:hover{ border-color: var(--gold); color: var(--gold); }
+
+.path-visual{ position: relative; height: 360px; width:100%; }
+.path-node{ position:absolute; }
+.path-node .dot{ width:14px; height:14px; border-radius:50%; box-shadow: 0 0 18px 2px currentColor; }
+.path-node .label{ position:absolute; top:20px; left:50%; transform:translateX(-50%); font-family:'JetBrains Mono', monospace; font-size:10.5px; color: var(--text-faint); white-space:nowrap; }
+.path-node.active .label{ color: var(--gold); }
+
+.section{ padding: 70px 0; border-top: 1px solid var(--line-soft); }
+.section-eyebrow{ font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color: var(--text-faint); margin-bottom:12px; }
+.section h2{ font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:32px; color:var(--text); margin:0 0 14px; letter-spacing:-0.01em; }
+.section p.section-lede{ font-family:'Manrope', sans-serif; font-size:15.5px; color: var(--text-dim); max-width:560px; line-height:1.6; margin:0 0 44px; }
+
+.steps-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+@media (max-width: 900px){ .steps-row{ grid-template-columns: 1fr 1fr; } }
+.step-card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 22px; position:relative; }
+.step-num{ font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:13px; color: var(--gold); letter-spacing:0.04em; margin-bottom:14px; }
+.step-card h3{ font-family:'Space Grotesk', sans-serif; font-size:16px; font-weight:700; color:var(--text); margin:0 0 8px; }
+.step-card p{ font-family:'Manrope', sans-serif; font-size:13px; color:var(--text-dim); line-height:1.55; margin:0; }
+
+.role-grid-mkt{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+@media (max-width: 900px){ .role-grid-mkt{ grid-template-columns: 1fr 1fr; } }
+.role-card-mkt{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px 24px; text-decoration:none; display:block; transition: all .2s ease; }
+.role-card-mkt:hover{ border-color: var(--gold); transform: translateY(-2px); }
+.role-card-mkt .ricon{ font-size: 30px; margin-bottom:16px; }
+.role-card-mkt h3{ font-family:'Space Grotesk', sans-serif; font-size:16px; font-weight:700; color:var(--text); margin:0 0 8px; }
+.role-card-mkt p{ font-family:'Manrope', sans-serif; font-size:13px; color:var(--text-dim); line-height:1.55; margin:0; }
+
+.feature-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+@media (max-width: 900px){ .feature-grid{ grid-template-columns: 1fr; } }
+.feature-card{ background: var(--void); border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 26px; }
+.feature-card .ficon{ width:38px; height:38px; border-radius:10px; background: var(--gold-dim); color: var(--gold); display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:16px; }
+.feature-card h3{ font-family:'Space Grotesk', sans-serif; font-size:15px; font-weight:700; color:var(--text); margin:0 0 8px; }
+.feature-card p{ font-family:'Manrope', sans-serif; font-size:13px; color:var(--text-dim); line-height:1.55; margin:0; }
+
+.cta-band{ background: var(--panel); border: 1px solid var(--gold); border-radius: 24px; padding: 56px 48px; text-align:center; }
+.cta-band h2{ font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:28px; color:var(--text); margin:0 0 14px; }
+.cta-band p{ font-family:'Manrope', sans-serif; font-size:14.5px; color:var(--text-dim); margin:0 0 28px; }
+
+.mkt-footer{ border-top: 1px solid var(--line-soft); padding: 40px 0; }
+.mkt-footer-inner{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+.mkt-footer-links{ display:flex; gap:24px; }
+.mkt-footer-links a{ font-family:'Manrope', sans-serif; font-size:12.5px; color: var(--text-faint); text-decoration:none; }
+.mkt-footer-links a:hover{ color: var(--text-dim); }
+
+/* ---------- Interactive / scroll-reveal enhancements (Adobe-style) ---------- */
+.reveal{ opacity:0; transform: translateY(28px); transition: opacity .7s cubic-bezier(.2,.7,.3,1), transform .7s cubic-bezier(.2,.7,.3,1); }
+.reveal.seen{ opacity:1; transform:none; }
+.reveal.d1{ transition-delay:.08s; } .reveal.d2{ transition-delay:.16s; } .reveal.d3{ transition-delay:.24s; } .reveal.d4{ transition-delay:.32s; }
+@media (prefers-reduced-motion: reduce){ .reveal{ opacity:1; transform:none; transition:none; } }
+
+.step-card, .feature-card{ transition: transform .2s cubic-bezier(.2,.7,.3,1), border-color .2s ease, box-shadow .2s ease; }
+.step-card:hover, .feature-card:hover{ transform: translateY(-4px); border-color: var(--gold); box-shadow: 0 18px 40px -24px rgba(240,178,78,0.4); }
+.step-card::after{ content:''; position:absolute; left:0; right:0; bottom:0; height:2px; background: linear-gradient(90deg, var(--gold), var(--violet)); border-radius:0 0 var(--radius) var(--radius); transform: scaleX(0); transform-origin:left; transition: transform .3s ease; }
+.step-card:hover::after{ transform: scaleX(1); }
+.feature-card .ficon{ transition: transform .3s cubic-bezier(.2,.7,.3,1); }
+.feature-card:hover .ficon{ transform: scale(1.12) rotate(-6deg); }
+
+/* animated stat band */
+.stat-band{ display:grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 8px; }
+@media (max-width:780px){ .stat-band{ grid-template-columns:1fr; gap:16px; } }
+.stat-cell{ text-align:center; padding: 26px 18px; background: var(--panel); border:1px solid var(--line); border-radius: var(--radius); }
+.stat-num{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:40px; letter-spacing:-0.02em; background: linear-gradient(120deg,#F7C878,#9B87F5,#5FE0B8); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.stat-label{ font-family:'Manrope',sans-serif; font-size:13px; color: var(--text-dim); margin-top:6px; }
+
+/* CTA band shimmer */
+.cta-band{ position:relative; overflow:hidden; }
+.cta-band::before{ content:''; position:absolute; inset:-40%; background: conic-gradient(from 0deg, transparent, rgba(240,178,78,0.10), transparent 30%); animation: spin 9s linear infinite; }
+@keyframes spin{ to{ transform: rotate(360deg); } }
+.cta-band > *{ position:relative; z-index:1; }
+.hero-cta-primary{ transition: transform .12s ease, filter .15s ease, box-shadow .2s ease; box-shadow: 0 10px 30px -10px rgba(240,178,78,0.5); }
+.hero-cta-primary:hover{ transform: translateY(-2px); filter:brightness(1.06); box-shadow:0 16px 40px -12px rgba(240,178,78,0.6); }
+
+/* Mobile nav: prevent horizontal overflow on phones (real bug found in audit) */
+@media (max-width: 560px){
+  .mkt-links{ display:none; }
+  .mkt-nav-inner{ padding: 12px 0; gap: 10px; }
+  .mkt-cta{ gap: 10px; }
+  .mkt-cta-signup{ padding: 8px 14px; font-size: 12.5px; }
+  .mkt-logo-word{ font-size: 15px; }
+}
+
+/* ============================================================
+   VISUAL ELEVATION LAYER — atmosphere, depth, motion, finish
+   Additive only. Builds on the existing night-sky palette.
+   ============================================================ */
+
+/* --- Nebula atmosphere behind everything (the "space" made real) --- */
+.nebula{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.neb{ position:absolute; border-radius:50%;  opacity:0.5; will-change:transform; }
+.neb-aurora{ width:620px; height:620px; top:-160px; right:-120px;
+  background: radial-gradient(circle, rgba(95,224,184,0.28), transparent 68%);
+  animation: nebFloatA 26s ease-in-out infinite; }
+.neb-violet{ width:720px; height:720px; top:180px; left:-240px;
+  background: radial-gradient(circle, rgba(155,135,245,0.30), transparent 68%);
+  animation: nebFloatB 32s ease-in-out infinite; }
+.neb-gold{ width:460px; height:460px; top:520px; right:8%;
+  background: radial-gradient(circle, rgba(240,178,78,0.18), transparent 70%);
+  animation: nebFloatC 38s ease-in-out infinite; }
+@keyframes nebFloatA{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-40px,50px) scale(1.08);} }
+@keyframes nebFloatB{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(60px,-40px) scale(1.1);} }
+@keyframes nebFloatC{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(-30px,-30px) scale(1.05);} }
+@media (prefers-reduced-motion: reduce){ .neb{ animation:none; } }
+
+/* keep content above the atmosphere */
+.mkt-nav, .wrap, .mkt-footer{ position:relative; z-index:2; }
+#starfield{ z-index:1; }
+
+/* --- Hero headline: living gradient shimmer on the accent --- */
+.hero h1 .accent{
+  background: linear-gradient(100deg, #F7C878 0%, #EAA23C 30%, #F7D89A 50%, #EAA23C 70%, #F7C878 100%);
+  background-size: 220% auto;
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  animation: shimmerText 6s linear infinite;
+}
+@keyframes shimmerText{ 0%{ background-position: 0% center; } 100%{ background-position: 220% center; } }
+@media (prefers-reduced-motion: reduce){ .hero h1 .accent{ animation:none; } }
+
+/* --- Primary CTA: depth + glow + lift --- */
+.hero-cta-primary, .mkt-cta-signup{
+  box-shadow: 0 8px 24px -6px rgba(240,178,78,0.5), inset 0 1px 0 rgba(255,255,255,0.35);
+  transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease;
+}
+.hero-cta-primary:hover, .mkt-cta-signup:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px -6px rgba(240,178,78,0.65), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.hero-cta-secondary{ transition: border-color .2s ease, color .2s ease, transform .2s ease, background .2s ease; }
+.hero-cta-secondary:hover{ border-color: var(--violet); color: var(--text); transform: translateY(-2px); background: var(--violet-dim); }
+
+/* --- Cards: gradient hairline border + glass depth + glow-lift on hover --- */
+.step-card, .feature-card, .role-card-mkt{
+  position:relative;
+  background:
+    linear-gradient(180deg, rgba(30,33,64,0.55), rgba(23,25,51,0.75));
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 2px 20px -12px rgba(0,0,0,0.8);
+  transition: transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s ease, border-color .22s ease;
+  overflow:hidden;
+}
+/* animated gradient hairline edge */
+.step-card::before, .feature-card::before, .role-card-mkt::before{
+  content:''; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background: linear-gradient(135deg, rgba(155,135,245,0.5), rgba(95,224,184,0.25) 40%, transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity:0.6; transition:opacity .22s ease; pointer-events:none;
+}
+.step-card:hover, .feature-card:hover, .role-card-mkt:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px -16px rgba(95,224,184,0.28), 0 4px 20px -10px rgba(0,0,0,0.9);
+  border-color: rgba(95,224,184,0.15);
+}
+.step-card:hover::before, .feature-card:hover::before, .role-card-mkt:hover::before{ opacity:1; }
+
+/* feature icon: subtle inner glow */
+.feature-card .ficon{ box-shadow: inset 0 0 0 1px rgba(240,178,78,0.25), 0 0 18px -6px rgba(240,178,78,0.5); }
+
+/* --- Section headings: refined tracking + a faint accent underline on eyebrows --- */
+.hero-eyebrow, .section-eyebrow{ position:relative; }
+
+/* --- CTA band: make it a real showpiece with a soft aurora wash --- */
+.cta-band{
+  background:
+    radial-gradient(circle at 30% 20%, rgba(155,135,245,0.14), transparent 55%),
+    radial-gradient(circle at 75% 90%, rgba(95,224,184,0.12), transparent 55%),
+    linear-gradient(180deg, rgba(30,33,64,0.6), rgba(23,25,51,0.85));
+  border: 1px solid rgba(240,178,78,0.4);
+  box-shadow: 0 0 60px -20px rgba(240,178,78,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+  position:relative; overflow:hidden;
+}
+
+/* --- Nav: crisper glass --- */
+.mkt-nav{ background: rgba(11,12,31,0.72); backdrop-filter: blur(16px) saturate(1.2); }
+
+/* --- Smooth scroll for anchor links --- */
+html{ scroll-behavior:smooth; }
+/* ---------- The animated product demo ("the video") ---------- */
+.demo-stage{ position:relative; }
+.demo-frame{ background: linear-gradient(170deg, #14162E, #0E0F24); border:1px solid var(--line); border-radius: 16px; padding: 0; overflow:hidden; box-shadow: 0 40px 90px -40px rgba(0,0,0,0.8), 0 0 0 1px rgba(155,135,245,0.06); position:relative; }
+.demo-glow{ position:absolute; inset:-2px; border-radius:16px; background: linear-gradient(120deg, rgba(240,178,78,0.5), rgba(155,135,245,0.5), rgba(95,224,184,0.5)); filter: blur(22px); opacity:0.25; z-index:-1; animation: glowshift 8s ease-in-out infinite; }
+.demo-topbar{ display:flex; align-items:center; gap:8px; padding: 13px 16px; border-bottom:1px solid var(--line-soft); background: rgba(255,255,255,0.015); }
+.demo-dot{ width:10px; height:10px; border-radius:50%; }
+.demo-dot.r{ background:#FF5F57; }
+.demo-dot.y{ background:#FEBC2E; }
+.demo-dot.g{ background:#28C840; }
+.demo-url{ margin-left:10px; font-family:'JetBrains Mono', monospace; font-size:11px; color: var(--text-faint); }
+.demo-live{ margin-left:auto; font-family:'JetBrains Mono', monospace; font-size:10px; color: var(--aurora); display:flex; align-items:center; gap:6px; }
+.demo-live .rec{ width:6px; height:6px; border-radius:50%; background:var(--aurora); animation: pulse 2s infinite; }
+.demo-body{ padding: 20px; min-height: 430px; position:relative; }
+.demo-caption{ font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.04em; color: var(--gold); margin-bottom:16px; min-height:15px; }
+.demo-caption .cursor{ display:inline-block; width:7px; height:13px; background:var(--gold); margin-left:2px; vertical-align:-2px; animation: blink 1s step-end infinite; }
+/* scene: profile chips */
+.dp-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.dp-chip{ font-family:'Manrope',sans-serif; font-size:12.5px; padding:7px 13px; border-radius:999px; background: var(--void); border:1px solid var(--line); color: var(--text-dim); opacity:0; transform: translateY(6px); }
+.dp-chip.in{ opacity:1; transform:none; transition: all .4s cubic-bezier(.2,.7,.3,1); }
+.dp-chip.gold{ border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+/* scene: match cards */
+.dm-card{ background: var(--void); border:1px solid var(--line); border-radius:12px; padding:14px 15px; margin-bottom:11px; display:flex; align-items:center; gap:14px; opacity:0; transform: translateX(18px); }
+.dm-card.in{ opacity:1; transform:none; transition: all .5s cubic-bezier(.2,.7,.3,1); }
+.dm-ring{ position:relative; width:46px; height:46px; flex-shrink:0; }
+.dm-ring svg{ transform: rotate(-90deg); }
+.dm-ring .pct{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; }
+.dm-info{ flex:1; min-width:0; }
+.dm-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; color: var(--text); margin:0 0 3px; }
+.dm-org{ font-family:'Manrope',sans-serif; font-size:12px; color: var(--text-faint); }
+.dm-flag{ font-family:'Manrope',sans-serif; font-size:11.5px; margin-top:7px; padding:6px 9px; border-radius:7px; line-height:1.4; display:flex; gap:7px; align-items:flex-start; }
+.dm-flag.warn{ background: var(--gold-dim); color: var(--gold); }
+.dm-flag.good{ background: var(--aurora-dim); color: var(--aurora); }
+.demo-progress{ position:absolute; bottom:0; left:0; height:3px; background: linear-gradient(90deg, var(--gold), var(--violet)); width:0%; }
+/* score ring: soft glow so numbers feel alive */
+.dm-ring svg circle:last-child{ filter: drop-shadow(0 0 4px currentColor); }
+.dm-ring .pct{ text-shadow: 0 0 10px rgba(255,255,255,0.12); }
+/* card hover-in gets a faint accent bloom */
+.dm-card{ box-shadow: 0 1px 0 rgba(255,255,255,0.02); }
+.dm-card.in{ box-shadow: 0 8px 26px -18px rgba(0,0,0,0.9); }
+/* scanning line sweep during the "scanning listings" phase */
+.demo-scan{ position:absolute; left:0; right:0; height:70px; top:0; pointer-events:none; z-index:3;
+  background: linear-gradient(180deg, rgba(95,224,184,0.14), transparent);
+  border-bottom:1px solid rgba(95,224,184,0.4); opacity:0; }
+.demo-scan.on{ animation: scanSweep 1.4s ease-in-out; }
+/* scene progress dots (like a product tour) */
+.demo-dots{ position:absolute; bottom:14px; right:16px; display:flex; gap:6px; z-index:4; }
+.demo-dots i{ width:6px; height:6px; border-radius:50%; background: var(--line); transition: all .3s ease; }
+.demo-dots i.active{ background: var(--gold); box-shadow:0 0 8px rgba(240,178,78,0.7); width:16px; border-radius:3px; }
+/* roadmap scene (scene 3 - the payoff) */
+.dr-step{ display:flex; gap:12px; align-items:flex-start; padding:12px 0; opacity:0; transform:translateX(16px); border-bottom:1px solid var(--line-soft); }
+.dr-step:last-child{ border-bottom:none; }
+.dr-step.in{ opacity:1; transform:none; transition: all .5s cubic-bezier(.2,.7,.3,1); }
+.dr-num{ width:26px; height:26px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:12px; background: var(--violet-dim); color: var(--violet); border:1px solid rgba(155,135,245,0.35); }
+.dr-step.done .dr-num{ background: var(--aurora-dim); color: var(--aurora); border-color: rgba(95,224,184,0.4); }
+.dr-txt{ font-family:'Manrope',sans-serif; }
+.dr-title{ font-size:13.5px; font-weight:600; color: var(--text); margin:0 0 2px; }
+.dr-sub{ font-size:11.5px; color: var(--text-faint); line-height:1.4; }
+/* ===== SIMULATED CURSOR — makes the demo feel USED, not just animated ===== */
+.demo-cursor{
+  position:absolute; width:22px; height:22px; z-index:20; left:0; top:0;
+  pointer-events:none; opacity:0;
+  transition: transform .7s cubic-bezier(.4,.1,.2,1), opacity .4s ease;
+  will-change: transform;
+}
+.demo-cursor svg{ display:block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)); }
+.demo-cursor.show{ opacity:1; }
+/* the click ripple */
+.demo-click{ position:absolute; width:10px; height:10px; border-radius:50%; z-index:19; pointer-events:none;
+  background: rgba(240,178,78,0.7); transform: translate(-50%,-50%) scale(0); opacity:0; }
+.demo-click.fire{ animation: clickPulse .5s ease-out; }
+/* card the cursor is "hovering" gets a live highlight */
+.dm-card.hot{ border-color: rgba(95,224,184,0.5); box-shadow: 0 10px 30px -14px rgba(95,224,184,0.4); transform: translateY(-2px); transition: all .3s ease; }
+.dr-step.hot .dr-num{ transform: scale(1.12); transition: transform .25s ease; }
+
+/* --- Demo showcase section on home --- */
+.demo-section{ padding: 30px 0 20px; }
+.demo-section .demo-head{ text-align:center; max-width:620px; margin:0 auto 34px; }
+.demo-section .demo-eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--aurora); margin-bottom:12px; }
+.demo-section h2{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:30px; color:var(--text); margin:0 0 12px; letter-spacing:-0.01em; }
+.demo-section .demo-sub{ font-family:'Manrope',sans-serif; font-size:15px; color:var(--text-dim); line-height:1.6; margin:0; }
+.demo-section .demo-stage{ max-width:760px; margin:0 auto; }
+
+/* Elevated presence for the home demo centerpiece */
+.demo-section .demo-frame{
+  box-shadow: 0 50px 120px -40px rgba(0,0,0,0.85), 0 0 0 1px rgba(155,135,245,0.10),
+              0 0 80px -30px rgba(95,224,184,0.25);
+  animation: demoFloat 7s ease-in-out infinite;
+}
+.demo-section .demo-glow{ opacity:0.32; filter: blur(30px); }
+@keyframes demoFloat{ 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-8px); } }
+@media (prefers-reduced-motion: reduce){ .demo-section .demo-frame{ animation:none; } }
+/* soft reflection under the frame */
+.demo-section .demo-stage::after{
+  content:''; position:absolute; left:8%; right:8%; bottom:-30px; height:60px;
+  background: radial-gradient(ellipse at center, rgba(155,135,245,0.18), transparent 70%);
+  filter: blur(14px); z-index:-2; pointer-events:none;
+}
+.demo-section .demo-stage{ position:relative; }
+
+/* ============================================================
+   CRAFT REFINEMENT LAYER — typographic rhythm, hierarchy, detail.
+   The polish that separates "good" from world-class. Additive.
+   ============================================================ */
+
+/* --- Bigger, tighter hero. Real display-type presence. --- */
+.hero h1{ font-size: clamp(40px, 5.2vw, 60px); line-height: 1.04; letter-spacing: -0.025em; font-weight: 800; }
+.hero p.lede{ font-size: 18.5px; line-height: 1.62; color: var(--text-dim); }
+
+/* --- Section headings get scale + tight tracking; a refined accent eyebrow --- */
+.section h2{ font-size: clamp(26px, 3.2vw, 36px); letter-spacing: -0.025em; line-height: 1.12; }
+.section-eyebrow, .demo-eyebrow{
+  display:inline-flex; align-items:center; gap:9px; font-weight:600;
+}
+.section-eyebrow::before{
+  content:''; width:22px; height:1px; background: linear-gradient(90deg, var(--gold), transparent);
+  display:inline-block;
+}
+.section p.section-lede{ font-size: 16px; color: var(--text-dim); line-height:1.65; }
+
+/* --- Card copy: brighter titles, refined secondary text --- */
+.step-card h3, .feature-card h3{ font-size: 15.5px; letter-spacing:-0.01em; }
+.step-card p, .feature-card p{ color: var(--text-dim); font-size:13.5px; line-height:1.6; }
+.step-num{ font-size:12px; letter-spacing:0.12em; opacity:0.9; }
+
+/* --- Section vertical rhythm: more generous, more confident breathing room --- */
+.section{ padding-top: 78px; }
+.demo-section{ padding-top: 40px; }
+
+/* --- THE STAT BAND: make it a genuine showpiece --- */
+.stat-band{ gap: 16px; }
+.stat-cell{
+  position:relative; overflow:hidden;
+  background: linear-gradient(180deg, rgba(30,33,64,0.5), rgba(23,25,51,0.7));
+  border: 1px solid transparent; background-clip: padding-box;
+  border-radius: 18px; padding: 30px 26px;
+  box-shadow: 0 2px 24px -14px rgba(0,0,0,0.85);
+}
+.stat-cell::before{
+  content:''; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background: linear-gradient(135deg, rgba(155,135,245,0.4), rgba(95,224,184,0.16) 50%, transparent 75%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; opacity:0.7; pointer-events:none;
+}
+.stat-num{
+  font-family:'Space Grotesk', sans-serif; font-weight:800;
+  font-size: clamp(38px, 5vw, 54px); letter-spacing:-0.03em; line-height:1;
+  background: linear-gradient(135deg, #C9BCFF, #9B87F5 55%, #6FE0C0);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  margin-bottom: 12px;
+}
+.stat-label{ font-family:'Manrope',sans-serif; font-size:13px; color: var(--text-dim); line-height:1.5; max-width: 260px; }
+
+/* --- CTA band: tighter, more luminous, better type --- */
+.cta-band h2{ font-size: clamp(24px, 3vw, 30px); letter-spacing:-0.02em; }
+.cta-band p{ font-size:15px; color: var(--text-dim); }
+
+/* --- Nav polish: refined letter-spacing + logo weight --- */
+.mkt-logo-word{ letter-spacing:0.10em; }
+.mkt-link{ font-weight:600; transition: color .16s ease; }
+.mkt-link:hover{ color: var(--text); }
+
+/* --- Footer: quieter, more refined --- */
+.mkt-footer-links a{ transition: color .16s ease; }
+.mkt-footer-links a:hover{ color: var(--text-dim); }
+
+/* --- How-it-works: iconified steps, aligned, with a connecting thread --- */
+.steps-row{ align-items: stretch; position:relative; }
+.step-card{ display:flex; flex-direction:column; }
+.step-icon{ width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+  background: rgba(255,255,255,0.03); border:1px solid var(--line-soft); margin-bottom:15px;
+  box-shadow: inset 0 0 14px -6px currentColor; }
+.step-num{ font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.12em; font-weight:700;
+  color: var(--text-faint); text-transform:uppercase; margin-bottom:8px; }
+.step-card p{ margin-top:auto; }
+/* subtle connecting thread behind the row (desktop only) */
+@media (min-width: 861px){
+  .steps-row::before{ content:''; position:absolute; top:60px; left:12%; right:12%; height:1px;
+    background: linear-gradient(90deg, transparent, rgba(155,135,245,0.25) 20%, rgba(95,224,184,0.25) 80%, transparent);
+    z-index:0; }
+  .step-card{ position:relative; z-index:1; }
+}
+
+/* --- Animated constellation hero centerpiece --- */
+.path-visual{ position:relative; height:360px; width:100%; }
+#constellation{ position:absolute; inset:0; }
+#constLabels{ position:absolute; inset:0; pointer-events:none; }
+#constLabels .cl{ position:absolute; transform:translate(-50%,0); opacity:0; transition:opacity .5s ease; text-shadow: 0 1px 6px rgba(11,12,31,0.9);
+  font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.02em; white-space:nowrap; }
+#constLabels .cl.big{ font-size:11.5px; font-weight:700; }
+#constLabels .cl span{ opacity:0.9; }
+
+/* PERF FIX: an animated 90px-blur surface re-renders the GPU every frame (~13fps).
+   Keep the beautiful nebula glow but STATIC — a still blur costs nothing. */
+.neb, .neb-aurora, .neb-violet, .neb-gold{ animation: none !important; }
+
+/* PERF: drop the costly large-radius blur — the radial-gradient glow is already
+   soft, so we get the same look without the GPU compositing hit. */
+.neb{ filter: none !important; }
+
+/* --- Demo card polish: match the real dashboard's elevated cards --- */
+.dm-card{
+  background: linear-gradient(180deg, rgba(30,33,64,0.65), rgba(23,25,51,0.82)) !important;
+  border: 1px solid transparent !important;
+  background-clip: padding-box;
+  position: relative;
+  box-shadow: 0 2px 16px -10px rgba(0,0,0,0.8);
+}
+.dm-card::after{
+  content:''; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background: linear-gradient(135deg, rgba(155,135,245,0.3), rgba(95,224,184,0.12) 50%, transparent 75%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0.6; pointer-events: none;
+}
+/* the top match (first card) is the hero - a touch more glow */
+.dm-card:first-child{ box-shadow: 0 6px 26px -14px rgba(95,224,184,0.35), 0 2px 16px -10px rgba(0,0,0,0.8); }
+.dm-card:first-child::after{ background: linear-gradient(135deg, rgba(95,224,184,0.5), rgba(155,135,245,0.2) 50%, transparent 75%); opacity: 0.85; }
+
+/* ============================================================
+   ADOBE-GRADE ELEVATION 2.0 — cinematic depth, motion, craft.
+   Additive. Keeps the navy+gold palette; raises the finish to
+   feel like a flagship AI product, not a template.
+   ============================================================ */
+
+/* Live atmosphere: slow animated aurora mesh (GPU-cheap: transform only) */
+.aurora-mesh{ position:fixed; inset:-25%; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(38% 38% at 16% 26%, rgba(155,135,245,0.24), transparent 70%),
+    radial-gradient(34% 34% at 84% 16%, rgba(95,224,184,0.17), transparent 72%),
+    radial-gradient(48% 46% at 74% 84%, rgba(240,178,78,0.16), transparent 72%);
+  animation: auroraDrift 34s ease-in-out infinite alternate; will-change: transform; }
+@keyframes auroraDrift{ 0%{ transform: translate3d(0,0,0) scale(1); } 100%{ transform: translate3d(2.5%,-2%,0) scale(1.12); } }
+@media (prefers-reduced-motion: reduce){ .aurora-mesh{ animation:none; } }
+
+/* Cinematic vignette + top spotlight — depth and focus */
+.fx-vignette{ position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(120% 85% at 50% -12%, rgba(123,169,255,0.10), transparent 46%),
+    radial-gradient(140% 100% at 50% 112%, rgba(7,8,22,0.9), transparent 55%); }
+
+/* Film grain — the fine texture premium sites have */
+.fx-grain{ position:fixed; inset:0; z-index:1; pointer-events:none; opacity:0.055; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* Keep content above the atmosphere */
+.mkt-nav, .wrap, .mkt-footer{ position:relative; z-index:2; }
+
+/* --- NAV: premium glass + a faint gold underglow line --- */
+.mkt-nav{ background: rgba(9,10,26,0.68); backdrop-filter: blur(18px) saturate(1.3);
+  border-bottom:1px solid rgba(240,178,78,0.14); box-shadow: 0 1px 0 rgba(255,255,255,0.03), 0 10px 40px -30px rgba(240,178,78,0.4); }
+
+/* --- HERO: cinematic scale, glass badge, proof strip --- */
+.hero{ padding: 108px 0 76px; }
+.hero h1{ font-size: clamp(46px, 6vw, 78px); line-height:1.015; letter-spacing:-0.038em; }
+.hero p.lede{ font-size: clamp(17px, 1.4vw, 20px); line-height:1.6; }
+.hero-badge{ display:inline-flex; align-items:center; gap:9px; margin-bottom:24px;
+  font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; letter-spacing:0.10em; text-transform:uppercase;
+  color: var(--text-dim); padding:7px 15px 7px 11px; border-radius:999px;
+  background: linear-gradient(180deg, rgba(155,135,245,0.14), rgba(95,224,184,0.06));
+  border:1px solid var(--line); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
+.hero-badge .d{ width:7px; height:7px; border-radius:50%; background:linear-gradient(135deg,#FCE7B4,#EAA23C); box-shadow:0 0 11px rgba(240,178,78,0.95); }
+.hero-proof{ display:flex; flex-wrap:wrap; gap:10px 22px; margin-top:26px; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text-faint); }
+.hero-proof span{ display:inline-flex; align-items:center; gap:8px; }
+.hero-proof span::before{ content:''; width:5px;height:5px;border-radius:50%; background:var(--aurora); box-shadow:0 0 8px rgba(95,224,184,0.85); }
+.path-visual{ height: 430px; }
+
+/* --- TRACKS STRIP: honest breadth, no fake logos --- */
+.tracks-strip{ display:grid; grid-template-columns: repeat(3,1fr); gap:14px; margin: 12px 0 6px; }
+@media (max-width:760px){ .tracks-strip{ grid-template-columns:1fr; } }
+.track-chip{ display:flex; align-items:center; gap:15px; padding:18px 20px; border-radius:16px;
+  background: linear-gradient(180deg, rgba(30,33,64,0.5), rgba(23,25,51,0.72)); border:1px solid var(--line-soft);
+  transition: transform .2s cubic-bezier(.2,.8,.2,1), border-color .2s ease; }
+.track-chip:hover{ transform: translateY(-3px); border-color: rgba(240,178,78,0.35); }
+.track-chip .ti{ width:42px;height:42px;border-radius:12px; display:flex;align-items:center;justify-content:center; flex-shrink:0;
+  background: rgba(255,255,255,0.03); border:1px solid var(--line); box-shadow: inset 0 0 16px -6px currentColor; }
+.track-chip h4{ font-family:'Space Grotesk',sans-serif; font-size:14.5px; font-weight:700; color:var(--text); margin:0 0 3px; letter-spacing:-0.01em; }
+.track-chip p{ font-family:'Manrope',sans-serif; font-size:12px; color:var(--text-faint); margin:0; line-height:1.45; }
+
+/* --- SECTION DIVIDERS: gradient hairline, not a flat rule --- */
+.section{ border-top:none !important; position:relative; }
+.section::after{ content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, rgba(155,135,245,0.28), rgba(95,224,184,0.2), transparent); }
+.demo-section::after, .hero + *::after{ display:none; }
+
+/* --- BENTO feature grid — asymmetric, with a mini visual --- */
+.bento{ display:grid; grid-template-columns: repeat(3,1fr); grid-auto-rows: minmax(140px,auto); gap:18px; }
+@media (max-width:820px){ .bento{ grid-template-columns:1fr; } .bento .b-lead{ grid-row:auto !important; } .bento .b-wide{ grid-column:auto !important; } }
+.bento .b{ position:relative; overflow:hidden; border-radius:20px; padding:26px 24px;
+  background: linear-gradient(180deg, rgba(30,33,64,0.58), rgba(23,25,51,0.8)); border:1px solid transparent; background-clip:padding-box;
+  box-shadow: 0 2px 26px -14px rgba(0,0,0,0.85); transition: transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s ease; }
+.bento .b::before{ content:''; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background: linear-gradient(135deg, rgba(155,135,245,0.5), rgba(95,224,184,0.22) 45%, transparent 72%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude;
+  opacity:0.6; transition:opacity .22s ease; pointer-events:none; }
+.bento .b:hover{ transform: translateY(-4px); box-shadow: 0 20px 46px -18px rgba(95,224,184,0.28), 0 4px 22px -10px rgba(0,0,0,0.9); }
+.bento .b:hover::before{ opacity:1; }
+.bento .b-lead{ grid-row: span 2; display:flex; flex-direction:column; }
+.bento .b-wide{ grid-column: span 2; }
+.bento .b .bi{ width:40px;height:40px;border-radius:11px; display:flex;align-items:center;justify-content:center; font-size:18px; margin-bottom:15px;
+  background: var(--gold-dim); color:var(--gold); box-shadow: inset 0 0 0 1px rgba(240,178,78,0.25), 0 0 18px -6px rgba(240,178,78,0.5); }
+.bento .b h3{ font-family:'Space Grotesk',sans-serif; font-size:16.5px; font-weight:700; color:var(--text); margin:0 0 8px; letter-spacing:-0.01em; }
+.bento .b p{ font-family:'Manrope',sans-serif; font-size:13.5px; color:var(--text-dim); line-height:1.6; margin:0; }
+/* mini score-breakdown visual inside the lead card */
+.bento .mini{ margin-top:auto; padding-top:22px; display:flex; flex-direction:column; gap:11px; }
+.bento .mini .row{ }
+.bento .mini .rl{ display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-faint); margin-bottom:6px; }
+.bento .mini .bar{ height:6px; border-radius:6px; background: rgba(255,255,255,0.05); overflow:hidden; }
+.bento .mini .bar i{ display:block; height:100%; border-radius:6px; }
+
+/* --- PRIMARY BUTTONS: richer gold, deeper glow --- */
+.hero-cta-primary, .mkt-cta-signup{
+  background: linear-gradient(135deg, #FCE0A6 0%, #F0B24E 55%, #E4922C 100%);
+  box-shadow: 0 10px 30px -8px rgba(240,178,78,0.55), inset 0 1px 0 rgba(255,255,255,0.45); }
+.hero-cta-primary:hover, .mkt-cta-signup:hover{ box-shadow: 0 16px 40px -8px rgba(240,178,78,0.7), inset 0 1px 0 rgba(255,255,255,0.5); }
+
+/* --- STAT band + CTA band: a touch more presence --- */
+.cta-band{ padding: 60px 48px; border-radius: 28px; }
+.cta-band h2{ font-size: clamp(26px,3.2vw,34px); }
+
+/* reveal utility (respect existing) */
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div class="nebula" aria-hidden="true">
+  <div class="neb neb-aurora"></div>
+  <div class="neb neb-violet"></div>
+  <div class="neb neb-gold"></div>
+</div>
+<div class="aurora-mesh" aria-hidden="true"></div>
+<div class="fx-vignette" aria-hidden="true"></div>
+<div class="fx-grain" aria-hidden="true"></div>
+
+<nav class="mkt-nav">
+  <div class="wrap mkt-nav-inner">
+    <a class="mkt-logo" href="site-home.html" id="mktLogo"><span class="mkt-logo-word">KAIDOSTAR</span></a>
+    <div class="mkt-links">
+      <a class="mkt-link" href="site-home.html">Product</a>
+      <a class="mkt-link" href="site-pricing.html">Pricing</a>
+      <a class="mkt-link" href="site-reviews.html">Reviews</a>
+    </div>
+    <div class="mkt-cta">
+      <a class="mkt-link" href="login.html">Log in</a>
+      <a class="mkt-cta-signup" href="login.html?mode=signup">Get started</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <section class="hero">
+    <div class="hero-grid">
+      <div class="hero-inner">
+        <div class="hero-badge"><span class="d"></span> The honest career engine</div>
+        <h1>Stop guessing what<br>gets you to <span class="accent">your goal.</span></h1>
+        <p class="lede">Kaidostar scores every opportunity against your actual roadmap, not a keyword match - so you always know why a match is good, and exactly what step it advances.</p>
+        <div class="hero-ctas">
+          <a class="hero-cta-primary" href="login.html?mode=signup">Get started free</a>
+          <a class="hero-cta-secondary" href="site-pricing.html">See pricing</a>
+        </div>
+        <div class="hero-proof">
+          <span>Free forever plan</span>
+          <span>No card required</span>
+          <span>Jobs &middot; College &middot; Athletics</span>
+        </div>
+      </div>
+      <div class="path-visual" id="pathVisual">
+        <canvas id="constellation"></canvas>
+        <div id="constLabels"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="tracks-strip reveal">
+    <div class="track-chip"><div class="ti" style="color:var(--gold)">&#128188;</div><div><h4>Job seekers</h4><p>Roles scored against your real goal &amp; skills</p></div></div>
+    <div class="track-chip"><div class="ti" style="color:var(--violet)">&#127891;</div><div><h4>Students</h4><p>Admissions, honestly, per target school</p></div></div>
+    <div class="track-chip"><div class="ti" style="color:var(--aurora)">&#127939;</div><div><h4>Athletes</h4><p>Recruiting &amp; exposure, on your clock</p></div></div>
+  </div>
+
+  <section class="section demo-section reveal">
+    <div class="demo-head">
+      <div class="demo-eyebrow">SEE IT WORK</div>
+      <h2>Watch Kaidostar score a real search</h2>
+      <p class="demo-sub">No slideshow. This is the actual flow — read your profile, score live listings against it honestly, and turn the top match into a real plan.</p>
+    </div>
+    <div class="demo-stage">
+      <div class="demo-frame">
+        <div class="demo-glow"></div>
+        <div class="demo-topbar">
+          <span class="demo-dot r"></span><span class="demo-dot y"></span><span class="demo-dot g"></span>
+          <span class="demo-url">kaidostar.app / dashboard</span>
+          <span class="demo-live"><span class="rec"></span> LIVE</span>
+        </div>
+        <div class="demo-body">
+          <div class="demo-scan" id="demoScan"></div>
+          <div class="demo-caption" id="demoCaption">&nbsp;<span class="cursor"></span></div>
+          <div id="demoScene"></div>
+          <div class="demo-click" id="demoClick"></div>
+          <div class="demo-cursor" id="demoCursor"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 2l6.5 16 2.3-6.6 6.7-2.4L3 2z" fill="#fff" stroke="#0B0C1F" stroke-width="1.3" stroke-linejoin="round"/></svg></div>
+          <div class="demo-progress" id="demoProgress"></div>
+          <div class="demo-dots" id="demoDots"><i class="active"></i><i></i><i></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">HOW IT WORKS</div>
+    <h2 class="reveal">Four steps from unsure to applied</h2>
+    <p class="section-lede">Not a static quiz. Every match, every step, and every application is generated fresh against where you actually are right now.</p>
+    <div class="steps-row">
+      <div class="step-card reveal d1">
+        <div class="step-icon" style="color:var(--gold)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5" fill="currentColor"/></svg></div><div class="step-num">STEP 01</div>
+        <h3>Tell Kaidostar your goal</h3>
+        <p>A short survey - or, if you're not sure yet, a real assessment grounded in what you've actually done, not a personality quiz.</p>
+      </div>
+      <div class="step-card reveal d2">
+        <div class="step-icon" style="color:var(--violet)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 18c0-4 3-4 3-8s-3-3-3-6"/><circle cx="4" cy="4" r="1.4" fill="currentColor" stroke="none"/><circle cx="7" cy="10" r="1.4" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.4" fill="currentColor" stroke="none"/><path d="M11 12h9M11 12l-2-2M11 12l-2 2" opacity="0"/></svg></div><div class="step-num">STEP 02</div>
+        <h3>Get a real roadmap</h3>
+        <p>Concrete stages with success criteria, resources, and what to do if a stage stalls - not a motivational list.</p>
+      </div>
+      <div class="step-card reveal d3">
+        <div class="step-icon" style="color:var(--aurora)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12l4 4 12-12"/><path d="M4 19h10"/></svg></div><div class="step-num">STEP 03</div>
+        <h3>Matches, explained</h3>
+        <p>Every opportunity is scored against your roadmap directly, with a plain-language reason, not just a percentage.</p>
+      </div>
+      <div class="step-card reveal d4">
+        <div class="step-icon" style="color:var(--comet)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l18-7-7 18-3-8-8-3z"/></svg></div><div class="step-num">STEP 04</div>
+        <h3>Apply, or let Auto handle it</h3>
+        <p>Draft, review, and send applications yourself - or turn on Auto and let it queue drafts while you're away.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow">WHY KAIDOSTAR</div>
+    <h2 class="reveal">Transparent by design</h2>
+    <p class="section-lede">Most tools give you a score and ask you to trust it. Kaidostar shows its work.</p>
+    <div class="bento">
+      <div class="b b-lead reveal d1">
+        <div class="bi">&#10022;</div>
+        <h3>Every score, explained</h3>
+        <p>Goal fit, skill fit, and roadmap alignment shown separately - never a black-box percentage. You see exactly why something ranked where it did.</p>
+        <div class="mini">
+          <div class="row"><div class="rl"><span>Goal fit</span><span>92</span></div><div class="bar"><i style="width:92%;background:linear-gradient(90deg,#F7C878,#EAA23C)"></i></div></div>
+          <div class="row"><div class="rl"><span>Skill fit</span><span>78</span></div><div class="bar"><i style="width:78%;background:linear-gradient(90deg,#9B87F5,#7BA9FF)"></i></div></div>
+          <div class="row"><div class="rl"><span>Roadmap alignment</span><span>85</span></div><div class="bar"><i style="width:85%;background:linear-gradient(90deg,#5FE0B8,#7BA9FF)"></i></div></div>
+        </div>
+      </div>
+      <div class="b reveal d2">
+        <div class="bi" style="background:var(--violet-dim);color:var(--violet);box-shadow:inset 0 0 0 1px rgba(155,135,245,0.3),0 0 18px -6px rgba(155,135,245,0.5)">&#128100;</div>
+        <h3>Metis, your AI guide</h3>
+        <p>Grounded in your actual goal, matches, and roadmap - not a chatbot bolted onto a job board.</p>
+      </div>
+      <div class="b reveal d3">
+        <div class="bi" style="background:var(--aurora-dim);color:var(--aurora);box-shadow:inset 0 0 0 1px rgba(95,224,184,0.3),0 0 18px -6px rgba(95,224,184,0.5)">&#9993;</div>
+        <h3>Drafts you review</h3>
+        <p>Auto drafts applications and outreach while you're away - you always click send.</p>
+      </div>
+      <div class="b b-wide reveal d4">
+        <div class="bi" style="background:var(--comet-dim);color:var(--comet);box-shadow:inset 0 0 0 1px rgba(123,169,255,0.3),0 0 18px -6px rgba(123,169,255,0.5)">&#9878;</div>
+        <h3>Honest by design</h3>
+        <p>Scores cap at 97% - no vanity 100%s. Every listing runs eight honesty checks, and nothing fabricated ever lands on your resume. The whole engine is built to tell you the truth, not to flatter you into applying.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-eyebrow reveal">HONEST BY THE NUMBERS</div>
+    <h2 class="reveal">Built to tell you the truth</h2>
+    <p class="section-lede reveal">Every number here reflects a real design decision - not marketing figures.</p>
+    <div class="stat-band">
+      <div class="stat-cell reveal d1"><div class="stat-num" data-count="97" data-suffix="%">0%</div><div class="stat-label">The hard cap on any match score - no vanity 100%s</div></div>
+      <div class="stat-cell reveal d2"><div class="stat-num" data-count="8" data-suffix="">0</div><div class="stat-label">Distinct honesty checks on every listing</div></div>
+      <div class="stat-cell reveal d3"><div class="stat-num" data-count="0" data-suffix="">0</div><div class="stat-label">Fabricated numbers ever added to your résumé</div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="cta-band reveal">
+      <h2>Find the direct path.</h2>
+      <p>Free to get started - see your first roadmap in minutes.</p>
+      <a class="hero-cta-primary" href="login.html?mode=signup">Get started free</a>
+    </div>
+  </section>
+</div>
+
+<div class="mkt-footer">
+  <div class="wrap mkt-footer-inner">
+    <span class="mkt-logo-word" style="font-size:13px;">KAIDOSTAR</span>
+    <div class="mkt-footer-links">
+      <a href="site-home.html">Product</a>
+      <a href="site-pricing.html">Pricing</a>
+      <a href="site-reviews.html">Reviews</a>
+      <a href="login.html">Log in</a>
+    </div>
+    <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint);">Kaidostar is a demo product.</span>
+  </div>
+</div>
+
+<script src="state.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof initStarfield === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+document.getElementById('mktLogo').insertAdjacentHTML('afterbegin', kaidostarMark(28));
+
+/* Signature hero visual: a pathfinding constellation - nodes
+   connected by lines, representing "where you are" leading through
+   real stages to "your goal", tying the hero directly to the
+   product's actual core mechanic (the roadmap) rather than a
+   generic animated backdrop. */
+function renderConstellation(){
+  const wrap = document.getElementById('pathVisual');
+  const canvas = document.getElementById('constellation');
+  const labelsEl = document.getElementById('constLabels');
+  if(!wrap || !canvas) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let W = wrap.clientWidth || 640, H = 360;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+
+  // The journey nodes (the meaning stays: a guided path to your goal).
+  const nodeDefs = [
+    {x:0.06, y:0.74, c:'#8890B8', label:'You are here'},
+    {x:0.30, y:0.32, c:'#7BA9FF', label:'Build the proof'},
+    {x:0.54, y:0.60, c:'#9B87F5', label:'Close the gap'},
+    {x:0.77, y:0.24, c:'#5FE0B8', label:'Apply'},
+    {x:0.95, y:0.50, c:'#F0B24E', label:'Goal', big:true},
+  ];
+  const nodes = nodeDefs.map(n => ({...n, px:n.x*W, py:n.y*H}));
+
+  // Ambient background stars (drifting, twinkling).
+  const STAR_N = Math.round(W/16);
+  const stars = [];
+  for(let i=0;i<STAR_N;i++){
+    stars.push({ x:Math.random()*W, y:Math.random()*H, r:Math.random()*1.3+0.3,
+      tw:Math.random()*Math.PI*2, tws:0.6+Math.random()*1.4,
+      vx:(Math.random()-0.5)*0.06, vy:(Math.random()-0.5)*0.06 });
+  }
+
+  // Render the node labels as HTML (crisp text) positioned over the canvas.
+  labelsEl.innerHTML = nodes.map((n,i) => {
+    // Smart placement: a "peak" node (higher than its neighbours) gets its label
+    // ABOVE it; a "valley" node gets it BELOW - so labels never sit on the path
+    // line where it ascends/descends. Endpoints default to below.
+    const prev = nodes[i-1], next = nodes[i+1];
+    const neighbourY = prev && next ? (prev.py + next.py)/2 : (prev ? prev.py : (next ? next.py : n.py+100));
+    const isPeak = n.py < neighbourY - 6;   // smaller y = higher on screen = peak
+    const top = isPeak ? (n.py - 26) : (n.py + 14);
+    return `<div class="cl ${n.big?'big':''}" style="left:${n.px}px; top:${top}px; color:${n.c};">
+      <span>${n.label}</span>
+    </div>`;
+  }).join('');
+
+  // Pre-render a soft glow sprite per node colour ONCE (cheap drawImage per frame
+  // instead of an expensive createRadialGradient every frame).
+  function makeGlow(color, radius){
+    const s = Math.ceil(radius*2);
+    const c = document.createElement('canvas'); c.width=s; c.height=s;
+    const cx = c.getContext('2d');
+    const g = cx.createRadialGradient(radius,radius,0,radius,radius,radius);
+    g.addColorStop(0, color+'cc'); g.addColorStop(0.5, color+'44'); g.addColorStop(1, color+'00');
+    cx.fillStyle=g; cx.beginPath(); cx.arc(radius,radius,radius,0,7); cx.fill();
+    return c;
+  }
+  nodes.forEach(n=>{ n._glow = makeGlow(n.c, n.big?28:20); });
+  const cometGlow = makeGlow('#B7A9FF', 12);
+  const t0 = performance.now();
+  const REVEAL = 3200; // ms for the path to draw + nodes to light
+
+  function frame(now){
+    const t = now - t0;
+    ctx.clearRect(0,0,W,H);
+
+    // 1) ambient stars
+    for(const s of stars){
+      s.x += s.vx; s.y += s.vy;
+      if(s.x<0)s.x+=W; if(s.x>W)s.x-=W; if(s.y<0)s.y+=H; if(s.y>H)s.y-=H;
+      const a = 0.35 + 0.35*Math.sin(s.tw + now*0.001*s.tws);
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7);
+      ctx.fillStyle = `rgba(200,205,240,${a})`; ctx.fill();
+    }
+
+    // 2) the constellation path (dashed guide + animated bright draw)
+    // guide line (faint)
+    ctx.beginPath();
+    ctx.moveTo(nodes[0].px, nodes[0].py);
+    for(let i=1;i<nodes.length;i++) ctx.lineTo(nodes[i].px, nodes[i].py);
+    ctx.strokeStyle = 'rgba(120,128,160,0.22)'; ctx.lineWidth = 1.2;
+    ctx.setLineDash([4,6]); ctx.stroke(); ctx.setLineDash([]);
+
+    // bright progressive draw across segments
+    const prog = Math.min(1, t / REVEAL);
+    const totalSeg = nodes.length - 1;
+    const drawn = prog * totalSeg;
+    ctx.lineWidth = 2; ctx.lineCap='round';
+    const grad = ctx.createLinearGradient(nodes[0].px,0,nodes[nodes.length-1].px,0);
+    grad.addColorStop(0,'#9B87F5'); grad.addColorStop(0.6,'#5FE0B8'); grad.addColorStop(1,'#F0B24E');
+    ctx.strokeStyle = grad;
+    ctx.beginPath(); ctx.moveTo(nodes[0].px, nodes[0].py);
+    for(let i=1;i<nodes.length;i++){
+      const segFill = Math.max(0, Math.min(1, drawn - (i-1)));
+      if(segFill<=0) break;
+      const a=nodes[i-1], b=nodes[i];
+      ctx.lineTo(a.px+(b.px-a.px)*segFill, a.py+(b.py-a.py)*segFill);
+    }
+    ctx.stroke();
+
+    // 3) a comet traveling the path on loop (after reveal)
+    if(prog>=1){
+      const loopT = ((now*0.00013)%1);
+      const seg = loopT*totalSeg; const si = Math.min(totalSeg-1, Math.floor(seg)); const sf = seg-si;
+      const a=nodes[si], b=nodes[si+1];
+      const cx=a.px+(b.px-a.px)*sf, cy=a.py+(b.py-a.py)*sf;
+      ctx.drawImage(cometGlow, cx-12, cy-12);
+    }
+
+    // 4) the nodes (light up in sequence as the path reaches them; then gentle pulse)
+    nodes.forEach((n,i)=>{
+      const lit = drawn >= i - 0.15;
+      if(!lit) return;
+      const pulse = prog>=1 ? (1 + 0.12*Math.sin(now*0.003 + i)) : 1;
+      const baseR = (n.big?6:4);
+      const gr = (n.big?28:20);
+      // cached glow sprite (cheap), scaled by pulse
+      const gs = gr*2*pulse;
+      ctx.globalAlpha = 0.9;
+      ctx.drawImage(n._glow, n.px-gs/2, n.py-gs/2, gs, gs);
+      ctx.globalAlpha = 1;
+      // core dot + white center (cheap arcs, no shadow)
+      ctx.beginPath(); ctx.arc(n.px,n.py, baseR*pulse, 0, 7); ctx.fillStyle = n.c; ctx.fill();
+      ctx.beginPath(); ctx.arc(n.px,n.py, baseR*0.4, 0, 7); ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.fill();
+      // the GOAL node is the destination — an expanding beacon ring draws the eye to it
+      if(n.big && prog>=1){
+        const rp = (now*0.0006) % 1;            // 0..1 ring progress, loops
+        const rr = 8 + rp*26;                    // ring expands outward
+        ctx.beginPath(); ctx.arc(n.px, n.py, rr, 0, 7);
+        ctx.strokeStyle = n.c; ctx.globalAlpha = (1 - rp) * 0.6; ctx.lineWidth = 1.6;
+        ctx.stroke(); ctx.globalAlpha = 1;
+      }
+    });
+    // fade the labels in as their node lights
+    [...labelsEl.children].forEach((el,i)=>{ el.style.opacity = (drawn >= i-0.15) ? '1' : '0'; });
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+renderConstellation();
+let _constRz; window.addEventListener('resize', ()=>{ clearTimeout(_constRz); _constRz=setTimeout(renderConstellation, 200); });
+
+/* Scroll-reveal: sections/cards animate in as they enter the viewport */
+(function(){
+  const els = document.querySelectorAll('.reveal');
+  if(!('IntersectionObserver' in window)){ els.forEach(e=>e.classList.add('seen')); return; }
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){
+        en.target.classList.add('seen');
+        // count-up any stat numbers inside
+        en.target.querySelectorAll('[data-count]').forEach(runCount);
+        if(en.target.matches('[data-count]')) runCount(en.target);
+        io.unobserve(en.target);
+      }
+    });
+  }, {threshold: 0.15});
+  els.forEach(e=>io.observe(e));
+
+  function runCount(el){
+    if(el._counted) return; el._counted = true;
+    const target = parseFloat(el.getAttribute('data-count'));
+    const suffix = el.getAttribute('data-suffix') || '';
+    const dur = 1100; const start = performance.now();
+    function tick(now){
+      const t = Math.min(1, (now-start)/dur);
+      const eased = 1 - Math.pow(1-t, 3);
+      el.textContent = Math.round(target*eased) + suffix;
+      if(t<1) requestAnimationFrame(tick); else el.textContent = target + suffix;
+    }
+    requestAnimationFrame(tick);
+  }
+})();
+</script>
+
+<script>
+(function(){
+  const caption = document.getElementById('demoCaption');
+  const scene = document.getElementById('demoScene');
+  const progress = document.getElementById('demoProgress');
+  if(!caption || !scene) return;
+  const dots = document.getElementById('demoDots');
+  const scan = document.getElementById('demoScan');
+  // set the active scene dot (0,1,2)
+  function setDot(i){ if(!dots) return; [...dots.children].forEach((d,n)=>d.classList.toggle('active', n===i)); }
+  // trigger the scanning-line sweep once
+  function sweep(){ if(!scan) return; scan.classList.remove('on'); void scan.offsetWidth; scan.classList.add('on'); }
+  // smoothly fade the scene out, swap content, fade back in, THEN animate content
+  async function swapScene(fn){
+    scene.classList.add('swapping');
+    await new Promise(r=>setTimeout(r,320));
+    scene.innerHTML='';
+    scene.classList.remove('swapping');   // fade back in BEFORE the scene animates
+    await new Promise(r=>setTimeout(r,60));
+    await fn();
+  }
+
+  // ===== Simulated cursor: the thing that makes it feel USED (Adobe-style) =====
+  const cursorEl = document.getElementById('demoCursor');
+  const clickEl = document.getElementById('demoClick');
+  const stage = scene.closest('.demo-body');
+  function showCursor(on){ if(cursorEl) cursorEl.classList.toggle('show', on); }
+  // move the cursor to the center of a target element (coords relative to demo-body)
+  async function moveCursorTo(target, opts){
+    if(!cursorEl || !stage || !target) return;
+    opts = opts || {};
+    const sr = stage.getBoundingClientRect();
+    const tr = target.getBoundingClientRect();
+    const x = (tr.left - sr.left) + (opts.offx!=null?opts.offx:tr.width*0.5) - 11;
+    const y = (tr.top - sr.top) + (opts.offy!=null?opts.offy:tr.height*0.5) - 11;
+    cursorEl.style.transform = `translate(${x}px, ${y}px)`;
+    await new Promise(r=>setTimeout(r, opts.dur || 720));
+  }
+  // fire the click ripple at the cursor's current position
+  async function clickCursor(){
+    if(!cursorEl || !clickEl || !stage) return;
+    const m = /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/.exec(cursorEl.style.transform || '');
+    if(m){
+      clickEl.style.left = (parseFloat(m[1])+11) + 'px';
+      clickEl.style.top  = (parseFloat(m[2])+11) + 'px';
+      clickEl.classList.remove('fire'); void clickEl.offsetWidth; clickEl.classList.add('fire');
+    }
+    // a tiny "press" nudge on the cursor
+    cursorEl.style.transition = 'transform .09s ease';
+    const cur = cursorEl.style.transform;
+    cursorEl.style.transform = cur + ' scale(.85)';
+    await new Promise(r=>setTimeout(r,90));
+    cursorEl.style.transform = cur;
+    cursorEl.style.transition = 'transform .7s cubic-bezier(.4,.1,.2,1), opacity .4s ease';
+    await new Promise(r=>setTimeout(r,140));
+  }
+
+  const esc = s => { const d=document.createElement('div'); d.textContent=String(s==null?'':s); return d.innerHTML; };
+  const ring = (pct, color) => {
+    const r=20, c=2*Math.PI*r, off=c-(pct/100)*c;
+    return `<svg width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="${r}" fill="none" stroke="var(--line)" stroke-width="4"/><circle cx="23" cy="23" r="${r}" fill="none" stroke="${color}" stroke-width="4" stroke-dasharray="${c}" stroke-dashoffset="${off}" stroke-linecap="round"/></svg><span class="pct" style="color:${color}">${pct}%</span>`;
+  };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  async function type(text){
+    caption.innerHTML = '';
+    const cursor = '<span class="cursor"></span>';
+    for(let i=0;i<=text.length;i++){
+      caption.innerHTML = esc(text.slice(0,i)) + cursor;
+      await wait(22);
+    }
+  }
+
+  // Scene 1: profile chips build up
+  async function sceneProfile(){
+    scene.innerHTML = `<div class="dp-chips" id="chips"></div>`;
+    const chips = document.getElementById('chips');
+    const items = [
+      {t:'Goal: Data Analyst', g:true},
+      {t:'SQL', g:false},{t:'Python', g:false},{t:'Excel', g:false},
+      {t:'Remote only', g:false},{t:'No sales roles', g:false},{t:'Learning > pay', g:false}
+    ];
+    for(const it of items){
+      const el=document.createElement('div');
+      el.className='dp-chip'+(it.g?' gold':'');
+      el.textContent=it.t;
+      chips.appendChild(el);
+      await wait(60);
+      requestAnimationFrame(()=>el.classList.add('in'));
+      await wait(190);
+    }
+    await wait(900);
+  }
+
+  // Scene 2: matches stream in and score
+  async function sceneMatches(){
+    scene.innerHTML = '';
+    const matches = [
+      {title:'Data Analyst', org:'Northwind Analytics \u00b7 Remote', pct:91, color:'var(--aurora)', flag:{c:'good', t:'Strong fit \u2014 touches SQL & Python from your goal, and the posting is 2 days fresh.'}},
+      {title:'Senior Data Scientist', org:'Vega Labs \u00b7 Remote', pct:58, color:'var(--gold)', flag:{c:'warn', t:'Seniority stretch \u2014 this reads a level above where you said you are. Worth weighing.'}},
+      {title:'Sales Analyst', org:'BrightCo \u00b7 New York', pct:null, color:null, flag:{c:'warn', t:'Filtered \u2014 you ruled out sales roles, and this one is onsite in a different city.'}}
+    ];
+    for(const m of matches){
+      const card=document.createElement('div');
+      card.className='dm-card';
+      if(m.pct===null){
+        card.innerHTML = `<div class="dm-ring" style="opacity:.4">${ring(35,'var(--text-faint)')}</div>
+          <div class="dm-info"><p class="dm-title" style="color:var(--text-faint)">${esc(m.title)}</p>
+          <div class="dm-org">${esc(m.org)}</div>
+          <div class="dm-flag ${m.flag.c}">&#9888; ${esc(m.flag.t)}</div></div>`;
+      } else {
+        card.innerHTML = `<div class="dm-ring">${ring(0,m.color)}</div>
+          <div class="dm-info"><p class="dm-title">${esc(m.title)}</p>
+          <div class="dm-org">${esc(m.org)}</div>
+          <div class="dm-flag ${m.flag.c}">${m.flag.c==='good'?'&#10003;':'&#9888;'} ${esc(m.flag.t)}</div></div>`;
+      }
+      scene.appendChild(card);
+      await wait(80);
+      requestAnimationFrame(()=>card.classList.add('in'));
+      if(m.pct!==null){
+        await wait(250);
+        const ringEl = card.querySelector('.dm-ring');
+        let cur=0; const target=m.pct;
+        await new Promise(res=>{
+          const iv=setInterval(()=>{
+            cur+=3; if(cur>=target){cur=target;clearInterval(iv);res();}
+            ringEl.innerHTML=ring(cur,m.color);
+          },16);
+        });
+      }
+      await wait(650);
+    }
+    await wait(1600);
+  }
+
+  // Scene 3: the payoff — a short roadmap of what to actually do next
+  async function sceneRoadmap(){
+    const steps = [
+      {n:'1', done:true,  title:'Add one SQL project to your portfolio', sub:'Closes the biggest gap for the Data Analyst match.'},
+      {n:'2', done:false, title:'Tailor your r\u00e9sum\u00e9 to the Northwind role', sub:'Drafted from your real experience \u2014 never fabricated.'},
+      {n:'3', done:false, title:'Reach out before the posting goes stale', sub:'It is 2 days fresh \u2014 apply while it is still active.'},
+    ];
+    for(const s of steps){
+      const el=document.createElement('div');
+      el.className='dr-step'+(s.done?' done':'');
+      el.innerHTML=`<div class="dr-num">${s.done?'\u2713':s.n}</div>
+        <div class="dr-txt"><p class="dr-title">${esc(s.title)}</p><div class="dr-sub">${esc(s.sub)}</div></div>`;
+      scene.appendChild(el);
+      await wait(80);
+      requestAnimationFrame(()=>el.classList.add('in'));
+      await wait(500);
+    }
+    await wait(1900);
+  }
+
+  async function loop(){
+    while(true){
+      // Scene 1 — read profile. Caption + scene enter together (synchronized).
+      showCursor(false);
+      setDot(0);
+      progress.style.transition='none'; progress.style.width='0%';
+      progress.style.transition='width 2.6s linear'; progress.style.width='25%';
+      await Promise.all([ type('Reading your profile \u2014 goals, skills, constraints'), swapScene(sceneProfile) ]);
+      await wait(700);
+
+      // Scene 2 — scan + score matches, then the CURSOR inspects the top match
+      setDot(1);
+      progress.style.transition='width 5.5s linear'; progress.style.width='70%';
+      const s2 = swapScene(sceneMatches);
+      await type('Scoring live listings against your profile');
+      sweep();
+      await s2;
+      await wait(500);
+      // cursor glides in and "clicks" the top match to inspect it
+      const topCard = scene.querySelector('.dm-card');
+      if(topCard){
+        showCursor(true);
+        await moveCursorTo(topCard, {offx: 30, offy: 22});
+        await clickCursor();
+        topCard.classList.add('hot');
+        await wait(1100);
+        topCard.classList.remove('hot');
+      } else { await wait(900); }
+
+      // Scene 3 — the payoff: cursor taps down the roadmap steps
+      setDot(2);
+      progress.style.transition='width 2.2s linear'; progress.style.width='100%';
+      const s3 = swapScene(sceneRoadmap);
+      await type('Turning the top match into next steps');
+      await s3;
+      await wait(300);
+      const steps = scene.querySelectorAll('.dr-step');
+      showCursor(true);
+      for(const st of steps){
+        await moveCursorTo(st, {offx: 13, offy: 20, dur: 520});
+        await clickCursor();
+        st.classList.add('hot');
+        await wait(260);
+        st.classList.remove('hot');
+      }
+      await wait(300);
+      showCursor(false);
+      await type('Every score capped and explained \u2014 nothing inflated');
+      await wait(1900);
+    }
+  }
+  loop();
+})();
+</script>
+</body>
+</html>

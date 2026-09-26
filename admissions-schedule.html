@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schedule — Kaidostar Admissions</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.add-card{ background: var(--panel); border:1px solid var(--violet); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; }
+.add-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+.add-row input, .add-row select{ flex:1; min-width:140px; }
+.evt{ background: var(--panel); border:1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px; display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; }
+.evt.status-passed{ border-color: rgba(95,224,184,0.5); opacity:0.8; }
+.evt.status-missed{ border-color: rgba(242,122,107,0.45); opacity:0.85; }
+.evt-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:var(--text); margin:0 0 5px; }
+.evt-meta{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text-faint); }
+.evt-type{ font-family:'JetBrains Mono',monospace; font-size:10px; padding:3px 10px; border-radius:999px; margin-left:8px; }
+.evt-type.competition{ color:var(--violet); background:var(--violet-dim); }
+.evt-type.deadline{ color:var(--gold); background:var(--gold-dim); }
+.evt-type.internship{ color:var(--aurora); background:var(--aurora-dim); }
+.evt-type.test{ color:var(--comet); background:var(--comet-dim); }
+.evt-actions{ display:flex; gap:8px; align-items:center; }
+.mini-btn{ background:var(--void); border:1px solid var(--line); border-radius:999px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; padding:6px 12px; cursor:pointer; }
+.mini-btn:hover{ border-color:var(--violet); color:var(--violet); }
+.mini-btn.del:hover{ border-color:var(--danger); color:var(--danger); }
+.win-tip{ margin-top:8px; padding:10px 13px; background:var(--void); border:1px solid var(--line-soft); border-radius:9px; font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); line-height:1.5; }
+.win-tip b{ color:var(--aurora); }
+.hint{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-faint); }
+</style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow" style="color:var(--violet);">ADMISSIONS TRACK</div>
+      <h1>Your admissions timeline</h1>
+      <p>Every competition round, application deadline, and internship opening in one place - with a concrete prep plan so you actually win the ones that matter.</p>
+    </div>
+
+    <div id="noProfile" class="add-card hidden">
+      <p class="hint" style="margin-bottom:14px;">Build your admissions profile first.</p>
+      <a class="btn" href="survey.html">Go to the survey &rarr;</a>
+    </div>
+
+    <div id="schedContent" class="hidden">
+      <div class="add-card">
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-size:15px; margin:0;">Add a deadline or competition</h2>
+        <p class="hint" style="margin:6px 0 0;">Opportunities you track from the dashboard land here automatically - add your own here too.</p>
+        <div class="add-row">
+          <input type="text" id="evtTitle" placeholder="e.g. USACO December Contest">
+          <input type="text" id="evtDate" placeholder="Date e.g. Dec 12">
+          <select id="evtType">
+            <option value="deadline">Application deadline</option>
+            <option value="competition">Competition</option>
+            <option value="internship">Internship opening</option>
+            <option value="test">Test date (SAT/ACT/AP)</option>
+          </select>
+          <button class="btn" id="addEvtBtn" style="flex:0 0 auto;">Add</button>
+        </div>
+      </div>
+
+      <div id="evtList"></div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script>
+window.addEventListener("error", function(e){ var m="Script error: "+e.message; if(!document.getElementById("diagBanner")){var b=document.createElement("div");b.id="diagBanner";b.style.cssText="position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px;font-family:monospace;font-size:13px;text-align:center;";b.textContent="Kaidostar failed to load - "+m;document.body.prepend(b);} });
+</script>
+<script>
+initStarfield();
+renderNav('admissions-schedule');
+const esc = s => { const d=document.createElement('div'); d.textContent=String(s==null?'':s); return d.innerHTML; };
+const admProfile = getAdmissionsProfile();
+
+if(!admProfile){
+  document.getElementById('noProfile').classList.remove('hidden');
+} else {
+  document.getElementById('schedContent').classList.remove('hidden');
+  seedIfEmpty();
+  renderEvents();
+}
+
+// On first visit, seed the schedule from the student's top matched
+// opportunities so it isn't empty - real deadlines, not placeholders.
+function seedIfEmpty(){
+  if(getAdmissionsEvents().length) return;
+  const opps = runAdmissionsMatchCycle(admProfile).slice(0,4);
+  opps.forEach(o => addAdmissionsEvent({ listing_id: String(o.id), title: o.title, org: o.org, event_type: o.tags.includes('competition') ? 'competition' : o.tags.includes('internship') ? 'internship' : 'deadline', event_date: o.deadline }));
+}
+
+document.getElementById('addEvtBtn').addEventListener('click', () => {
+  const title = document.getElementById('evtTitle').value.trim();
+  const date = document.getElementById('evtDate').value.trim();
+  const type = document.getElementById('evtType').value;
+  if(!title){ document.getElementById('evtTitle').focus(); return; }
+  addAdmissionsEvent({ title, event_date: date, event_type: type });
+  document.getElementById('evtTitle').value = '';
+  document.getElementById('evtDate').value = '';
+  renderEvents();
+});
+
+/* A concrete, honest prep suggestion per event type - the "push" that
+   turns a deadline into a plan. Deterministic, no fabricated specifics. */
+function winTip(type){
+  if(type === 'competition') return `<b>To place:</b> work backward from the date - block 2-3 short prep sessions a week now rather than cramming. A steady, entered attempt beats a perfect one you never submit.`;
+  if(type === 'internship') return `<b>To land it:</b> send a specific, short outreach email this week - name why this program, not a generic one. Direct outreach opens doors public postings never advertise.`;
+  if(type === 'test') return `<b>To improve:</b> take one timed practice section this week to set a baseline, then target your weakest area first - that's where scores move fastest.`;
+  return `<b>To submit strong:</b> start the draft at least two weeks out - the best applications go through a few honest revisions, which takes real lead time.`;
+}
+
+/* A one-time, school-aware banner reminding the student of the key application
+   deadlines that actually apply to THEIR target schools (UCAS for UK, ED/EA for
+   US) - real, well-known dates, no fabricated per-school specifics. */
+function admissionsDeadlineBanner(){
+  const A = (typeof admissionsAnchor === 'function') ? admissionsAnchor(admProfile) : null;
+  if(!A || !A.anchor) return '';
+  const parts = [];
+  if(A.hasUK){
+    parts.push(`<b>UK / UCAS:</b> the deadline is 15 October for Oxbridge, medicine, dentistry, and veterinary courses, and late January for most other courses. Any required admissions test (e.g. TMUA, ESAT, MAT, STEP, LNAT, UCAT) has its own earlier registration deadline - check each course page.`);
+  }
+  if(A.hasUS){
+    parts.push(`<b>US:</b> Early Decision / Early Action deadlines are usually 1 November (a binding ED offer often carries a meaningfully higher admit rate); Regular Decision is usually 1 January. Rolling-admission schools reward applying early. Confirm each school's exact dates.`);
+  }
+  if(!parts.length) return '';
+  return `<div class="win-tip" style="border-color:var(--gold-dim); margin-bottom:14px;">${parts.join('<br><br>')}</div>`;
+}
+
+function renderEvents(){
+  const el = document.getElementById('evtList');
+  const events = getAdmissionsEvents();
+  const banner = admissionsDeadlineBanner();
+  if(!events.length){ el.innerHTML = banner + `<div class="evt"><span class="hint">Nothing scheduled yet - add a deadline above, or track opportunities from the dashboard.</span></div>`; return; }
+  el.innerHTML = banner + events.map(e => `
+    <div class="evt status-${esc(e.status || 'upcoming')}">
+      <div style="flex:1; min-width:200px;">
+        <p class="evt-title">${esc(e.title)}<span class="evt-type ${esc(e.event_type||'deadline')}">${esc((e.event_type||'deadline').replace('_',' '))}</span></p>
+        <div class="evt-meta">${e.org ? esc(e.org) + ' &middot; ' : ''}Due ${esc(e.event_date || 'TBD')}${e.status && e.status!=='upcoming' ? ' &middot; ' + esc(e.status) : ''}</div>
+        ${e.status === 'passed' || e.status === 'missed' ? '' : `<div class="win-tip">${winTip(e.event_type||'deadline')}</div>`}
+      </div>
+      <div class="evt-actions">
+        <button class="mini-btn" data-passed="${esc(e.id)}">Done</button>
+        <button class="mini-btn" data-missed="${esc(e.id)}">Missed</button>
+        <button class="mini-btn del" data-del="${esc(e.id)}">&times;</button>
+      </div>
+    </div>`).join('');
+  el.querySelectorAll('[data-passed]').forEach(b => b.addEventListener('click', () => { updateAdmissionsEventStatus(b.dataset.passed, 'passed'); renderEvents(); }));
+  el.querySelectorAll('[data-missed]').forEach(b => b.addEventListener('click', () => { updateAdmissionsEventStatus(b.dataset.missed, 'missed'); renderEvents(); }));
+  el.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => { deleteAdmissionsEvent(b.dataset.del); renderEvents(); }));
+}
+
+// School-aware Metis guide (shared context - consistent across every admissions page).
+if(typeof admProfile !== 'undefined' ? admProfile : (typeof getAdmissionsProfile==='function' && getAdmissionsProfile())){
+  injectMetisWidget(admissionsMetisContext, {
+    subtitle: 'Your AI admissions guide',
+    greeting: "Hi - I can help with your target schools, essays, your roadmap, or deadlines. What's on your mind?",
+    suggestions: [ { label: 'Deadline help', q: 'What application deadlines should I be most worried about for my target schools?' }, { label: 'Plan my prep', q: 'How should I plan my prep backward from my next deadline?' } ],
+  });
+}
+</script>
+<script>
+// Visible tier switcher (preview - no payment) so plan differences are testable everywhere.
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+</body>
+</html>

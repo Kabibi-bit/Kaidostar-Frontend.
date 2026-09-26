@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Application — Kaidostar Admissions</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.ws-card{ background: var(--panel); border:1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-bottom: 16px; }
+.ws-card h2{ font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; margin:0 0 6px; color:var(--text); }
+.ws-card .sub{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); margin:0 0 16px; line-height:1.5; }
+.ws-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+@media (max-width:700px){ .ws-grid{ grid-template-columns:1fr; } }
+.draft-out{ margin-top:16px; padding:16px; background:var(--void); border:1px solid var(--violet); border-radius:10px; font-family:'Manrope',sans-serif; font-size:13.5px; line-height:1.65; color:var(--text); white-space:pre-wrap; display:none; }
+.draft-out.show{ display:block; }
+.pill-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.pill{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12.5px; padding:8px 16px; border-radius:999px; background:var(--void); border:1px solid var(--line); color:var(--text-dim); cursor:pointer; }
+.pill.active{ background:var(--violet-dim); border-color:var(--violet); color:var(--violet); }
+.copy-btn{ margin-top:12px; background:transparent; border:1px solid var(--line); color:var(--text-dim); border-radius:999px; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; padding:7px 14px; cursor:pointer; }
+.copy-btn:hover{ border-color:var(--violet); color:var(--violet); }
+.hint{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-faint); }
+.honest-note{ margin-top:14px; font-family:'Manrope',sans-serif; font-size:12px; color:var(--text-faint); line-height:1.5; border-top:1px solid var(--line-soft); padding-top:12px; }
+label{ display:block; }
+
+/* ---- Competitive-grade essay rubric ---- */
+.rubric-out{ display:none; margin-top:16px; }
+.rubric-out.show{ display:block; }
+.rubric-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px 20px; }
+.rb-head{ display:flex; align-items:center; gap:18px; padding-bottom:16px; border-bottom:1px solid var(--line-soft); margin-bottom:16px; }
+.rb-score{ display:flex; align-items:baseline; justify-content:center; width:82px; height:82px; border-radius:50%; border:3px solid var(--rb-c, var(--violet)); flex:0 0 auto; }
+.rb-score-num{ font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:700; color:var(--rb-c, var(--violet)); }
+.rb-score-max{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-faint); }
+.rb-band{ font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:600; margin-bottom:4px; }
+.rb-meta{ font-family:'Manrope',sans-serif; font-size:11.5px; color:var(--text-faint); }
+.rb-dims{ display:grid; gap:13px; }
+.rb-dim-top{ display:flex; justify-content:space-between; align-items:baseline; }
+.rb-dim-name{ font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--text); }
+.rb-dim-score{ font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; }
+.rb-dim-bar{ height:6px; border-radius:6px; background:var(--void); overflow:hidden; margin:5px 0 5px; }
+.rb-dim-bar > i{ display:block; height:100%; border-radius:6px; transition:width .8s cubic-bezier(.2,.8,.2,1); }
+.rb-dim-note{ font-family:'Manrope',sans-serif; font-size:11.5px; line-height:1.5; color:var(--text-dim); }
+.rb-ground-wrap{ margin-top:16px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.rb-ground-label{ font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.06em; text-transform:uppercase; color:var(--aurora); margin-bottom:8px; }
+.rb-ground{ font-family:'Manrope',sans-serif; font-size:12px; line-height:1.55; color:var(--text); background:rgba(64,192,160,.08); border-left:2px solid var(--aurora); border-radius:0 8px 8px 0; padding:9px 12px; margin-bottom:8px; }
+.rb-school{ font-family:'Manrope',sans-serif; font-size:12px; line-height:1.55; color:var(--text); background:var(--void); border-left:2px solid var(--violet); border-radius:0 8px 8px 0; padding:9px 12px; margin-top:8px; }
+.rb-school b{ display:block; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.06em; text-transform:uppercase; color:var(--violet); margin-bottom:3px; }
+.rb-honest{ font-family:'Manrope',sans-serif; font-size:10.5px; font-style:italic; color:var(--text-faint); margin-top:14px; line-height:1.5; }
+</style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow" style="color:var(--violet);">ADMISSIONS TRACK</div>
+      <h1>Where your application gets built</h1>
+      <p>Draft the outreach that lands internships and research spots, and get honest structure for your application - grounded in your real profile, never fabricated.</p>
+    </div>
+
+    <div id="noProfile" class="ws-card hidden" style="border-color:var(--violet);">
+      <p class="hint" style="margin-bottom:14px;">Build your admissions profile first.</p>
+      <a class="btn" href="survey.html">Go to the survey &rarr;</a>
+    </div>
+
+    <div id="wsContent" class="hidden">
+      <div class="pill-row">
+        <div class="pill active" data-mode="essay">Essay structure</div>
+        <div class="pill" data-mode="brainstorm">Brainstorm your story</div>
+        <div class="pill" data-mode="polish">Polish your draft</div>
+        <div class="pill" data-mode="outreach">Internship / research outreach</div>
+      </div>
+
+      <!-- Outreach mode -->
+      <div id="outreachPanel" style="display:none;">
+        <div class="ws-card">
+          <h2>Cold outreach for an internship or research spot</h2>
+          <p class="sub">The single highest-leverage move most students skip. A specific, short email to a professor or program often works where public postings never appear.</p>
+          <div class="ws-grid">
+            <div><label for="oProgram">Program / professor / organization</label><input type="text" id="oProgram" placeholder="e.g. Prof. Lee's robotics lab, Whitfield University"></div>
+            <div><label for="oFocus">What specifically interests you about it</label><input type="text" id="oFocus" placeholder="e.g. your work on autonomous navigation"></div>
+          </div>
+          <button class="btn" id="genOutreachBtn" style="margin-top:14px;">Draft my outreach &rarr;</button>
+          <div class="draft-out" id="outreachDraft"></div>
+          <div class="honest-note">Kaidostar drafts a real, specific starting point from what you enter - it never invents accomplishments, grades, or experience you didn't provide. Always edit it into your own honest voice before sending.</div>
+        </div>
+      </div>
+
+      <!-- Essay mode -->
+      <div id="essayPanel">
+        <div class="ws-card">
+          <h2>Application essay structure</h2>
+          <p class="sub">Not a written-for-you essay - an honest structure and prompts, so the words stay genuinely yours (which is what actually reads as authentic to admissions officers).</p>
+          <div><label for="eTheme">The one story or trait you want this essay to show</label><input type="text" id="eTheme" placeholder="e.g. how founding a coding club changed how I lead"></div>
+          <button class="btn" id="genEssayBtn" style="margin-top:14px;">Get my essay structure &rarr;</button>
+          <div class="draft-out" id="essayDraft"></div>
+          <div class="honest-note">This is scaffolding and honest guidance only. Selective schools can spot a generic or AI-written essay instantly - the structure is here to help you tell your own real story well.</div>
+        </div>
+      </div>
+
+      <!-- Brainstorm mode: pull a REAL essay out of the student via their own answers -->
+      <div id="brainstormPanel" style="display:none;">
+        <div class="ws-card">
+          <h2>Brainstorm your story</h2>
+          <p class="sub">The hardest part of an essay isn't writing - it's finding the true, specific story only you can tell. Answer these honestly and Kaidostar turns YOUR answers into a personal outline in your own words. It never invents anything; every line comes from you.</p>
+          <div class="bs-q"><label for="bsMoment">1. A specific moment (not a summary). When did something shift for you - a single scene you still remember? Where were you, what happened?</label><textarea id="bsMoment" rows="3" placeholder="Be concrete. 'The night the robot finally worked at 2am in the empty lab' beats 'I love robotics.'"></textarea></div>
+          <div class="bs-q"><label for="bsStruggle">2. What was genuinely hard, uncertain, or went wrong first?</label><textarea id="bsStruggle" rows="2" placeholder="The real struggle - admissions officers connect with honesty, not a highlight reel."></textarea></div>
+          <div class="bs-q"><label for="bsDid">3. What did YOU actually do about it? (2-3 concrete actions)</label><textarea id="bsDid" rows="2" placeholder="Specifics over adjectives: 'I rewrote the wiring diagram three times' not 'I worked hard.'"></textarea></div>
+          <div class="bs-q"><label for="bsChanged">4. What did it change in how you think, work, or see things?</label><textarea id="bsChanged" rows="2" placeholder="The real reflection - this is the heart of the essay."></textarea></div>
+          <button class="btn" id="genBrainstormBtn" style="margin-top:6px;">Build my outline from my answers &rarr;</button>
+          <div class="draft-out" id="brainstormDraft"></div>
+          <div class="honest-note">This assembles YOUR own words into a structure - it doesn't write the essay for you. The finished essay must be written by you, in your voice. That's not just honest; it's what actually reads as authentic (and what selective schools increasingly require).</div>
+        </div>
+      </div>
+
+      <!-- Polish mode: the honest "humanizer" - improve the student's OWN draft -->
+      <div id="polishPanel" style="display:none;">
+        <div class="ws-card">
+          <h2>Polish your draft</h2>
+          <p class="sub">Paste an essay YOU'VE written. Kaidostar flags the clichés, generic lines, and "AI-tells" that make essays blur together - and shows you where your real voice is missing - so you can make it unmistakably yours. It won't rewrite it for you (a rewritten essay isn't yours, and that's the whole point).</p>
+          <div><label for="polishPrompt">The essay prompt (optional, improves the check)</label><input type="text" id="polishPrompt" placeholder="e.g. Describe a challenge you overcame and what you learned"></div>
+          <div style="margin-top:12px;"><label for="polishText">Your draft (paste your own writing)</label><textarea id="polishText" rows="9" placeholder="Paste the essay you've written. Everything stays on your device."></textarea></div>
+          <button class="btn" id="genPolishBtn" style="margin-top:12px;">Score & review my draft &rarr;</button>
+          <div id="rubricOut" class="rubric-out"></div>
+          <div class="draft-out" id="polishDraft"></div>
+          <div class="honest-note">This analyzes your own text and gives you feedback to revise it yourself. It is NOT an "AI humanizer" that disguises machine-written text to beat detectors - that's a fast way to get an application rescinded, and it's the opposite of what we do. The goal is your genuine voice, made sharper.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script>
+window.addEventListener("error", function(e){ var m="Script error: "+e.message; if(!document.getElementById("diagBanner")){var b=document.createElement("div");b.id="diagBanner";b.style.cssText="position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px;font-family:monospace;font-size:13px;text-align:center;";b.textContent="Kaidostar failed to load - "+m;document.body.prepend(b);} });
+</script>
+<script>
+initStarfield();
+renderNav('admissions-workshop');
+const esc = s => { const d=document.createElement('div'); d.textContent=String(s==null?'':s); return d.innerHTML; };
+const admProfile = getAdmissionsProfile();
+
+if(!admProfile){
+  document.getElementById('noProfile').classList.remove('hidden');
+} else {
+  document.getElementById('wsContent').classList.remove('hidden');
+}
+
+// Visible tier switcher (preview - no payment) so the plan differences are testable.
+if(typeof injectTierSwitcher === 'function') injectTierSwitcher();
+
+// mode toggle
+document.querySelectorAll('.pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    const mode = p.dataset.mode;
+    document.getElementById('essayPanel').style.display = mode === 'essay' ? 'block' : 'none';
+    document.getElementById('brainstormPanel').style.display = mode === 'brainstorm' ? 'block' : 'none';
+    document.getElementById('polishPanel').style.display = mode === 'polish' ? 'block' : 'none';
+    document.getElementById('outreachPanel').style.display = mode === 'outreach' ? 'block' : 'none';
+    if(mode === 'outreach') applyOutreachGate();
+  });
+});
+
+// Outreach drafting is a Pro+ feature. On Free, replace the drafting form with an
+// honest locked overlay; on Pro/Max, show the real tool. Gating reads the single
+// hasFeature() source of truth, so it stays correct if tiers change.
+function applyOutreachGate(){
+  const panel = document.getElementById('outreachPanel');
+  if(!panel) return;
+  const card = panel.querySelector('.ws-card');
+  if(!card) return;
+  if(hasFeature('outreach_drafting')){
+    // Unlocked: make sure the real form is visible (restore if we hid it).
+    const locked = card.querySelector('.feature-locked');
+    if(locked){ locked.remove(); const real = card.querySelector('[data-outreach-real]'); if(real) real.style.display=''; }
+  } else {
+    // Locked: hide the real form, show the overlay (once).
+    if(!card.querySelector('.feature-locked')){
+      Array.from(card.children).forEach(ch => { ch.setAttribute('data-outreach-real',''); ch.style.display='none'; });
+      const div = document.createElement('div');
+      div.innerHTML = lockedFeatureHTML('outreach_drafting', 'Outreach drafting',
+        'Draft specific, honest cold-outreach emails to programs, professors, and internships - built from your real profile, never fabricated. Available on Pro and Max.');
+      card.appendChild(div.firstElementChild);
+    }
+  }
+}
+
+// Outreach draft - deterministic, built only from real entered inputs +
+// the student's real profile. No fabricated credentials.
+document.getElementById('genOutreachBtn').addEventListener('click', () => {
+  const program = document.getElementById('oProgram').value.trim() || '[program/professor]';
+  const focus = document.getElementById('oFocus').value.trim() || '[the specific work that interests you]';
+  const major = admProfile.intendedMajor || 'my intended field';
+  const grade = admProfile.gradeLevel || 'a high school student';
+  const interests = admProfile.interests ? ` My background is in ${admProfile.interests}.` : '';
+  // Use the student's OWN stated achievements as a real credibility line - never fabricated.
+  const ach = (admProfile.studentAchievements || '').trim();
+  const achLine = ach ? ` To give a sense of where I'm coming from: ${ach}.` : '';
+  const A = admissionsAnchor(admProfile);
+  // One honest, school-aware line tying the pitch to what the anchor school genuinely values -
+  // never a fabricated credential, just a framing that fits.
+  let fitLine = '';
+  if(A.anchor){
+    if(A.isMaker) fitLine = ` I'm especially drawn to work where I can build and make things, not just observe.`;
+    else if(A.isResearch) fitLine = ` I'm particularly keen to contribute to real research, even in a small supporting role.`;
+    else if(A.isService) fitLine = ` I care about work that contributes something to the wider community, which is part of why this appeals to me.`;
+  }
+  // A specific subject line lands far better than a generic one - anchor it to the focus area.
+  const subjectFocus = (document.getElementById('oFocus').value.trim()) || major;
+  const draft = `Subject: ${grade} keen to contribute to your work on ${subjectFocus}
+
+Dear [Name],
+
+My name is [your name], and I'm ${grade} planning to study ${major}. I came across ${program} and was genuinely drawn to ${focus} - it's closely tied to what I want to explore.${interests}${achLine}${fitLine}
+
+I'd be grateful for the chance to contribute in any capacity this term - helping with ongoing work, assisting on a project, or learning alongside your team. I'm reliable, eager, and happy to start small.
+
+Would you be open to a short conversation? I've attached a brief summary of my background and can work around your schedule.
+
+Thank you for your time,
+[Your name] · [email] · [phone]`;
+  const out = document.getElementById('outreachDraft');
+  out.textContent = draft;
+  out.classList.add('show');
+  if(!out.dataset.copyAdded){ addCopy(out); out.dataset.copyAdded = '1'; }
+});
+
+// Essay structure - honest scaffolding, not a written essay.
+document.getElementById('genEssayBtn').addEventListener('click', () => {
+  const theme = document.getElementById('eTheme').value.trim() || '[the story or trait you chose]';
+  const major = admProfile.intendedMajor || 'your field';
+  const A = admissionsAnchor(admProfile);
+  const anchorName = A.anchor ? A.anchor.name : 'your target schools';
+  let structure;
+
+  if(A.isUK){
+    // UK personal statement: ~80% academic/subject-focused. A US-style personal
+    // narrative is the WRONG shape here and reads as off-target to UK tutors.
+    const crossNote = (A.hasUS)
+      ? `\n\nIMPORTANT - you're also applying to US schools: they want the opposite kind of essay (a personal, story-driven Common App essay about who you are). You'll need to write that separately. The structure below is for your UK/UCAS statement only.`
+      : '';
+    const valuesNote = A.anchor ? ` This is exactly what ${anchorName} means when it looks for ${A.twoValues}.` : '';
+    structure = `UK personal-statement structure for ${major}${A.anchor ? ' (anchored on ' + anchorName + ')' : ''}:
+
+The UK statement is ONE statement for all five choices and should be roughly 80% about your subject - why you want to study ${major}, and the evidence you've engaged with it deeply. It is NOT a personal-narrative "who I am" essay. Structure it in the three UCAS sections:
+
+1. WHY THIS SUBJECT (your motivation)
+   A specific intellectual hook - an idea, problem, or question in ${major} that genuinely grabbed you. Not "I've always loved it," not a childhood story, not a quote.
+   Prompt: What specific idea or problem in ${major} made you want to study it at degree level?
+
+2. WHAT YOU'VE DONE TO EXPLORE IT (the bulk - super-curricular evidence)
+   The heart of a UK statement. Wider reading, lectures, MOOCs, projects, essays, competitions, or a personal investigation - and crucially, what you LEARNED or THOUGHT from each, not just that you did it.${valuesNote}
+   Prompt: Name 2-3 things you read or did beyond school, and one genuine idea or question each left you with.
+   ${A.isPortfolio ? 'Because your course is portfolio-based, your portfolio is the real centrepiece - reference the work and the thinking behind it.' : A.isAudition ? 'Because your course is audition-based, your musical/performance development and repertoire are central here.' : ''}
+
+3. RELEVANT SKILLS & ANY SUPER-CURRICULAR CONTEXT (brief)
+   Only what genuinely connects to studying ${major} - a relevant EPQ, work experience, or skill. Keep any extracurriculars short and tied back to academic qualities (discipline, teamwork for the subject).
+   Prompt: What have you done that shows you can handle the academic demands of this course?
+
+Honest reminders for the UK statement:
+- Tutors probe what you actually understood - depth of thought beats a long list.
+- Avoid personality essays, inspirational quotes, and generic openings; they count against you.
+- Every sentence should earn its place by showing academic engagement with ${major}.${crossNote}`;
+  } else {
+    // US holistic essay: personal, story-driven - the original scaffold, now with a
+    // school-aware "what it changed in you" tie-in to the anchor's real values.
+    const valuesTie = A.anchor ? ` Where it fits honestly, let this connect to qualities ${anchorName} genuinely values - ${A.twoValues} - shown through your story, never name-dropped.` : '';
+    structure = `US application-essay structure for: ${theme}${A.anchor ? ' (anchored on ' + anchorName + ')' : ''}
+
+The US personal essay is the opposite of a UK statement: it's a personal, story-driven window into who you are - not an academic case. Show character through a specific true story.
+
+1. OPEN IN A SPECIFIC MOMENT (not a summary)
+   Start inside one concrete scene where this story happened - a single moment, with real detail. Avoid opening with a thesis or a quote.
+   Prompt: What was the exact moment things shifted? Put the reader there.
+
+2. THE TENSION OR TURN
+   What was genuinely hard, uncertain, or surprising? Admissions officers connect with honesty here, not a highlight reel.
+   Prompt: What did you get wrong first, or struggle with, before it worked?
+
+3. WHAT YOU ACTUALLY DID
+   Concrete actions, in your own voice. Specifics over adjectives - "I rewrote the schedule three times" beats "I worked hard."
+   Prompt: What are the 2-3 real things you did that you're proud of?
+
+4. WHAT IT CHANGED IN YOU
+   The real reflection - how this shaped how you think, lead, or approach ${major}. This is the heart of the essay.${valuesTie}
+   Prompt: How do you approach things differently now because of this?
+
+5. CLOSE WITH FORWARD MOTION
+   Tie it briefly to who you're becoming - without over-explaining or restating. Trust the story you told.
+
+Honest reminders:
+- Write it yourself. A real, slightly imperfect voice beats a polished generic one every time.
+- Cut anything that could appear in anyone's essay.
+- Read it aloud - if it doesn't sound like you talking, revise it.${A.hasUK ? '\n- Note: your UK choices need a separate, subject-focused UCAS statement - this personal style does not fit them.' : ''}`;
+  }
+  const out = document.getElementById('essayDraft');
+  out.textContent = structure;
+  out.classList.add('show');
+  if(!out.dataset.copyAdded){ addCopy(out); out.dataset.copyAdded = '1'; }
+});
+
+// ---- Brainstorm: assemble the student's OWN answers into a personal outline. ----
+// Never invents content - every line is built from what they typed. This is how
+// you help someone write a real essay without writing it for them.
+document.getElementById('genBrainstormBtn').addEventListener('click', () => {
+  const moment = document.getElementById('bsMoment').value.trim();
+  const struggle = document.getElementById('bsStruggle').value.trim();
+  const did = document.getElementById('bsDid').value.trim();
+  const changed = document.getElementById('bsChanged').value.trim();
+  const filled = [moment, struggle, did, changed].filter(Boolean).length;
+  const out = document.getElementById('brainstormDraft');
+
+  if(filled < 2){
+    out.textContent = 'Answer at least the first couple of questions above - the outline is built entirely from your own words, so it needs your real material to work with.';
+    out.classList.add('show');
+    return;
+  }
+  const A = admissionsAnchor(admProfile);
+  const major = admProfile.intendedMajor || 'your field';
+  // For UK, gently redirect: personal-narrative essays are the wrong shape there.
+  const ukNote = A.isUK ? `\n\nNOTE: your target schools are UK - a UK personal statement should be ~80% about your subject, not a personal narrative. Use this story only if it genuinely shows academic engagement with ${major}; otherwise switch to the "Essay structure" tab for the UK format.\n` : '';
+
+  let outline = `YOUR ESSAY OUTLINE — built entirely from your own answers\n(These are YOUR words, organized. Now write the full essay yourself, in your voice.)\n`;
+  outline += `\n1. OPEN HERE (drop the reader into this moment):\n   "${moment || '[the specific moment you described]'}"\n   → Write this as a scene, present and concrete. Don't explain it yet - let the reader be there.\n`;
+  if(struggle) outline += `\n2. THE TENSION (what was hard/uncertain):\n   "${struggle}"\n   → Be honest here. This is where the reader leans in.\n`;
+  if(did) outline += `\n3. WHAT YOU DID (your real, specific actions):\n   "${did}"\n   → Keep the specifics. Cut any adjective you could replace with a fact.\n`;
+  if(changed) outline += `\n4. WHAT IT CHANGED (the heart of the essay):\n   "${changed}"\n   → This is the reflection that makes it matter. Connect it to who you're becoming, briefly.\n`;
+  outline += `\n5. CLOSE with forward motion - tie it to how you'll carry this into ${major}, without over-explaining.\n`;
+  outline += `\nHONEST CHECK before you write:\n- Could this exact story belong to anyone else? If yes, add the details that make it only yours.\n- Are you telling the reader how to feel, or showing them? Show.\n- Read your finished draft aloud - if it doesn't sound like you talking, it isn't done.${ukNote}`;
+
+  out.textContent = outline;
+  out.classList.add('show');
+  if(!out.dataset.copyAdded){ addCopy(out); out.dataset.copyAdded = '1'; }
+
+  // Backend as source of truth when logged in (parity-verified with the local outline above).
+  (async () => {
+    const s = (typeof getSession === 'function') ? getSession() : null;
+    const uid = s && s.user_id;
+    if(!uid || typeof apiEssayBrainstorm !== 'function') return;
+    try {
+      const be = await apiEssayBrainstorm(uid, { moment, struggle, did, changed });
+      if(be && be.ok && be.outline){ out.textContent = be.outline; }
+    } catch(e){ /* backend unreachable - local outline already shown */ }
+  })();
+});
+
+// ---- Polish: the HONEST "humanizer" - analyze the student's OWN draft for
+// clichés, generic lines, and AI-tells, and show where their voice is missing.
+// It does NOT rewrite the essay (a rewrite isn't theirs) and is NOT a
+// detector-evasion tool. Pure client-side heuristics on their text.
+function renderRubric(rev){
+  const rubricEl = document.getElementById('rubricOut');
+  const bandColor = rev.overall>=8 ? 'var(--aurora)' : rev.overall>=6.5 ? 'var(--violet)' : rev.overall>=4.5 ? 'var(--gold)' : '#E0714E';
+  const dimColor = s => s>=4 ? 'var(--aurora)' : s>=3 ? 'var(--violet)' : s>=2 ? 'var(--gold)' : '#E0714E';
+  const dims = rev.dimensions || [];
+  const dimRows = dims.map(d => `
+    <div class="rb-dim">
+      <div class="rb-dim-top"><span class="rb-dim-name">${esc(d.name)}</span><span class="rb-dim-score" style="color:${dimColor(d.score)};">${d.score}/5</span></div>
+      <div class="rb-dim-bar"><i style="width:${d.score/5*100}%; background:${dimColor(d.score)};"></i></div>
+      <div class="rb-dim-note">${esc(d.note)}</div>
+    </div>`).join('');
+  const grounding = rev.groundingNotes || rev.grounding_notes || [];
+  const schoolNote = rev.schoolNote || rev.school_note;
+  const wordCount = rev.wordCount != null ? rev.wordCount : rev.word_count;
+  const sentenceCount = rev.sentenceCount != null ? rev.sentenceCount : rev.sentence_count;
+  const groundHtml = grounding.map(n => `<div class="rb-ground">${esc(n)}</div>`).join('');
+  const schoolHtml = schoolNote ? `<div class="rb-school"><b>School alignment</b>${esc(schoolNote)}</div>` : '';
+  rubricEl.innerHTML = `
+    <div class="rubric-card">
+      <div class="rb-head">
+        <div class="rb-score" style="--rb-c:${bandColor};">
+          <div class="rb-score-num">${rev.overall}</div><div class="rb-score-max">/10</div>
+        </div>
+        <div class="rb-head-txt">
+          <div class="rb-band" style="color:${bandColor};">${esc(rev.band)}</div>
+          <div class="rb-meta">${wordCount} words · ${sentenceCount} sentences · scored on what admissions readers actually look for</div>
+        </div>
+      </div>
+      <div class="rb-dims">${dimRows}</div>
+      ${groundHtml ? `<div class="rb-ground-wrap"><div class="rb-ground-label">Grounded in your real profile — something no other tool can check</div>${groundHtml}</div>` : ''}
+      ${schoolHtml}
+      <div class="rb-honest">A draft-strength read to guide your revision — not an admissions prediction, and never a rewrite. The detailed line-level notes are below.</div>
+    </div>`;
+  rubricEl.classList.add('show');
+}
+
+document.getElementById('genPolishBtn').addEventListener('click', () => {
+  const text = document.getElementById('polishText').value.trim();
+  const prompt = document.getElementById('polishPrompt').value.trim();
+  const rubricEl = document.getElementById('rubricOut');
+  const out = document.getElementById('polishDraft');
+  if(text.length < 120){
+    rubricEl.innerHTML = '';
+    out.textContent = "Paste a bit more of your draft (at least a few sentences) so there's something real to analyze.";
+    out.classList.add('show');
+    return;
+  }
+  // Local render first = instant + offline fallback (parity-verified with backend).
+  renderRubric(essayRubricReview(text, admProfile, { prompt }));
+  const report = polishAnalyze(text, admProfile);
+  out.textContent = report;
+  out.classList.add('show');
+  if(!out.dataset.copyAdded){ addCopy(out); out.dataset.copyAdded = '1'; }
+
+  // Then the backend as source of truth when logged in.
+  (async () => {
+    const s = (typeof getSession === 'function') ? getSession() : null;
+    const uid = s && s.user_id;
+    if(!uid || typeof apiEssayPolish !== 'function') return;
+    try {
+      const be = await apiEssayPolish(uid, text, prompt);
+      if(be && be.rubric){ renderRubric(be.rubric); }
+      if(be && be.report){ out.textContent = be.report; }
+    } catch(e){ /* backend unreachable - local review already shown */ }
+  })();
+});
+
+function addCopy(outEl){
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'Copy';
+  btn.addEventListener('click', () => {
+    navigator.clipboard && navigator.clipboard.writeText(outEl.textContent);
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+  outEl.insertAdjacentElement('afterend', btn);
+}
+
+// School-aware Metis guide (shared context - consistent across every admissions page).
+if(typeof admProfile !== 'undefined' ? admProfile : (typeof getAdmissionsProfile==='function' && getAdmissionsProfile())){
+  injectMetisWidget(admissionsMetisContext, {
+    subtitle: 'Your AI admissions guide',
+    greeting: "Hi - I can help with your target schools, essays, your roadmap, or deadlines. What's on your mind?",
+    suggestions: [ { label: 'Essay help', q: 'How should I approach my application essay for my target schools?' }, { label: 'Outreach tips', q: 'What makes a cold outreach email for an internship actually work?' } ],
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explore — Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.explore-wrap{ max-width: 720px; margin: 0 auto; }
+.slider-row{ margin-bottom: 22px; }
+.slider-row label{ display:flex; justify-content: space-between; margin-bottom: 8px; }
+.slider-label-text{ font-family:'Manrope', sans-serif; font-weight: 600; font-size: 13px; color: var(--text-dim); text-transform: none; letter-spacing: 0; }
+.slider-value{ color: var(--gold); font-family:'Space Grotesk', sans-serif; font-weight: 700; font-size: 12px; }
+/* Custom polished range slider (replaces the flat browser default) */
+input[type=range]{
+  width: 100%;
+  -webkit-appearance: none; appearance: none;
+  height: 8px; border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold) var(--fill,33%), var(--line-soft) var(--fill,33%), var(--line-soft) 100%);
+  outline: none; cursor: pointer;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance: none; appearance: none;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #FBD79A, #EAA23C);
+  border: 2px solid #241704;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 12px -2px rgba(240,178,78,0.7);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+input[type=range]::-webkit-slider-thumb:hover{ transform: scale(1.15); box-shadow: 0 2px 10px rgba(0,0,0,0.6), 0 0 18px -2px rgba(240,178,78,0.9); }
+input[type=range]::-moz-range-thumb{
+  width: 20px; height: 20px; border-radius: 50%; border: 2px solid #241704;
+  background: radial-gradient(circle at 35% 30%, #FBD79A, #EAA23C);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 12px -2px rgba(240,178,78,0.7);
+}
+input[type=range]::-moz-range-track{ height: 8px; border-radius: 999px; background: var(--line-soft); }
+input[type=range]::-moz-range-progress{ height: 8px; border-radius: 999px; background: var(--gold); }
+.slider-hint{ display:flex; justify-content: space-between; font-family:'JetBrains Mono', monospace; font-size: 10px; color: var(--text-faint); margin-top: 4px; }
+
+.direction-card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
+.direction-card.top{ border-color: var(--gold); }
+.direction-body{ display:grid; grid-template-columns: 56px 1fr; gap: 18px; }
+.direction-title{ font-family:'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px; margin: 0 0 6px; }
+.direction-desc{ font-family:'Manrope', sans-serif; font-size: 14px; color: var(--text-dim); line-height: 1.55; margin: 0 0 10px; }
+.direction-meta{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--comet); margin-bottom: 12px; }
+.direction-actions{ display:flex; gap: 10px; flex-wrap: wrap; }
+.direction-deep{ margin-top: 14px; padding: 14px; background: var(--void); border: 1px solid var(--line-soft); border-radius: 10px; font-family:'Manrope', sans-serif; font-size: 13px; line-height: 1.6; color: var(--text); white-space: pre-wrap; display:none; }
+.direction-deep.open{ display:block; }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow">Explore</div>
+      <h1>Calibrate your direction</h1>
+      <p>A short assessment surfaces real directions worth considering - each one connected to actual current opportunities, not just a description that dead-ends.</p>
+    </div>
+
+    <div class="explore-wrap">
+      <div class="panel" id="quizPanel">
+        <h2>1. What you've actually done</h2>
+        <div class="sub">The strongest signal isn't what you'd rate yourself - it's real things you've done. Be specific.</div>
+
+        <label for="proudMoment">Something you've built, led, organized, or solved that you're genuinely proud of</label>
+        <textarea id="proudMoment" placeholder="e.g. I organized a fundraiser that brought in 3x our target, I taught myself to fix my car's engine, I ran the social media for my club and grew it from 20 to 500 followers..."></textarea>
+
+        <label for="flowMoment">A time you lost track of time doing something - what were you actually doing?</label>
+        <textarea id="flowMoment" placeholder="e.g. Debugging a program until 3am without noticing, rearranging furniture and thinking about layout for hours, writing a long argument in a group chat..."></textarea>
+
+        <label for="soughtFor">What do people already come to you for help with?</label>
+        <textarea id="soughtFor" placeholder="e.g. Friends ask me to help plan things, people bring me their broken laptops, classmates ask me to explain concepts before exams..."></textarea>
+
+        <h2 style="margin-top:32px;">2. What actually matters to you</h2>
+        <div class="sub">Pick up to 3 - what you'd protect even if it cost you something else.</div>
+        <div class="chip-row" id="valuesChips">
+          <div class="chip" data-val="stability">Stability &amp; security</div>
+          <div class="chip" data-val="autonomy">Autonomy / independence</div>
+          <div class="chip" data-val="money">Financial upside</div>
+          <div class="chip" data-val="creativity">Creative expression</div>
+          <div class="chip" data-val="impact">Directly helping people</div>
+          <div class="chip" data-val="recognition">Recognition / status</div>
+          <div class="chip" data-val="learning">Constant learning</div>
+          <div class="chip" data-val="balance">Work-life balance</div>
+        </div>
+
+        <h2 style="margin-top:32px;">3. How you actually like to work</h2>
+        <div class="sub">Not abstract interests - real preferences about the shape of the work itself.</div>
+
+        <div class="slider-row">
+          <label><span class="slider-label-text">Working directly with people vs. working alone</span><span class="slider-value" id="peopleVal">1</span></label>
+          <input type="range" id="peopleSlider" min="0" max="3" value="1" aria-label="Working directly with people vs. working alone">
+          <div class="slider-hint"><span>Prefer solo work</span><span>Energized by people</span></div>
+        </div>
+        <div class="slider-row">
+          <label><span class="slider-label-text">Digging into data and analysis</span><span class="slider-value" id="dataVal">1</span></label>
+          <input type="range" id="dataSlider" min="0" max="3" value="1" aria-label="Digging into data and analysis">
+          <div class="slider-hint"><span>Not my thing</span><span>Love digging into numbers</span></div>
+        </div>
+        <div class="slider-row">
+          <label><span class="slider-label-text">Open-ended, ambiguous work vs. clear structure</span><span class="slider-value" id="structureVal">1</span></label>
+          <input type="range" id="structureSlider" min="0" max="3" value="1" aria-label="Open-ended, ambiguous work vs. clear structure">
+          <div class="slider-hint"><span>Give me a clear process</span><span>Give me an open problem</span></div>
+        </div>
+        <div class="slider-row">
+          <label><span class="slider-label-text">Risk tolerance: stable path vs. uncertain/entrepreneurial</span><span class="slider-value" id="riskVal">1</span></label>
+          <input type="range" id="riskSlider" min="0" max="3" value="1" aria-label="Risk tolerance: stable path vs. uncertain or entrepreneurial">
+          <div class="slider-hint"><span>I want predictability</span><span>I want to bet on myself</span></div>
+        </div>
+        <div class="slider-row">
+          <label><span class="slider-label-text">Pace: steady and predictable vs. fast-changing and varied</span><span class="slider-value" id="paceVal">1</span></label>
+          <input type="range" id="paceSlider" min="0" max="3" value="1" aria-label="Pace: steady and predictable vs. fast-changing and varied">
+          <div class="slider-hint"><span>Steady rhythm</span><span>Constant variety</span></div>
+        </div>
+
+        <h2 style="margin-top:32px;">4. What to steer away from</h2>
+        <div class="sub">Just as useful as what you're drawn to.</div>
+        <label for="avoidText">What would you actively want to avoid in a career?</label>
+        <textarea id="avoidText" placeholder="e.g. Cold-calling strangers all day, sitting in the same spot for 8 hours, work with no visible outcome, constant public speaking..."></textarea>
+
+        <h2 style="margin-top:32px;">5. Where you're starting from</h2>
+        <div class="chip-row" id="timelineChips">
+          <div class="chip active" data-val="now">Need direction now - deciding soon</div>
+          <div class="chip" data-val="exploring">Just exploring - no deadline</div>
+        </div>
+        <label style="margin-top:18px;">Open to more school or training if it's the right fit?</label>
+        <div class="chip-row" id="trainingChips">
+          <div class="chip active" data-val="yes">Yes, if it's worth it</div>
+          <div class="chip" data-val="no">Prefer to avoid more school</div>
+        </div>
+
+        <button class="btn block" id="discoverBtn">See possible directions &rarr;</button>
+      </div>
+
+      <div id="resultsArea" class="hidden">
+        <div class="results-head">
+          <h2>Directions worth considering</h2>
+          <div class="results-count"><a href="#" id="retakeBtn" style="color:var(--gold);">Retake</a></div>
+        </div>
+        <div id="directionsList"></div>
+      </div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo - "related opportunities" counts are drawn from the same illustrative listings used elsewhere in the demo.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script src="charts.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof renderNav === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+renderNav('explore');
+
+// Keep the custom slider's gold fill in sync with its value (WebKit needs this;
+// it has no ::-moz-range-progress equivalent). Sets a --fill % the track gradient uses.
+(function setupSliderFills(){
+  function paint(el){
+    const min = parseFloat(el.min || 0), max = parseFloat(el.max || 100);
+    const pct = max > min ? ((parseFloat(el.value) - min) / (max - min)) * 100 : 0;
+    el.style.setProperty('--fill', pct + '%');
+  }
+  document.querySelectorAll('input[type=range]').forEach(el => {
+    paint(el);
+    el.addEventListener('input', () => paint(el));
+  });
+})();
+
+// Prefer the backend (server-side AI, no exposed key) when logged in;
+// fall back to the existing local Anthropic call otherwise, or if the
+// backend call fails, so the feature always produces a result.
+async function getDirectionsPreferBackend(answers){
+  const session = getSession();
+  const userId = session && session.user_id;
+  if(userId){
+    const res = await apiGetCareerDirections(userId, answers);
+    if(res.ok && res.directions.length){ return res.directions; }
+    // fall through to local on backend failure
+  }
+  return await generateCareerDirectionsAI(answers);
+}
+async function explainDirectionPreferBackend(direction, answers){
+  const session = getSession();
+  const userId = session && session.user_id;
+  if(userId){
+    const text = await apiExplainCareerDirection(userId, direction.id);
+    if(text){ return text; }
+    // fall through to local on backend failure
+  }
+  return await explainCareerDirectionDeep(direction, answers);
+}
+
+['people','data','structure','risk','pace'].forEach(dim => {
+  const slider = document.getElementById(dim+'Slider');
+  const val = document.getElementById(dim+'Val');
+  if(slider && val){ slider.addEventListener('input', () => { val.textContent = slider.value; }); }
+});
+
+function multiSelectChips(id, min, max){
+  document.getElementById(id).querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const parent = chip.parentElement;
+      const activeCount = parent.querySelectorAll('.chip.active').length;
+      if(chip.classList.contains('active')){
+        if(activeCount<=min) return;
+        chip.classList.remove('active');
+      } else {
+        if(activeCount>=max) return;
+        chip.classList.add('active');
+      }
+    });
+  });
+}
+function singleSelectChips(id){
+  document.getElementById(id).querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      chip.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+}
+multiSelectChips('valuesChips', 0, 3);
+singleSelectChips('timelineChips');
+singleSelectChips('trainingChips');
+function getActiveChipVals(id){ return Array.from(document.querySelectorAll('#'+id+' .chip.active')).map(c => c.dataset.val); }
+
+const existing = getCareerDiscoveryResult();
+if(existing){
+  document.getElementById('quizPanel').classList.add('hidden');
+  document.getElementById('resultsArea').classList.remove('hidden');
+  renderDirections(existing.directions, existing.answers);
+}
+
+document.getElementById('discoverBtn').addEventListener('click', async () => {
+  const proudMoment = document.getElementById('proudMoment').value.trim();
+  const flowMoment = document.getElementById('flowMoment').value.trim();
+  const soughtFor = document.getElementById('soughtFor').value.trim();
+
+  // The whole point of this feature is grounding directions in real
+  // evidence, not generic categories - the prompt explicitly weighs
+  // these three fields as the strongest signal and calls the sliders
+  // "secondary." Submitting with all three genuinely empty would
+  // silently fall back to a much weaker result with no warning.
+  if(!proudMoment && !flowMoment && !soughtFor){
+    const proceed = confirm("You haven't filled in any of the three questions about what you're actually proud of, in flow doing, or sought out for - those matter far more than the sliders below for a result that's genuinely about you, not a generic category. Continue anyway with just the sliders?");
+    if(!proceed) return;
+  }
+
+  const answers = {
+    proudMoment,
+    flowMoment,
+    soughtFor,
+    values: getActiveChipVals('valuesChips'),
+    people: parseInt(document.getElementById('peopleSlider').value),
+    data: parseInt(document.getElementById('dataSlider').value),
+    structure: parseInt(document.getElementById('structureSlider').value),
+    risk: parseInt(document.getElementById('riskSlider').value),
+    pace: parseInt(document.getElementById('paceSlider').value),
+    avoidText: document.getElementById('avoidText').value.trim(),
+    timeline: getActiveChipVals('timelineChips')[0] || 'now',
+    openToTraining: getActiveChipVals('trainingChips')[0] || 'yes',
+    // kept for backward compatibility with the offline fallback matcher
+    freeText: [proudMoment, flowMoment, soughtFor].filter(Boolean).join(' '),
+    creative: parseInt(document.getElementById('structureSlider').value) <= 1 ? 3 : 1,
+  };
+
+  const btn = document.getElementById('discoverBtn');
+  btn.disabled = true;
+  btn.textContent = 'Thinking...';
+
+  let directions = await getDirectionsPreferBackend(answers);
+  let usedFallback = false;
+  if(!directions){
+    directions = scoreCareerDirections(answers);
+    usedFallback = true;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'See possible directions \u2192';
+
+  saveCareerDiscoveryResult({ answers, directions, usedFallback });
+  document.getElementById('quizPanel').classList.add('hidden');
+  document.getElementById('resultsArea').classList.remove('hidden');
+  renderDirections(directions, answers, usedFallback);
+});
+
+document.getElementById('retakeBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('quizPanel').classList.remove('hidden');
+  document.getElementById('resultsArea').classList.add('hidden');
+});
+
+function renderDirections(directions, answers, usedFallback){
+  // Defensive: never assume directions is an array (corrupted storage, a failed
+  // API shape, or an old saved result could make it undefined/non-array).
+  const top4 = (Array.isArray(directions) ? directions : []).slice(0, 4);
+  const fallbackNotice = usedFallback
+    ? `<div class="hint" style="margin-bottom:16px;">Couldn't reach the AI just now, so these are offline best-guess matches from a fixed list rather than reasoned from your specific answer. <a href="#" id="retryAiBtn" style="color:var(--gold);">Try again for a personalized version</a>.</div>`
+    : '';
+  document.getElementById('directionsList').innerHTML = fallbackNotice + top4.map((d, i) => {
+    const whyFits = d.why_fits || null;
+    const firstStep = d.first_step || null;
+    return `
+    <div class="direction-card ${i===0?'top':''}" data-id="${d.id}">
+      <div class="direction-body">
+        <div class="score-ring">${typeof d.pct === 'number' ? `${ringSvg(d.pct, i===0?'var(--gold)':'var(--comet)')}<span>${d.pct}%</span>` : ''}</div>
+        <div>
+          <p class="direction-title">${escapeForHtml(d.title)}</p>
+          <p class="direction-desc">${escapeForHtml(d.description)}</p>
+          ${whyFits ? `<p class="direction-desc" style="color:var(--text);"><b style="color:var(--gold);">Why this fits you:</b> ${escapeForHtml(whyFits)}</p>` : ''}
+          ${firstStep ? `<p class="direction-desc" style="color:var(--text);"><b style="color:var(--aurora);">Try this first:</b> ${escapeForHtml(firstStep)}</p>` : ''}
+          <div class="direction-meta">
+            ${d.relatedCount} related opportunit${d.relatedCount===1?'y':'ies'} currently in the system
+            ${d.relatedCount > 0 ? ` &middot; <a href="#" data-action="view-related" data-id="${d.id}" style="color:var(--gold); text-decoration:underline;">See them</a>` : ''}
+          </div>
+          <div class="direction-actions">
+            ${!whyFits ? `<button class="btn ghost" data-action="explain" data-id="${d.id}">Explain why this fits</button>` : ''}
+            <button class="btn" data-action="use-goal" data-id="${d.id}">Make this my goal</button>
+          </div>
+          <div class="direction-deep" id="deep-${d.id}"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const retryBtn = document.getElementById('retryAiBtn');
+  if(retryBtn){
+    retryBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const freshDirections = await getDirectionsPreferBackend(answers);
+      if(freshDirections){
+        saveCareerDiscoveryResult({ answers, directions: freshDirections, usedFallback: false });
+        renderDirections(freshDirections, answers, false);
+      }
+    });
+  }
+
+  document.querySelectorAll('[data-action="explain"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const direction = directions.find(d => d.id === id);
+      const container = document.getElementById('deep-' + id);
+      btn.disabled = true; btn.textContent = 'Thinking...';
+      container.innerHTML = `<p style="color:var(--text-faint); font-style:italic;">Generating a personalized explanation...</p>`;
+      container.classList.add('open');
+      const text = await explainDirectionPreferBackend(direction, answers);
+      btn.disabled = false; btn.textContent = 'Explain why this fits';
+      container.innerHTML = text ? escapeForHtml(text) : `<span style="color:var(--danger);">Couldn't generate an explanation just now - try again.</span>`;
+    });
+  });
+  document.querySelectorAll('[data-action="use-goal"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const direction = directions.find(d => d.id === id);
+      _safeSetItem('kaidostar_role', 'candidate');
+      _safeSetItem('kaidostar_explore_prefill', JSON.stringify({
+        northstar: `Build a career in ${direction.title.toLowerCase()} - ${direction.description.toLowerCase()}`,
+      }));
+      window.location.href = 'survey.html';
+    });
+  });
+
+  document.querySelectorAll('[data-action="view-related"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const id = btn.dataset.id;
+      const direction = directions.find(d => d.id === id);
+      _safeSetItem('kaidostar_dashboard_search_prefill', direction.title);
+      window.location.href = 'dashboard.html';
+    });
+  });
+}
+</script>
+<script>
+// Visible tier switcher (preview - no payment) so plan differences are testable everywhere.
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+</body>
+</html>
