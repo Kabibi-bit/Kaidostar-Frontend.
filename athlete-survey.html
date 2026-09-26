@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Athlete Survey — Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.survey-wrap{ max-width: 640px; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page">
+    <div class="survey-wrap">
+      <div class="page-head">
+        <div class="eyebrow">Step 1 of 1</div>
+        <h1>Lock in your recruiting goal</h1>
+        <p>Answer once - every opportunity gets scored against your sport, level, and career direction.</p>
+      </div>
+
+      <div class="panel">
+        <label for="sport">Your sport</label>
+        <input type="text" id="sport" placeholder="e.g. Track & Field, Soccer, Swimming" value="Track & Field">
+
+        <label>Current level</label>
+        <div class="chip-row" id="levelChips">
+          <div class="chip active" data-val="high-school">High school</div>
+          <div class="chip" data-val="club">Club / travel</div>
+          <div class="chip" data-val="college">College</div>
+          <div class="chip" data-val="semi-pro">Semi-pro / open</div>
+        </div>
+
+        <label>Career direction</label>
+        <div class="chip-row" id="directionChips">
+          <div class="chip active" data-val="play-college">Play at the college level</div>
+          <div class="chip" data-val="go-pro">Go pro</div>
+          <div class="chip" data-val="coach">Coach</div>
+          <div class="chip" data-val="sports-management">Sports management</div>
+        </div>
+
+        <label for="achievements">Achievements &amp; experience</label>
+        <textarea id="achievements" placeholder="e.g. Varsity captain, regional finalist, 2 years travel team">Varsity team captain, regional qualifier, 3 years competitive experience</textarea>
+
+        <label for="athleteLoc">Location preference</label>
+        <input type="text" id="athleteLoc" placeholder="e.g. Remote or Northeast US" value="Remote or Northeast US">
+
+        <label for="athleteDealbreakers">Deal-breakers / avoid</label>
+        <input type="text" id="athleteDealbreakers" placeholder="e.g. No Division III programs">
+
+        <button class="btn block" id="athleteSurveyBtn">Save answers &amp; view opportunities &rarr;</button>
+      </div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo - listings shown are illustrative, not live postings.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script src="charts.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof renderNav === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+_safeSetItem('kaidostar_role', 'athlete');
+renderNav('athlete-survey');
+
+function singleSelect(id){
+  document.getElementById(id).querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      chip.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+}
+singleSelect('levelChips'); singleSelect('directionChips');
+function getActiveVal(id){ const el = document.querySelector('#'+id+' .chip.active'); return el ? el.dataset.val : null; }
+
+const existing = getAthleteProfile();
+if(existing){
+  document.getElementById('sport').value = existing.sport || '';
+  document.getElementById('achievements').value = existing.achievements || '';
+  document.getElementById('athleteLoc').value = existing.loc || '';
+  document.getElementById('athleteDealbreakers').value = existing.dealbreakers || '';
+  // The chip-based fields were never restored here - a returning
+  // athlete editing their profile would silently see the HTML's
+  // hardcoded defaults (high-school/play-college) instead of what
+  // they'd actually, previously chosen, and saving without noticing
+  // that discrepancy would silently overwrite their real preference.
+  const restoreChip = (rowId, value) => {
+    document.querySelectorAll(`#${rowId} .chip`).forEach(chip => {
+      chip.classList.toggle('active', chip.dataset.val === value);
+    });
+  };
+  if(existing.level) restoreChip('levelChips', existing.level);
+  if(existing.careerDirection) restoreChip('directionChips', existing.careerDirection);
+}
+
+document.getElementById('athleteSurveyBtn').addEventListener('click', async ()=>{
+  const sport = document.getElementById('sport').value.trim();
+  if(!sport) { document.getElementById('sport').focus(); return; }
+  const achievements = document.getElementById('achievements').value.trim();
+  // achievements genuinely, substantially feeds the real match-
+  // scoring text (the same role "skills" plays on the candidate
+  // survey) - submitting without it silently produces much weaker
+  // matches with no warning. A confirm dialog, not a hard block,
+  // mirrors the exact pattern already proven on survey.html.
+  if(!achievements){
+    const proceed = confirm("You haven't listed any achievements - this genuinely affects how well your matches actually fit your real experience. Continue anyway?");
+    if(!proceed){ document.getElementById('achievements').focus(); return; }
+  }
+  const athleteProfile = {
+    sport,
+    level: getActiveVal('levelChips') || 'high-school',
+    careerDirection: getActiveVal('directionChips') || 'play-college',
+    achievements,
+    loc: document.getElementById('athleteLoc').value.trim(),
+    dealbreakers: document.getElementById('athleteDealbreakers').value.trim().toLowerCase(),
+  };
+  saveAthleteProfile(athleteProfile);   // local first - instant UI + demo fallback
+
+  // Persist to the real backend when logged in.
+  const session = getSession();
+  const userId = session && session.user_id;
+  const btn = document.getElementById('athleteSurveyBtn');
+  if(userId){
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    const result = await apiSaveAthleteProfile(userId, athleteProfile);
+    btn.disabled = false;
+    btn.textContent = originalText;
+    if(!result.ok){
+      let errEl = document.getElementById('athleteSurveyError');
+      if(!errEl){
+        errEl = document.createElement('p');
+        errEl.id = 'athleteSurveyError';
+        errEl.style.cssText = 'color:var(--danger,#e5484d); font-family:sans-serif; font-size:13px; margin-top:12px;';
+        btn.parentNode.insertBefore(errEl, btn.nextSibling);
+      }
+      errEl.textContent = result.error || 'Could not save your profile - please try again.';
+      return;  // do NOT navigate on failure
+    }
+  }
+  _safeSetItem('kaidostar_role', 'athlete');
+  window.location.href = 'athlete-dashboard.html';
+});
+</script>
+</body>
+</html>

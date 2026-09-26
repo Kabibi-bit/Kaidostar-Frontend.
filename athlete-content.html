@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Coach — Kaidostar Athlete</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.plan-section{ margin-bottom: 26px; }
+.reel-step{ display:flex; gap: 14px; align-items:flex-start; padding: 14px 0; border-top: 1px solid var(--line-soft); }
+.reel-step:first-child{ border-top: none; }
+.reel-num{ font-family:'Space Grotesk', sans-serif; font-weight: 800; font-size: 15px; color: var(--gold); flex-shrink:0; width: 26px; }
+.reel-text{ font-family:'Manrope', sans-serif; font-size: 13.5px; color: var(--text); line-height: 1.55; }
+.eval-card{ background: var(--void); border: 1px solid var(--line-soft); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+.eval-skill{ font-family:'Space Grotesk', sans-serif; font-weight: 700; font-size: 13.5px; color: var(--text); margin: 0 0 5px; }
+.eval-why{ font-family:'Manrope', sans-serif; font-size: 12.5px; color: var(--text-dim); margin: 0; line-height: 1.5; }
+.drill-tag{ display:inline-block; background: var(--violet-dim); border: 1px solid rgba(155,135,245,0.4); color: var(--violet); border-radius: 999px; padding: 8px 16px; margin: 0 8px 10px 0; font-family:'Manrope', sans-serif; font-size: 13px; }
+.checklist-item{ display:flex; gap: 10px; align-items:flex-start; padding: 10px 0; border-top: 1px solid var(--line-soft); }
+.research-result{ margin-top: 16px; display:none; }
+.research-result.open{ display:block; }
+.research-findings{ font-family:'Manrope', sans-serif; font-size: 13.5px; color: var(--text); line-height: 1.65; padding: 16px; background: var(--void); border: 1px solid var(--comet); border-radius: 10px; white-space: pre-wrap; }
+.research-sources{ margin-top: 12px; }
+.research-source-link{ display:block; font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--comet); text-decoration: none; margin-bottom: 6px; word-break: break-all; }
+.research-source-link:hover{ text-decoration: underline; }
+.research-no-sources{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); margin-top: 10px; }
+.checklist-item:first-child{ border-top: none; }
+.checklist-check{ color: var(--aurora); flex-shrink:0; margin-top: 1px; }
+.section-toggle{ display:flex; gap: 10px; margin-bottom: 24px; }
+.section-toggle button{ background: var(--panel); border: 1px solid var(--line); border-radius: 999px; color: var(--text-dim); font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 13px; padding: 10px 20px; cursor:pointer; }
+.section-toggle button.active{ background: var(--violet-dim); border-color: var(--violet); color: var(--violet); }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow">Content Coach</div>
+      <h1>Your highlight game plan</h1>
+      <p>Real, structured guidance for your highlight reel and training - grounded in what recruiters at your level commonly evaluate, not generic motivational advice.</p>
+    </div>
+
+    <div class="honesty-panel" style="background: var(--void); border: 1px solid var(--danger); border-radius: var(--radius); padding: 20px 22px; margin-bottom: 26px;">
+      <h3 style="font-family:'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: var(--danger); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 8px;">Worth knowing</h3>
+      <p style="font-family:'Manrope', sans-serif; font-size: 13px; color: var(--text-dim); line-height: 1.55; margin: 0;">This is grounded in what's commonly evaluated for your sport and level generally - it does not know what any specific named coach or program individually wants, since nothing here has access to that. Use it to build a stronger, more deliberate reel and practice plan, not as a guarantee.</p>
+    </div>
+
+    <div id="noProfile" class="empty-state hidden">
+      <div class="glyph">&#127909;</div>
+      No survey answers yet.
+      <div class="sub">Complete the athlete survey first so this can be grounded in your actual sport and level.</div>
+      <a class="btn" href="athlete-survey.html">Go to survey &rarr;</a>
+    </div>
+
+    <div id="contentArea" class="hidden">
+      <div class="section-toggle">
+        <button class="active" data-section="coach" id="sectionCoachBtn">Content Coach</button>
+        <button data-section="search" id="sectionSearchBtn">Search</button>
+      </div>
+
+      <div id="coachSection">
+        <div class="panel" style="margin-bottom:26px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+              <h2 style="margin-bottom:4px;">Your plan for <span id="sportLabel"></span></h2>
+              <div class="sub">Based on your stated level, direction, and achievements.</div>
+            </div>
+            <button class="btn ghost" id="regenerateBtn">Regenerate</button>
+          </div>
+        </div>
+
+        <div id="planContent"></div>
+      </div>
+
+      <div id="searchSection" class="hidden">
+        <div class="panel">
+          <h2>Research a specific program</h2>
+          <div class="sub">This searches the real web for current, public information about a named program - what they actually publish, not a guess.</div>
+          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+            <input type="text" id="programNameInput" placeholder="e.g. University of Michigan Track & Field" style="flex:1; min-width:220px;">
+            <button class="btn" id="researchBtn">Search</button>
+          </div>
+          <div id="programResearchResult"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo - general guidance is grounded knowledge, not specific to any named coach; program research uses real, live web search and cites what it finds.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script src="charts.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof renderNav === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+_safeSetItem('kaidostar_role', 'athlete');
+renderNav('athlete-content');
+
+const athleteProfile = getAthleteProfile();
+if(!athleteProfile){
+  document.getElementById('noProfile').classList.remove('hidden');
+} else {
+  document.getElementById('contentArea').classList.remove('hidden');
+  document.getElementById('sportLabel').textContent = athleteProfile.sport;
+}
+
+/* ---------------- Section toggle ---------------- */
+document.getElementById('sectionCoachBtn').addEventListener('click', () => {
+  document.getElementById('sectionCoachBtn').classList.add('active');
+  document.getElementById('sectionSearchBtn').classList.remove('active');
+  document.getElementById('coachSection').classList.remove('hidden');
+  document.getElementById('searchSection').classList.add('hidden');
+});
+document.getElementById('sectionSearchBtn').addEventListener('click', () => {
+  document.getElementById('sectionSearchBtn').classList.add('active');
+  document.getElementById('sectionCoachBtn').classList.remove('active');
+  document.getElementById('searchSection').classList.remove('hidden');
+  document.getElementById('coachSection').classList.add('hidden');
+});
+
+function renderPlan(plan){
+  const content = document.getElementById('planContent');
+  content.innerHTML = `
+    <div class="chart-panel plan-section">
+      <h3>Highlight reel structure</h3>
+      <div class="sub">In order - what to lead with, build through, and close on.</div>
+      ${plan.reel_structure.map((step, i) => `<div class="reel-step"><div class="reel-num">${i+1}</div><div class="reel-text">${escapeForHtml(step)}</div></div>`).join('')}
+    </div>
+
+    <div class="chart-panel plan-section">
+      <h3>Commonly evaluated at your level</h3>
+      <div class="sub">What recruiters and scouts typically weigh for ${escapeForHtml(athleteProfile.sport)} at ${escapeForHtml(athleteProfile.level)} level - not a specific person's preference.</div>
+      ${plan.commonly_evaluated.map(e => `<div class="eval-card"><p class="eval-skill">${escapeForHtml(e.skill_or_metric)}</p><p class="eval-why">${escapeForHtml(e.why)}</p></div>`).join('')}
+    </div>
+
+    ${(Array.isArray(plan.coaching_insights) && plan.coaching_insights.length) ? `
+    <div class="chart-panel plan-section">
+      <h3>Coaching priorities &amp; tactics to show</h3>
+      <div class="sub">Widely-recognized tactical &amp; mentality priorities college coaches value in ${escapeForHtml(athleteProfile.sport)} - general to the sport/level, <b>not</b> claims about any specific coach.</div>
+      ${plan.coaching_insights.map(c => `<div class="eval-card"><p class="eval-skill">${escapeForHtml(c.principle)}</p><p class="eval-why">${escapeForHtml(c.how_to_show_it)}</p></div>`).join('')}
+    </div>` : ''}
+
+    ${plan.researching_specific_coaches ? `
+    <div class="chart-panel plan-section" style="border-left:2px solid var(--comet);">
+      <h3>Researching a specific coach</h3>
+      <div class="sub" style="color:var(--text);">${escapeForHtml(plan.researching_specific_coaches)}</div>
+    </div>` : ''}
+
+    <div class="chart-panel plan-section">
+      <h3>Drills to practice</h3>
+      <div class="sub">Specific, real drills to close the gap to your target level.</div>
+      <div>${plan.drills_to_practice.map(d => `<span class="drill-tag">${escapeForHtml(d)}</span>`).join('')}</div>
+    </div>
+
+    <div class="chart-panel">
+      <h3>Filming checklist</h3>
+      <div class="sub">Practical, concrete dos for your next filming session.</div>
+      ${plan.content_checklist.map(item => `<div class="checklist-item"><span class="checklist-check">&#10003;</span><span style="font-family:'Manrope',sans-serif; font-size:13.5px; color:var(--text);">${escapeForHtml(item)}</span></div>`).join('')}
+    </div>
+  `;
+}
+
+function getCachedContentPlan(){
+  try{
+    const raw = JSON.parse(localStorage.getItem('kaidostar_athlete_content_plan'));
+    if(raw && raw.sport === athleteProfile.sport && raw.level === athleteProfile.level && raw.careerDirection === athleteProfile.careerDirection){
+      return raw.plan;
+    }
+  }catch(e){}
+  return null;
+}
+function saveCachedContentPlan(plan){
+  _safeSetItem('kaidostar_athlete_content_plan', JSON.stringify({
+    sport: athleteProfile.sport, level: athleteProfile.level, careerDirection: athleteProfile.careerDirection, plan,
+  }));
+}
+
+async function generateContentPlan(){
+  // Prefer the backend (server-side AI, no exposed browser key) when
+  // logged in; fall back to the local call below otherwise or on
+  // backend failure, so a plan is always produced.
+  const _session = getSession();
+  const _userId = _session && _session.user_id;
+  if(_userId){
+    const backendPlan = await apiGenerateContentPlan(athleteProfile);
+    if(backendPlan && backendPlan.reel_structure){ return backendPlan; }
+  }
+  const prompt = `A student-athlete: sport "${athleteProfile.sport}", current level ${athleteProfile.level}, career direction: ${(athleteProfile.careerDirection || 'not specified').replace('-',' ')}. Their stated achievements: "${athleteProfile.achievements || 'not specified'}".\n\nGive them real, specific guidance on how to structure recruiting content and what to practice - grounded in genuinely common recruiting patterns for their sport and level, not generic motivational advice. Do NOT claim to know what any specific named coach, program, or scout individually wants - frame everything as what is COMMONLY evaluated by recruiters/scouts at this level, since that's real, honest knowledge, not a claim about a specific person's preferences.\n\nReturn a JSON object with exactly these four keys:\n- reel_structure: an array of 4-6 short strings, each describing one segment of a highlight reel in order (e.g. "Open with your fastest recorded time or most explosive play - recruiters often stop watching in the first 10 seconds if it doesn't grab attention"). Be specific to this sport and position/role, not generic ("show your best plays").\n- commonly_evaluated: an array of 4-6 objects, each with "skill_or_metric" (a specific thing commonly evaluated for this sport/level, e.g. "40-yard dash time", "first-step quickness on defense") and "why" (1 sentence on why recruiters at this level commonly weight it)\n- drills_to_practice: an array of 3-5 specific, real drills or practice routines relevant to closing the gap between their current level and their target level - name real, standard drills for this sport, not vague advice\n- content_checklist: an array of 3-4 concrete, practical dos for filming/presenting content (e.g. camera angle, what footage to prioritize keeping, length) - specific to this sport\n- coaching_insights: an array of 3-5 objects, each with "principle" and "how_to_show_it". These capture what college coaches AT THIS LEVEL AND IN THIS SPORT commonly prioritize tactically and in player mentality. Each "principle" is a REAL, widely-recognized coaching priority for this sport/level - NOT a claim about any specific named coach or program. Each "how_to_show_it" is one concrete way the athlete can demonstrate that quality in their film or play. CRITICAL: do NOT name specific coaches or attribute beliefs/tactics/quotes to any real individual.\n- researching_specific_coaches: a single string (2-3 sentences) telling the athlete how to find a SPECIFIC target coach's actual philosophy for themselves - watch that team's game film for playing style, read the coach's real published interviews, note their system - and reminding them Kaidostar's "Research a program" tool pulls real, cited public statements rather than guesses.\n\nReturn ONLY valid JSON, nothing else, no markdown fences, no commentary.`;
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1200, messages: [{role:"user", content: prompt}] })
+    });
+    const data = await response.json();
+    let text = (data.content || []).map(b => b.type==='text'?b.text:'').filter(Boolean).join('\n');
+    text = text.trim().replace(/^```json/,'').replace(/^```/,'').replace(/```$/,'').trim();
+    const plan = JSON.parse(text);
+    // Real shape validation - a syntactically valid but incomplete
+    // response would otherwise crash renderPlan uncaught, since it
+    // calls .map() on all four fields with no defensive checks.
+    if(!Array.isArray(plan.reel_structure) || !Array.isArray(plan.commonly_evaluated) ||
+       !Array.isArray(plan.drills_to_practice) || !Array.isArray(plan.content_checklist)){
+      throw new Error('Content plan response has an unexpected shape');
+    }
+    // New grounded-tactics fields are additive - default them if omitted rather
+    // than failing the whole plan.
+    if(!Array.isArray(plan.coaching_insights)) plan.coaching_insights = [];
+    if(typeof plan.researching_specific_coaches !== 'string'){
+      plan.researching_specific_coaches = "To learn a specific coach's real philosophy, watch that team's recent game film for their playing style and system, read the coach's published interviews, and use Kaidostar's \\u2018Research a program\\u2019 tool, which pulls real, cited public statements rather than guesses.";
+    }
+    return plan;
+  } catch(err){
+    console.error('Content plan generation failed:', err);
+    return null;
+  }
+}
+
+async function loadPlan(forceRegenerate){
+  const content = document.getElementById('planContent');
+  const cached = !forceRegenerate ? getCachedContentPlan() : null;
+  if(cached){ renderPlan(cached); return; }
+
+  content.innerHTML = `<div class="empty-state"><div class="glyph">&#127909;</div>Building your plan...<div class="sub">Grounding this in your sport, level, and direction.</div></div>`;
+  const plan = await generateContentPlan();
+  if(plan){
+    saveCachedContentPlan(plan);
+    renderPlan(plan);
+  } else {
+    content.innerHTML = `<div class="empty-state"><div class="glyph">&#9888;</div>Couldn't generate this just now.<div class="sub">Try again in a moment.</div><button class="btn" id="retryBtn">Try again</button></div>`;
+    document.getElementById('retryBtn')?.addEventListener('click', () => loadPlan(true));
+  }
+}
+
+document.getElementById('regenerateBtn')?.addEventListener('click', () => loadPlan(true));
+
+/* ---- Program research: uses Claude's real web search tool to find
+   current, public information about a specific named program. This
+   mirrors the real backend endpoint (POST /athletics/research-program)
+   exactly, but calls Anthropic directly from the browser like the
+   rest of this standalone demo does. This same client-side
+   web-search pattern has since been built and directly tested
+   multiple times elsewhere in this app (the assistance-search
+   feature), confirmed working with real source extraction - so
+   this is no longer a distinct, unproven risk. ---- */
+async function researchProgram(sport, level, programName){
+  // Prefer the backend (server-side, web-search-backed, no exposed
+  // key) when logged in; fall back to the local call below otherwise
+  // or on failure.
+  const _session = getSession();
+  const _userId = _session && _session.user_id;
+  if(_userId){
+    const backendResult = await apiResearchProgram(sport, level, programName);
+    if(backendResult){
+      // Backend may return {result: "..."} or a bare string - normalize.
+      return typeof backendResult === 'string' ? backendResult : (backendResult.result || backendResult.explanation || null);
+    }
+  }
+  const prompt = `Search for real, current, publicly available information about the ${sport} program at "${programName}" that would help a ${level}-level recruit understand what this specific program looks for - their official recruiting/roster page, public statements from coaching staff about what they value, their recent recruiting classes, team needs by position, or similar.\n\nReport ONLY what you actually find through search - do not fill in gaps with generic assumptions about the sport in general, and do not invent specific claims about this program that search doesn't support. If you can't find anything specific and current about this program, say that plainly rather than guessing.\n\nParaphrase what you find in your own words rather than quoting sources at length. Structure your answer as: what you found (with a brief note on where it came from), and then, only if genuinely supported by what you found, 2-3 concrete implications for how this recruit should tailor their content or approach to this specific program.`;
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6", max_tokens: 1000,
+        tools: [{ type: "web_search_20250305", name: "web_search" }],
+        messages: [{role:"user", content: prompt}],
+      })
+    });
+    const data = await response.json();
+    const findings = (data.content || []).map(b => b.type==='text'?b.text:'').filter(Boolean).join('\n');
+    const sources = [];
+    (data.content || []).forEach(block => {
+      if(block.type === 'web_search_tool_result' && Array.isArray(block.content)){
+        block.content.forEach(item => { if(item.url) sources.push({ url: item.url, title: item.title || item.url }); });
+      }
+    });
+    return { findings: findings || null, sources };
+  } catch(err){
+    console.error('Program research failed:', err);
+    return null;
+  }
+}
+
+document.getElementById('researchBtn')?.addEventListener('click', async () => {
+  const programName = document.getElementById('programNameInput').value.trim();
+  if(!programName) return;
+  const btn = document.getElementById('researchBtn');
+  const resultEl = document.getElementById('programResearchResult');
+  btn.disabled = true; btn.textContent = 'Searching...';
+  resultEl.innerHTML = `<div class="research-result open"><p style="color:var(--text-faint); font-style:italic; font-family:'Manrope',sans-serif; font-size:13px;">Searching the web for current information about ${escapeForHtml(programName)}...</p></div>`;
+
+  const result = await researchProgram(athleteProfile.sport, athleteProfile.level, programName);
+  btn.disabled = false; btn.textContent = 'Search';
+
+  if(!result || !result.findings){
+    resultEl.innerHTML = `<div class="research-result open"><p style="color:var(--danger); font-family:'Manrope',sans-serif; font-size:13px;">Couldn't complete this search just now - try again in a moment.</p></div>`;
+    return;
+  }
+
+  const sourcesHtml = result.sources.length
+    ? `<div class="research-sources">${result.sources.map(s => `<a class="research-source-link" href="${safeHref(s.url)}" target="_blank">${escapeForHtml(s.title)}</a>`).join('')}</div>`
+    : `<div class="research-no-sources">No specific sources were returned for this search.</div>`;
+
+  resultEl.innerHTML = `<div class="research-result open">
+    <div class="research-findings">${escapeForHtml(result.findings)}</div>
+    ${sourcesHtml}
+  </div>`;
+});
+
+function escapeForHtml(str){
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+if(athleteProfile){
+  loadPlan(false);
+
+  injectMetisWidget(function(){
+    let ctx = `You are Metis, the built-in guide inside "Kaidostar" for student-athletes. Help with recruiting content strategy, drill selection, and how to present their real achievements. Be concise and practical. Never claim to know a specific named coach or program's individual preferences - speak in terms of what's commonly evaluated at their level.\n\n`;
+    ctx += `This athlete's sport: "${athleteProfile.sport}". Level: ${athleteProfile.level}. Career direction: ${athleteProfile.careerDirection}. Achievements: "${athleteProfile.achievements}".`;
+    return ctx;
+  }, {
+    subtitle: 'Your AI recruiting guide',
+    greeting: "Hi - I can help you think through your highlight reel, what to practice, or how to present your achievements. What's on your mind?",
+    suggestions: [
+      { label: 'What should I lead with?', q: 'What should the very first clip in my highlight reel be, and why?' },
+      { label: 'Am I missing anything?', q: 'Based on my sport and level, is there a commonly-evaluated skill I might be overlooking in my training?' },
+    ],
+  });
+}
+</script>
+<script>
+// Visible tier switcher (preview - no payment) so plan differences are testable everywhere.
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+</body>
+</html>
