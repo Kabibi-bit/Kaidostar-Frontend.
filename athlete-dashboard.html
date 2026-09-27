@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opportunities — Kaidostar Athlete</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.grid{ display:grid; grid-template-columns: 1fr 300px; gap: 26px; align-items:start; }
+@media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
+.card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-bottom: 15px; }
+.card-body{ display:grid; grid-template-columns: 56px 1fr; gap: 18px; }
+.card-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+.card-title{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 15.5px; margin:0; }
+.card-org{ font-family:'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-faint); margin-top:4px; }
+.card-rationale{ margin: 12px 0 6px; font-size: 13.5px; line-height:1.6; color: var(--text); }
+.card-rationale b{ color: var(--violet); }
+.card-deep{ margin-top: 10px; padding: 12px 14px; background: var(--void); border: 1px solid var(--violet); border-radius: 8px; font-family:'Manrope', sans-serif; font-size: 13px; line-height:1.55; color: var(--text); display:none; }
+.card-deep.open{ display:block; }
+.card-meta{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); margin-top:4px; }
+.roadmap-preview-panel{ margin-bottom: 26px; }
+.event-add-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+.event-add-row input, .event-add-row select{ flex:1; min-width:130px; }
+.event-card{ background: var(--void); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 10px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+.event-card.status-passed{ border-color: rgba(95,224,184,0.5); }
+.event-card.status-missed{ border-color: rgba(242,122,107,0.4); }
+.event-title{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:14px; color:var(--text); margin:0 0 4px; }
+.event-meta{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-faint); }
+.event-stage-tag{ font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--violet); background:var(--violet-dim); border:1px solid rgba(155,135,245,0.4); padding:3px 9px; border-radius:999px; margin-top:6px; display:inline-block; }
+.event-actions{ display:flex; gap:8px; align-items:center; }
+.card-actions{ display:flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items:center; }
+.explain-deep-btn{ background:none; border: 1px solid var(--line); border-radius: 999px; color: var(--violet); font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:0.04em; text-transform:uppercase; cursor:pointer; padding: 5px 12px; }
+.explain-deep-btn:hover{ border-color: var(--violet); background: rgba(155,135,245,0.1); }
+
+.section-toggle{ display:flex; gap: 10px; margin-bottom: 24px; }
+.section-toggle button{ background: var(--panel); border: 1px solid var(--line); border-radius: 999px; color: var(--text-dim); font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 13px; padding: 10px 20px; cursor:pointer; }
+.section-toggle button.active{ background: var(--violet-dim); border-color: var(--violet); color: var(--violet); }
+
+.toggle-switch{ position: relative; width: 50px; height: 28px; flex-shrink: 0; }
+.toggle-switch input{ opacity: 0; width: 0; height: 0; }
+.toggle-slider{ position: absolute; cursor: pointer; inset: 0; background: var(--line); border-radius: 999px; transition: all .2s ease; }
+.toggle-slider::before{ content: ''; position: absolute; height: 20px; width: 20px; left: 4px; top: 4px; background: var(--text); border-radius: 50%; transition: all .2s ease; }
+.toggle-switch input:checked + .toggle-slider{ background: var(--violet); }
+.toggle-switch input:checked + .toggle-slider::before{ transform: translateX(22px); background: #14102E; }
+.auto-panel-inner{ display:flex; justify-content:space-between; align-items:flex-start; gap: 16px; flex-wrap:wrap; }
+.auto-panel-inner .mode-desc{ font-family:'Manrope', sans-serif; font-size: 13px; color: var(--text-dim); max-width: 480px; margin: 6px 0 0; }
+.threshold-inline{ margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line-soft); display:none; }
+.threshold-inline.show{ display:block; }
+.threshold-inline label{ display:flex; justify-content:space-between; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-dim); margin-bottom:8px; }
+.threshold-inline .tval{ color: var(--violet); font-weight:700; }
+input[type=range]{ width:100%; accent-color: var(--violet); }
+
+.app-card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-bottom: 14px; }
+.app-status-pill{ font-family:'JetBrains Mono', monospace; font-size: 10.5px; padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
+.app-status-pill.pending_review{ color: var(--gold); background: var(--gold-dim); border:1px solid rgba(240,178,78,0.4); }
+.app-status-pill.approved{ color: var(--comet); background: var(--comet-dim); border:1px solid rgba(123,169,255,0.4); }
+.app-status-pill.sent{ color: var(--aurora); background: var(--aurora-dim); border:1px solid rgba(95,224,184,0.4); }
+.app-status-pill.auto-tag{ color: var(--violet); background: rgba(155,135,245,0.14); border:1px solid rgba(155,135,245,0.4); margin-left:6px; }
+.app-draft{ margin-top: 12px; padding: 14px; background: var(--void); border: 1px solid var(--line-soft); border-radius: 10px; font-family:'Manrope', sans-serif; font-size: 13px; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
+.app-countdown{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); margin-top: 8px; }
+
+/* --- Recruiting timeline banner (uses grad year) --- */
+.recruiting-timeline{ display:flex; gap:12px; align-items:flex-start; padding:14px 16px; border-radius:12px; margin-bottom:22px; border:1px solid var(--line-soft); background:var(--void); }
+.recruiting-timeline.hidden{ display:none; }
+.recruiting-timeline .rt-icon{ font-size:20px; line-height:1; }
+.recruiting-timeline .rt-label{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint); margin-bottom:4px; }
+.recruiting-timeline .rt-note{ font-family:'Manrope',sans-serif; font-size:13.5px; line-height:1.55; color:var(--text); }
+.recruiting-timeline.band-now{ border-left:3px solid var(--danger); }
+.recruiting-timeline.band-soon{ border-left:3px solid var(--gold); }
+.recruiting-timeline.band-building{ border-left:3px solid var(--violet); }
+.recruiting-timeline.band-early{ border-left:3px solid var(--aurora); }
+
+/* --- Athlete match breakdown: recruiting-profile transparency (parity w/ job track) --- */
+.ath-breakdown{ margin: 10px 0 6px; padding: 12px 14px; border-radius: 10px; background: rgba(155,135,245,0.06); border: 1px solid var(--line-soft); }
+.ath-bd-intro{ font-family:'Manrope',sans-serif; font-size:11.5px; color:var(--text-faint); margin-bottom:9px; line-height:1.5; }
+.ath-bd-row{ display:grid; grid-template-columns: 84px auto 1fr; align-items:baseline; gap:10px; margin:5px 0; font-family:'Manrope',sans-serif; font-size:12.5px; }
+.ath-bd-label{ color:var(--violet); font-weight:600; }
+.ath-bd-val{ color:var(--text); font-weight:600; }
+.ath-bd-note{ color:var(--text-faint); font-size:11.5px; }
+.ath-breakdown-none{ color:var(--text-faint); font-family:'Manrope',sans-serif; font-size:12px; line-height:1.55; background:none; border-style:dashed; }
+
+/* --- Recruiting-clock chip on athlete match cards (reuses timeline bands) --- */
+.ath-bd-clock{ display:inline-flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:600; letter-spacing:0.02em; text-transform:uppercase; padding:4px 10px; border-radius:999px; margin-bottom:10px; }
+.ath-bd-clock-dot{ width:6px; height:6px; border-radius:50%; background:currentColor; box-shadow:0 0 6px currentColor; }
+.ath-bd-clock-now{ color:var(--danger); background:rgba(240,90,90,0.12); border:1px solid rgba(240,90,90,0.3); }
+.ath-bd-clock-soon{ color:var(--gold); background:rgba(240,178,78,0.12); border:1px solid rgba(240,178,78,0.3); }
+.ath-bd-clock-building{ color:var(--violet); background:rgba(155,135,245,0.12); border:1px solid rgba(155,135,245,0.3); }
+.ath-bd-clock-early{ color:var(--aurora); background:rgba(95,224,184,0.12); border:1px solid rgba(95,224,184,0.3); }
+.ath-breakdown-none .ath-bd-clock{ margin-bottom:8px; }
+
+/* Mobile overflow guard (same as admissions): grid/flex children default to
+   min-width:auto, letting wide content push past a narrow viewport. Keeps the
+   athlete dashboard from overflowing horizontally on small screens, and stacks
+   the recruiting breakdown rows so long values wrap cleanly. */
+@media (max-width: 640px){
+  .grid, .grid > *{ min-width: 0; }
+  .card-body, .card-body > *{ min-width: 0; }
+  .ath-bd-row{ grid-template-columns: 1fr; gap: 2px; }
+  .event-add-row input, .event-add-row select{ min-width: 0; }
+}
+
+/* --- Athlete saved-item outcome logging (closes the feedback loop) --- */
+.ath-sv-item{ display:block; }
+.ath-sv-head{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.ath-sv-outcome-btns{ display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
+.ath-oc-btn{ font-family:'Manrope',sans-serif; font-size:10.5px; font-weight:600; color:var(--text-dim); background:none; border:1px solid var(--line); border-radius:7px; padding:3px 8px; cursor:pointer; }
+.ath-oc-btn:hover{ border-color:var(--violet); color:var(--violet); }
+.ath-sv-outcome{ margin-top:7px; font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:600; letter-spacing:0.02em; }
+.ath-sv-outcome-made_it{ color:var(--aurora); }
+.ath-sv-outcome-tryout{ color:var(--gold); }
+.ath-sv-outcome-waitlisted{ color:var(--violet); }
+.ath-sv-outcome-no{ color:var(--text-faint); }
+@media (max-width: 640px){ .ath-sv-outcome-btns{ gap:4px; } .ath-oc-btn{ font-size:10px; padding:3px 6px; } }
+
+/* --- Athlete outcome summary tally --- */
+.ath-outcome-summary{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:12px; padding-bottom:11px; border-bottom:1px solid var(--line-soft); font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; }
+.ath-sum-made_it{ color:var(--aurora); } .ath-sum-tryout{ color:var(--gold); } .ath-sum-waitlisted{ color:var(--violet); } .ath-sum-muted{ color:var(--text-faint); }
+.ath-sum-dot{ color:var(--line); }
+</style>
+<style>
+/* ============================================================
+   COOL FEATURES v1 — athlete match cards. Additive, loads last.
+   ============================================================ */
+.card-body{ grid-template-columns: 60px 1fr !important; }
+.score-ring{ width:58px !important; height:58px !important; }
+.score-ring::before{ content:''; position:absolute; inset:-7px; border-radius:50%; z-index:0;
+  background: radial-gradient(circle, rgba(240,178,78,0.22), transparent 68%); }
+.score-ring svg{ filter: drop-shadow(0 0 5px rgba(240,178,78,0.45)); }
+.score-ring span{ font-weight:800;
+  background:linear-gradient(135deg,#FCE7B4,#F0B24E); -webkit-background-clip:text; background-clip:text;
+  color:transparent; -webkit-text-fill-color:transparent; }
+.card{ position:relative; overflow:hidden; }
+.card::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:3px; z-index:1;
+  background:linear-gradient(180deg,var(--violet),var(--aurora)); opacity:0.5; transition:opacity .2s ease; }
+.card:hover::before{ opacity:1; }
+.card:hover{ transform: translateY(-3px); box-shadow: 0 24px 54px -20px rgba(155,135,245,0.32), 0 6px 24px -12px rgba(0,0,0,0.9); }
+/* athlete status/tags: soft glow so they read as live signal */
+.roadmap-stage-badge{ box-shadow:0 0 12px -4px rgba(155,135,245,0.6); }
+.event-stage-tag{ box-shadow:0 0 12px -4px rgba(240,178,78,0.55); }
+.ath-bd-clock-dot{ box-shadow:0 0 10px -2px currentColor; }
+.ath-bd-row{ transition: background .15s ease; border-radius:8px; }
+.ath-bd-row:hover{ background: rgba(255,255,255,0.03); }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow">Athlete</div>
+      <h1>Your recruiting radar</h1>
+      <p>Athletic scholarships, coaching, athletic training, and sports management - scored against your sport and career direction.</p>
+    </div>
+
+    <div id="recruitingTimeline" class="recruiting-timeline hidden"></div>
+
+    <div id="noAthleteProfile" class="empty-state hidden">
+      <div class="glyph">&#127942;</div>
+      No survey answers yet.
+      <div class="sub">Complete the survey first so opportunities can be scored against your sport and goal.</div>
+      <a class="btn" href="athlete-survey.html">Go to survey &rarr;</a>
+    </div>
+
+    <div id="athleteContent" class="hidden">
+      <div class="panel roadmap-preview-panel featured panel-roadmap">
+        <h2>Your roadmap</h2>
+        <div class="sub" id="roadmapSummaryPreview"></div>
+        <div id="roadmapPreview"></div>
+        <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+          <a class="btn" href="athlete-roadmap.html">View full roadmap &rarr;</a>
+          <a class="btn ghost" href="athlete-content.html">Get your Content Coach plan &rarr;</a>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:26px;">
+        <h2>Deadlines &amp; trial opportunities</h2>
+        <div class="sub">Tryouts, camps, combines, and application deadlines - tag one to a roadmap stage to keep it connected to your plan.</div>
+        <div class="event-add-row">
+          <input type="text" id="eventTitle" placeholder="e.g. Regional combine" aria-label="Event title">
+          <input type="text" id="eventOrg" placeholder="Org / program (optional)" aria-label="Organization or program (optional)">
+          <select id="eventType" aria-label="Event type">
+            <option value="tryout">Tryout</option>
+            <option value="camp">Camp</option>
+            <option value="combine">Combine</option>
+            <option value="application_deadline">Application deadline</option>
+            <option value="other">Other</option>
+          </select>
+          <input type="date" id="eventDate" aria-label="Event date">
+          <select id="eventStageSelect" aria-label="Link to roadmap stage"><option value="">No roadmap stage</option></select>
+          <button class="btn" id="addEventBtn">Add</button>
+        </div>
+        <div id="eventList" style="margin-top:16px;"></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:26px;" id="autoPanel">
+        <div class="auto-panel-inner">
+          <div>
+            <h2 style="margin-bottom:0;">Auto</h2>
+            <p class="mode-desc">When enabled, top-scoring opportunities get an application drafted automatically - no starring required. Nothing is ever sent without you reviewing it in the Applications Inbox first.</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="athleteAutoToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="threshold-inline" id="thresholdInline">
+          <label><span>Auto-draft threshold</span><span class="tval" id="thresholdVal">75%</span></label>
+          <input type="range" id="thresholdSlider" min="50" max="98" value="75">
+        </div>
+      </div>
+
+      <div class="chart-grid" style="margin-bottom:26px;">
+        <div class="chart-panel">
+          <h3>Outcomes</h3>
+          <div class="sub">Where your applications have landed.</div>
+          <div class="donut-row" id="athleteOutcomeDonut"></div>
+        </div>
+        <div class="chart-panel">
+          <h3>Athletic potential</h3>
+          <div class="sub">A composite of roadmap progress, achievements, and match quality.</div>
+          <div class="gauge-wrap" id="athletePotentialGauge"></div>
+        </div>
+      </div>
+
+      <div class="chart-panel" style="margin-bottom:26px;">
+        <h3>Monthly targets</h3>
+        <div class="sub">Outreach/applications sent vs. your target pace, by month.</div>
+        <div id="athleteTargetChart"></div>
+        <div class="target-summary" id="athleteTargetSummary"></div>
+      </div>
+
+      <div class="section-toggle">
+        <button class="active" data-section="opportunities" id="sectionOppBtn">Opportunities</button>
+        <button data-section="applications" id="sectionAppBtn">Applications Inbox</button>
+      </div>
+
+      <div id="opportunitiesSection">
+        <div class="grid">
+          <div>
+            <div class="results-head">
+              <h2>Ranked opportunities</h2>
+              <div class="results-count" id="athleteResultsCount">0 matches</div>
+            </div>
+            <div id="athleteResults"></div>
+          </div>
+          <div>
+            <div class="panel">
+              <h2>Saved</h2>
+              <div class="sub">Starred opportunities.</div>
+              <div id="athleteSavedList"><span class="hint">Nothing saved yet.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="applicationsSection" class="hidden">
+        <div id="athleteAppList"></div>
+      </div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo - athletic job listings are pulled from a real jobs API (Adzuna) queried with sports-career terms; scholarship listings remain illustrative until a real scholarship data source is added.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script src="charts.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof renderNav === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+_safeSetItem('kaidostar_role', 'athlete');
+renderNav('athlete');
+
+const athleteProfile = getAthleteProfile();
+
+// Backend hydration: pull the real athlete profile when logged in.
+// If the backend has one this browser lacks, store it and reload once
+// so the synchronous render below runs with the real profile. Guarded
+// so it only reloads when it genuinely added something new (no loop).
+(async () => {
+  const session = getSession();
+  const userId = session && session.user_id;
+  if(!userId) return;
+  try{
+    const backendAthlete = await apiLoadAthleteProfile(userId);
+    if(backendAthlete && backendAthlete.sport){
+      const localHadProfile = !!athleteProfile;
+      saveAthleteProfile(backendAthlete);
+      _safeSetItem('kaidostar_role', 'athlete');
+      if(!localHadProfile){
+        // The page rendered its "no profile" state; now we have the
+        // real one - reload once so the full dashboard renders.
+        location.reload();
+      }
+    }
+  }catch(e){ /* best-effort - local render already happened */ }
+})();
+
+if(!athleteProfile){
+  document.getElementById('noAthleteProfile').classList.remove('hidden');
+} else {
+  document.getElementById('athleteContent').classList.remove('hidden');
+}
+
+function getAthleteSavedIds(){ try{ return new Set(JSON.parse(localStorage.getItem('kaidostar_athlete_saved_ids')) || []); }catch(e){ return new Set(); } }
+function saveAthleteSavedIds(s){ _safeSetItem('kaidostar_athlete_saved_ids', JSON.stringify([...s])); }
+function getAthleteOutcomes(){
+  // A MAP keyed by listing id: { "5": {outcome, logged_at} } - the shape
+  // logAthleteOutcome writes and renderAthleteSaved reads. Default to {} (not [])
+  // and coerce any non-object/array to {}: defaulting to [] made logAthleteOutcome
+  // set a numeric key on an array, producing a sparse array whose null holes then
+  // crashed the outcome donut. Coercing a legacy array back to {} self-heals it.
+  try{
+    const v = JSON.parse(localStorage.getItem('kaidostar_athlete_outcomes'));
+    return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+  }catch(e){ return {}; }
+}
+
+let savedIds = getAthleteSavedIds();
+let lastScored = [];
+
+async function runAthleteAssistanceSearch(panel, listing, budget){
+  const searchBtn = panel.querySelector('.assistance-search-btn');
+  searchBtn.disabled = true;
+  searchBtn.textContent = 'Searching...';
+  panel.insertAdjacentHTML('beforeend', `<p class="assistance-loading" style="margin-top:10px; color:var(--text-faint); font-style:italic;">Searching the web for real, credible coaches within your budget...</p>`);
+
+  const needDescription = `coaching for a ${athleteProfile.sport || 'this'} athlete (${athleteProfile.level || 'unspecified'} level) to become a stronger fit for "${listing.title || 'this opportunity'}" - real characteristics and playstyle a coach for this kind of opportunity would genuinely look for`;
+  const result = await findAssistanceOptions(needDescription, budget, athleteProfile.loc || '');
+
+  const loadingEl = panel.querySelector('.assistance-loading');
+  if(loadingEl) loadingEl.remove();
+  searchBtn.disabled = false;
+  searchBtn.textContent = 'Search';
+
+  const resultsHtml = result
+    ? `<div class="assistance-results" style="margin-top:12px; padding-top:12px; border-top:1px solid var(--line);">
+        ${renderAthleteAssistanceText(result.text)}
+        ${result.sources.length ? `<div class="assistance-sources" style="margin-top:10px; font-size:13px;">
+          <span style="color:var(--text-faint);">Sources: </span>
+          ${result.sources.map(s => `<a href="${safeHref(s.url)}" target="_blank" rel="noopener" style="color:var(--gold); margin-right:10px;">${escapeForAttr(s.title)}</a>`).join('')}
+        </div>` : ''}
+      </div>`
+    : `<p class="assistance-results" style="margin-top:12px; color:var(--danger);">Couldn't complete this search just now - try again in a moment.</p>`;
+  panel.insertAdjacentHTML('beforeend', resultsHtml);
+}
+
+function escapeForAttr(str){
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* A dedicated markdown-lite renderer for this page's own results -
+   this file has its own script scope, separate from roadmap.html's
+   copy of the same, simple utility. */
+function renderAthleteAssistanceText(text){
+  const escaped = document.createElement('div');
+  escaped.textContent = text;
+  const safe = escaped.innerHTML;
+  return safe.split('\n').filter(line => line.trim()).map(line => {
+    const bolded = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    return `<p style="margin:6px 0;">${bolded}</p>`;
+  }).join('');
+}
+
+function renderAthleteResults(){
+  const resultsEl = document.getElementById('athleteResults');
+  const countEl = document.getElementById('athleteResultsCount');
+  countEl.textContent = `${lastScored.length} matches`;
+  if(lastScored.length === 0){
+    resultsEl.innerHTML = `<div class="empty-state"><div class="glyph">&#127942;</div>No matches yet.<div class="sub">Try widening your survey answers.</div></div>`;
+    return;
+  }
+  resultsEl.innerHTML = lastScored.map(l => {
+    // String(l.id): saved ids are stored as strings but demo listing ids are
+    // numbers, so savedIds.has(l.id) never matched and the star never lit / the
+    // saved list stayed empty. Matches the dismiss path's String() normalization.
+    const isSaved = savedIds.has(String(l.id));
+    const color = l.pct >= 75 ? 'var(--aurora)' : l.pct >= 55 ? 'var(--violet)' : 'var(--text-faint)';
+    // A genuinely low match score means this opportunity's own tags
+    // don't strongly overlap with what the athlete has stated about
+    // their sport/level/achievements - a real, honest stretch where
+    // coaching could genuinely help, not an arbitrary label.
+    const needsCoaching = l.pct < 50;
+    return `<div class="card">
+      <div class="card-body">
+        <div class="score-ring">${ringSvg(l.pct, color)}<span>${l.pct}%</span></div>
+        <div>
+          <div class="card-top">
+            <div><p class="card-title">${escapeForAttr(l.title)}</p><div class="card-org">${escapeForAttr(l.org)} - ${escapeForAttr(l.loc)}</div></div>
+            <button class="icon-btn ${isSaved?'starred':''}" data-id="${l.id}" title="Save">&#9733;</button>
+          </div>
+          <div class="badges" style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="badge type-athletic">Athletics</span>
+            <span class="badge deadline">Due ${escapeForAttr(l.deadline)}</span>
+          </div>
+          <p class="card-rationale">${l.rationale}</p>
+          ${(() => {
+            const prof = getAthleteProfile();
+            const bd = (typeof athleteMatchBreakdown==='function') ? athleteMatchBreakdown(l, prof) : [];
+            const tl = (typeof athleteRecruitingTimeline==='function') ? athleteRecruitingTimeline(prof) : null;
+            const clockChip = tl ? (() => {
+              const label = { now:'Act now', soon:'Core window', building:'Runway', early:'Early - build now' }[tl.band] || '';
+              return label ? `<div class="ath-bd-clock ath-bd-clock-${tl.band}"><span class="ath-bd-clock-dot"></span>${label} &middot; class of ${escapeForAttr(String(prof.gradYear || ''))}</div>` : '';
+            })() : '';
+            if(!bd.length) return `<div class="ath-breakdown ath-breakdown-none">${clockChip}This is a looser, exploratory match &mdash; none of your specific recruiting details (sport, level, position, division) strongly overlap yet.</div>`;
+            const rows = bd.map(r => `<div class="ath-bd-row"><span class="ath-bd-label">${escapeForAttr(r.label)}</span><span class="ath-bd-val">${escapeForAttr(String(r.value))}</span><span class="ath-bd-note">${escapeForAttr(r.note)}</span></div>`).join('');
+            return `<div class="ath-breakdown">${clockChip}<div class="ath-bd-intro">Why this fits your recruiting profile &mdash; real, named reasons, not a black-box score:</div>${rows}</div>`;
+          })()}
+          <div class="card-deep" id="deep-${l.id}"></div>
+          <div class="card-actions">
+            <button class="explain-deep-btn" data-id="${l.id}">Explain in depth ${typeof proBadgeHTML==='function'?proBadgeHTML('deep_match_explanations'):''}</button>
+            ${needsCoaching ? `<button class="get-assistance-btn" data-id="${l.id}">Get coaching assistance &rarr;</button>` : ''}
+          </div>
+          <div class="assistance-panel hidden" data-id="${l.id}"></div>
+          <div class="card-meta">Tags: ${(l.tags||[]).map(t=>escapeForAttr(t)).join(' - ')}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  resultsEl.querySelectorAll('.explain-deep-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = parseInt(btn.dataset.id);
+      const listing = lastScored.find(l => l.id === id);
+      const container = document.getElementById('deep-' + id);
+      // Deep AI explanations are a Pro+ feature - honest upgrade prompt on Free.
+      if(typeof hasFeature === 'function' && !hasFeature('deep_match_explanations')){
+        const needed = (typeof tierRequiredFor === 'function' && tierRequiredFor('deep_match_explanations')) || 'pro';
+        const tierName = needed.charAt(0).toUpperCase() + needed.slice(1);
+        container.innerHTML = `<p><strong style="color:var(--gold);">${tierName} feature.</strong> Deep, specific explanations of why each match fits - beyond the summary you already get free. <a href="site-pricing.html" style="color:var(--gold);">Upgrade to ${tierName} &rarr;</a></p>`;
+        container.classList.add('open');
+        return;
+      }
+      btn.disabled = true; btn.textContent = 'Thinking...';
+      container.innerHTML = `<p style="color:var(--text-faint); font-style:italic;">Generating a deeper explanation...</p>`;
+      container.classList.add('open');
+      const text = await explainAthleteMatchDeep(listing, athleteProfile);
+      btn.disabled = false; btn.textContent = 'Explain in depth';
+      container.innerHTML = text ? `<p>${escapeForAttr(text)}</p>` : `<span style="color:var(--danger);">Couldn't generate this just now - try again.</span>`;
+    });
+  });
+
+  resultsEl.querySelectorAll('.get-assistance-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const listing = lastScored.find(l => l.id === parseInt(id));
+      const panel = document.querySelector(`.assistance-panel[data-id="${id}"]`);
+      panel.classList.remove('hidden');
+      panel.innerHTML = `
+        <div class="detail-block action">
+          <div class="dlabel">Find a real coach for ${escapeForAttr(listing.title)}</div>
+          <p style="margin-bottom:10px;">What's your budget for coaching? Kaidostar will search for credible coaches within it, matched to your sport and playstyle.</p>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input type="text" class="assistance-budget-input" placeholder="e.g. $40/session, or $300 total" style="flex:1; min-width:160px; box-sizing:border-box; font-family:inherit; padding:8px; border-radius:8px; border:1px solid var(--line); background:var(--void); color:var(--text);">
+            <button class="btn assistance-search-btn" data-id="${id}">Search</button>
+          </div>
+        </div>`;
+      panel.querySelector('.assistance-search-btn').addEventListener('click', async () => {
+        const budget = panel.querySelector('.assistance-budget-input').value.trim();
+        if(!budget) return;
+        await runAthleteAssistanceSearch(panel, listing, budget);
+      });
+    });
+  });
+
+  resultsEl.querySelectorAll('.icon-btn').forEach(btn => {
+    btn.addEventListener('click', async ()=>{
+      // Keep the id as a string (not parseInt): demo listing ids are numbers but
+      // backend listing ids are UUID strings, and parseInt(uuid) is NaN - so the
+      // old parseInt path silently broke save for every logged-in user. String
+      // normalization matches the job dashboard, the dismiss path, and the
+      // String(l.id) checks in renderAthleteResults/renderAthleteSaved.
+      const id = btn.dataset.id;
+      const wasStarred = savedIds.has(id);
+      if(wasStarred) savedIds.delete(id); else savedIds.add(id);
+      saveAthleteSavedIds(savedIds);
+      renderAthleteSaved();
+      renderAthleteResults();
+      if(!wasStarred){
+        const listing = lastScored.find(l => String(l.id) === id);
+        if(listing){
+          btn.disabled = true;
+          await draftAthleteApplication(listing, athleteProfile, false);
+          btn.disabled = false;
+        }
+      }
+    });
+  });
+}
+
+document.getElementById('sectionOppBtn').addEventListener('click', () => {
+  document.getElementById('sectionOppBtn').classList.add('active');
+  document.getElementById('sectionAppBtn').classList.remove('active');
+  document.getElementById('opportunitiesSection').classList.remove('hidden');
+  document.getElementById('applicationsSection').classList.add('hidden');
+});
+document.getElementById('sectionAppBtn').addEventListener('click', () => {
+  document.getElementById('sectionAppBtn').classList.add('active');
+  document.getElementById('sectionOppBtn').classList.remove('active');
+  document.getElementById('applicationsSection').classList.remove('hidden');
+  document.getElementById('opportunitiesSection').classList.add('hidden');
+  renderAthleteApplications();
+});
+
+function initAthleteAuto(){
+  const settings = getAthleteAutoSettings();
+  document.getElementById('athleteAutoToggle').checked = settings.enabled;
+  document.getElementById('thresholdSlider').value = settings.threshold;
+  document.getElementById('thresholdVal').textContent = settings.threshold + '%';
+  document.getElementById('thresholdInline').classList.toggle('show', settings.enabled);
+
+  document.getElementById('athleteAutoToggle').addEventListener('change', async (e) => {
+    const s = getAthleteAutoSettings();
+    s.enabled = e.target.checked;
+    saveAthleteAutoSettings(s);
+    document.getElementById('thresholdInline').classList.toggle('show', s.enabled);
+    if(s.enabled){
+      const drafted = await runAthleteAutoApply(lastScored, athleteProfile);
+      if(drafted.length > 0){
+        addNotification({ type: 'auto_apply', title: `Auto: ${drafted.length} application${drafted.length>1?'s':''} drafted`, detail: 'Review and send from the Applications Inbox whenever you\'re ready.' });
+      }
+    }
+  });
+  document.getElementById('thresholdSlider').addEventListener('input', (e) => {
+    document.getElementById('thresholdVal').textContent = e.target.value + '%';
+  });
+  document.getElementById('thresholdSlider').addEventListener('change', (e) => {
+    const s = getAthleteAutoSettings();
+    s.threshold = parseInt(e.target.value);
+    saveAthleteAutoSettings(s);
+  });
+}
+
+function athleteAppStatusLabel(status){
+  return { pending_review: 'Needs review', approved: 'Approved - ready to send', sent: 'Sent' }[status] || status;
+}
+function athleteAppTimeRemaining(sendableAt){
+  const diff = new Date(sendableAt) - new Date();
+  if(diff <= 0) return null;
+  const mins = Math.ceil(diff / 60000);
+  return `${mins} minute${mins===1?'':'s'} left in the undo window`;
+}
+
+function renderAthleteApplications(){
+  const apps = getAthleteApplications();
+  const list = document.getElementById('athleteAppList');
+  if(apps.length === 0){
+    list.innerHTML = `<div class="empty-state"><div class="glyph">&#9998;</div>No applications drafted yet.<div class="sub">Star an opportunity, or enable Auto above - an AI-tailored application will be drafted automatically.</div></div>`;
+    return;
+  }
+  list.innerHTML = apps.map(a => {
+    const remaining = a.status === 'approved' && a.sendable_at ? athleteAppTimeRemaining(a.sendable_at) : null;
+    return `<div class="app-card" data-id="${a.id}">
+      <div class="card-top">
+        <div><p class="card-title">${a.listing_title}</p><div class="card-org">${a.listing_org}</div></div>
+        <span class="app-status-pill ${a.status}">${athleteAppStatusLabel(a.status)}${a.auto_generated ? '<span class="app-status-pill auto-tag">Auto</span>' : ''}</span>
+      </div>
+      <div class="card-meta">Match confidence: ${a.confidence_pct}% ${a.confidence_pct >= 75 ? '(auto-approved)' : '(needs your review)'}</div>
+      <div class="app-draft">${escapeForAttr(a.draft || '')}</div>
+      ${remaining ? `<div class="app-countdown">${remaining}</div>` : ''}
+      <div class="card-actions">
+        ${a.status === 'pending_review' ? `<button class="btn" data-action="approve" data-id="${a.id}">Approve</button>` : ''}
+        ${a.status === 'approved' && !remaining ? `<button class="btn" data-action="send" data-id="${a.id}">Send</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const apps = getAthleteApplications();
+      const app = apps.find(a => a.id === id);
+      if(!app) return;
+      if(btn.dataset.action === 'approve'){ app.status = 'approved'; app.sendable_at = new Date(Date.now() + UNDO_WINDOW_MINUTES * 60000).toISOString(); }
+      else if(btn.dataset.action === 'send'){ app.status = 'sent'; app.sent_at = new Date().toISOString(); }
+      saveAthleteApplications(apps);
+      renderAthleteApplications();
+    });
+  });
+}
+
+function renderAthleteSaved(){
+  const el = document.getElementById('athleteSavedList');
+  if(savedIds.size === 0){ el.innerHTML = `<span class="hint">Nothing saved yet.</span>`; return; }
+  const items = LISTINGS.filter(l => savedIds.has(String(l.id)));
+  const scoredById = {}; lastScored.forEach(l => scoredById[l.id] = l.pct);
+  const outcomes = (typeof getAthleteOutcomes === 'function') ? getAthleteOutcomes() : {};
+  const outcomeLabel = { made_it:'&#10003; Made it', tryout:'&#9733; Tryout offered', waitlisted:'&#9203; Waitlisted', no:'Didn\'t make it' };
+  // Honest outcome summary: a real tally of logged results across saved items.
+  const counts = { made_it:0, tryout:0, waitlisted:0, no:0, pending:0 };
+  items.forEach(l => { const o = outcomes[String(l.id)] && outcomes[String(l.id)].outcome; if(o && counts[o] !== undefined) counts[o]++; else counts.pending++; });
+  const anyLogged = counts.made_it + counts.tryout + counts.waitlisted + counts.no;
+  const sumParts = [];
+  if(counts.made_it) sumParts.push(`<span class="ath-sum-made_it">${counts.made_it} made it</span>`);
+  if(counts.tryout) sumParts.push(`<span class="ath-sum-tryout">${counts.tryout} tryout${counts.tryout>1?'s':''}</span>`);
+  if(counts.waitlisted) sumParts.push(`<span class="ath-sum-waitlisted">${counts.waitlisted} waitlisted</span>`);
+  if(counts.no) sumParts.push(`<span class="ath-sum-muted">${counts.no} didn't</span>`);
+  if(counts.pending) sumParts.push(`<span class="ath-sum-muted">${counts.pending} pending</span>`);
+  const summary = anyLogged > 0 ? `<div class="ath-outcome-summary">${sumParts.join('<span class="ath-sum-dot">&middot;</span>')}</div>` : '';
+  el.innerHTML = summary + items.map(l => {
+    const logged = outcomes[String(l.id)] && outcomes[String(l.id)].outcome;
+    const outcomeRow = logged
+      ? `<div class="ath-sv-outcome ath-sv-outcome-${escapeForAttr(logged)}">${outcomeLabel[logged] || escapeForAttr(logged)}</div>`
+      : `<div class="ath-sv-outcome-btns">
+           <button class="ath-oc-btn" data-ath-outcome="made_it" data-lid="${escapeForAttr(String(l.id))}">Made it</button>
+           <button class="ath-oc-btn" data-ath-outcome="tryout" data-lid="${escapeForAttr(String(l.id))}">Tryout</button>
+           <button class="ath-oc-btn" data-ath-outcome="waitlisted" data-lid="${escapeForAttr(String(l.id))}">Waitlisted</button>
+           <button class="ath-oc-btn" data-ath-outcome="no" data-lid="${escapeForAttr(String(l.id))}">Didn't make it</button>
+         </div>`;
+    return `<div class="saved-mini ath-sv-item"><div class="ath-sv-head"><span>${escapeForAttr(l.title)}</span><span class="pct">${scoredById[l.id] !== undefined ? scoredById[l.id]+'%' : ''}</span></div>${outcomeRow}</div>`;
+  }).join('');
+  el.querySelectorAll('[data-ath-outcome]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(typeof logAthleteOutcome === 'function' && logAthleteOutcome(btn.dataset.lid, btn.dataset.athOutcome)){
+        renderAthleteSaved();
+      }
+    });
+  });
+}
+
+function renderAthleteRoadmap(){
+  let roadmap = getAthleteRoadmap();
+  if(!roadmap || !Array.isArray(roadmap.milestones) || roadmap.milestones.length === 0){
+    // A missing roadmap OR a corrupted/empty-milestones one (e.g. from partial
+    // storage or an unexpected backend shape) would otherwise crash below on
+    // next.stage / divide-by-zero. Regenerate a real one instead.
+    const topMatch = lastScored.length ? lastScored[0] : null;
+    roadmap = generateAthleteRoadmapLocal(athleteProfile, topMatch);
+    saveAthleteRoadmap(roadmap);
+  }
+  document.getElementById('roadmapSummaryPreview').textContent = roadmap.summary;
+  const milestones = roadmap.milestones;
+  const next = milestones.find(m => m.status !== 'done') || milestones[0];
+  const doneCount = milestones.filter(m => m.status === 'done').length;
+  document.getElementById('roadmapPreview').innerHTML = `
+    <div class="roadmap-progress-mini">
+      <div class="roadmap-progress-track"><div class="roadmap-progress-fill" style="width:${Math.round((doneCount/milestones.length)*100)}%;"></div></div>
+      <span class="roadmap-progress-label">${doneCount} of ${milestones.length} stages complete</span>
+    </div>
+    <div class="roadmap-next-preview">
+      <span class="roadmap-stage-badge">Stage ${next.stage}</span>
+      <h4>${escapeForAttr(next.title)}</h4>
+      <p>${escapeForAttr(next.description)}</p>
+    </div>`;
+}
+
+function renderAthleteCharts(){
+  // Athlete outcomes are a MAP keyed by listing id ({ "5": {outcome, logged_at} },
+  // written by logAthleteOutcome) using the recruiting vocabulary made_it / tryout
+  // / waitlisted / no - the SAME set renderAthleteSaved shows. Count each logged
+  // listing once by its outcome, real logged results only. (The old code seeded
+  // fabricated offer/interview/applied/rejected demo data - violating the app's
+  // no-mock-numbers rule and using the wrong vocabulary - and, via a `.length`
+  // test that is always undefined on a map, overwrote real logged outcomes with
+  // that array; a logged outcome then persisted as a sparse array whose null
+  // holes crashed this loop on `o.status`.)
+  const outcomes = (typeof getAthleteOutcomes === 'function') ? getAthleteOutcomes() : {};
+  const statusColors = { made_it: 'var(--aurora)', tryout: 'var(--comet)', waitlisted: 'var(--gold)', no: 'var(--danger)' };
+  const statusLabels = { made_it: 'Made it', tryout: 'Tryouts', waitlisted: 'Waitlisted', no: "Didn't make it" };
+  const counts = {};
+  Object.keys(outcomes || {}).forEach(lid => {
+    const rec = outcomes[lid];
+    const o = rec && rec.outcome;
+    if(o && statusLabels[o]) counts[o] = (counts[o] || 0) + 1;
+  });
+  const segments = Object.keys(statusLabels).filter(k => counts[k]).map(k => ({ label: statusLabels[k], value: counts[k], color: statusColors[k] }));
+  document.getElementById('athleteOutcomeDonut').innerHTML = donutChart(segments, 130, 18) + donutLegend(segments);
+
+  const roadmap = getAthleteRoadmap();
+  const _ms = (roadmap && Array.isArray(roadmap.milestones)) ? roadmap.milestones : [];
+  const doneCount = _ms.filter(m => m.status === 'done').length;
+  const roadmapProgress = _ms.length ? Math.round((doneCount / _ms.length) * 100) : 0;
+  const achievementStrength = Math.min(100, tokenize(athleteProfile.achievements || '').length * 12);
+  const matchQuality = lastScored.length ? Math.round(lastScored.reduce((s,l)=>s+l.pct,0)/lastScored.length) : 40;
+  const potential = Math.round((roadmapProgress * 0.3) + (achievementStrength * 0.3) + (matchQuality * 0.4));
+  document.getElementById('athletePotentialGauge').innerHTML = gaugeChart(Math.min(100,potential), 130, 'var(--violet)') +
+    `<div class="gauge-value">${Math.min(100,potential)}</div><div class="gauge-label">Potential score</div>`;
+
+  // Real athlete applications SENT per month, matching this panel's "Applications
+  // sent" label. One row per application (by sent_at month), never per outcome
+  // event - and crucially NOT the `outcomes` map above, which has no `.month` and
+  // is a map, not an array (monthlyTargetData calls .filter on it).
+  // Trailing 6 months ending with the CURRENT month (dynamic, not a hardcoded
+  // summer-only list), with records windowed to the same span (see charts.js).
+  const MONTH_WINDOW = 6;
+  const months = lastNMonths(MONTH_WINDOW);
+  const monthCutoff = monthWindowStart(MONTH_WINDOW);
+  const sentRecords = getAthleteApplications()
+    .filter(a => a.status === 'sent' && a.sent_at)
+    .map(a => { const d = new Date(a.sent_at); return (isNaN(d.getTime()) || d < monthCutoff) ? null : { month: d.toLocaleString('en-US', { month: 'short' }) }; })
+    .filter(Boolean);
+  const monthly = monthlyTargetData(sentRecords, 4, months);
+  document.getElementById('athleteTargetChart').innerHTML = barChart(monthly, {width: 400, height: 130});
+  const totalActual = monthly.reduce((s,m)=>s+m.actual, 0);
+  const totalTarget = monthly.reduce((s,m)=>s+m.target, 0);
+  document.getElementById('athleteTargetSummary').innerHTML = `<span>Applications sent: <b>${totalActual}</b> of ${totalTarget} targeted</span><span>Pace: <b>${Math.round((totalActual/totalTarget)*100)}%</b> of target</span>`;
+}
+
+const EVENT_TYPE_LABELS = { tryout: 'Tryout', camp: 'Camp', combine: 'Combine', application_deadline: 'Application deadline', other: 'Other' };
+const EVENT_STATUS_LABELS = { upcoming: 'Upcoming', attended: 'Attended', passed: 'Passed', missed: 'Missed' };
+
+function populateEventStageSelect(){
+  const roadmap = getAthleteRoadmap();
+  const select = document.getElementById('eventStageSelect');
+  select.innerHTML = '<option value="">No roadmap stage</option>';
+  if(roadmap && roadmap.milestones){
+    roadmap.milestones.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.stage;
+      opt.textContent = `Stage ${m.stage}: ${m.title}`;
+      select.appendChild(opt);
+    });
+  }
+}
+
+function renderEvents(){
+  const events = getAthleteEvents();
+  const list = document.getElementById('eventList');
+  if(events.length === 0){
+    list.innerHTML = `<span class="hint">No deadlines or trials tracked yet - add one above.</span>`;
+    return;
+  }
+  list.innerHTML = events.map(e => `<div class="event-card status-${e.status}" data-id="${e.id}">
+    <div>
+      <p class="event-title">${escapeForAttr(e.title)}${e.org ? ' - ' + escapeForAttr(e.org) : ''}</p>
+      <div class="event-meta">${EVENT_TYPE_LABELS[e.event_type] || escapeForAttr(e.event_type)}${e.event_date ? ' - ' + escapeForAttr(e.event_date) : ''}</div>
+      ${e.roadmap_stage_title ? `<span class="event-stage-tag">Stage ${escapeForAttr(e.roadmap_stage)}: ${escapeForAttr(e.roadmap_stage_title)}</span>` : ''}
+    </div>
+    <div class="event-actions">
+      <select class="stage-select" data-action="status" data-id="${e.id}">
+        <option value="upcoming" ${e.status==='upcoming'?'selected':''}>Upcoming</option>
+        <option value="attended" ${e.status==='attended'?'selected':''}>Attended</option>
+        <option value="passed" ${e.status==='passed'?'selected':''}>Passed</option>
+        <option value="missed" ${e.status==='missed'?'selected':''}>Missed</option>
+      </select>
+      <button class="btn ghost" data-action="delete" data-id="${e.id}">Remove</button>
+    </div>
+  </div>`).join('');
+
+  list.querySelectorAll('[data-action="status"]').forEach(sel => {
+    sel.addEventListener('change', () => { updateAthleteEventStatus(sel.dataset.id, sel.value); renderEvents(); });
+  });
+  list.querySelectorAll('[data-action="delete"]').forEach(btn => {
+    btn.addEventListener('click', () => { deleteAthleteEvent(btn.dataset.id); renderEvents(); });
+  });
+}
+
+if(athleteProfile){
+  // Recruiting timeline from grad year - real, actionable use of the profile.
+  if(typeof athleteRecruitingTimeline === 'function'){
+    const tl = athleteRecruitingTimeline(athleteProfile);
+    const tlEl = document.getElementById('recruitingTimeline');
+    if(tl && tlEl){
+      tlEl.className = `recruiting-timeline band-${tl.band}`;
+      tlEl.innerHTML = `<span class="rt-icon">&#9201;</span><div><div class="rt-label">Your recruiting timeline</div><div class="rt-note">${tl.note}</div></div>`;
+    }
+  }
+  // Local scoring first = instant + offline fallback (the demo listings).
+  lastScored = runAthleteMatchCycle(athleteProfile);
+  renderAthleteRoadmap();
+  renderAthleteCharts();
+  renderAthleteResults();
+  renderAthleteSaved();
+  initAthleteAuto();
+  populateEventStageSelect();
+  renderEvents();
+
+  // Then fetch REAL athletic listings from the backend when logged in, and
+  // re-render with them — the same backend-first pattern the job dashboard uses.
+  // (Athletic-career listings are populated by the real Adzuna ingestion pipeline.)
+  (async () => {
+    try {
+      const s = (typeof getSession === 'function') ? getSession() : null;
+      const uid = s && s.user_id;
+      if(!uid || typeof apiGetMatches !== 'function') return;
+      const res = await apiGetMatches(uid);
+      if(res && res.ok && Array.isArray(res.matches) && res.matches.length){
+        lastScored = res.matches;
+        if(typeof saveAthleteMatches === 'function'){ try{ saveAthleteMatches(lastScored); }catch(e){} }
+        renderAthleteResults();
+        renderAthleteCharts();
+      }
+    } catch(e){ /* offline - local demo results already shown */ }
+  })();
+
+  document.getElementById('addEventBtn').addEventListener('click', () => {
+    const title = document.getElementById('eventTitle').value.trim();
+    if(!title) return;
+    const stageSelect = document.getElementById('eventStageSelect');
+    const roadmap = getAthleteRoadmap();
+    const stageNum = stageSelect.value ? parseInt(stageSelect.value) : null;
+    const stageTitle = stageNum && roadmap ? (roadmap.milestones.find(m => m.stage === stageNum) || {}).title : null;
+    addAthleteEvent({
+      title, org: document.getElementById('eventOrg').value.trim(),
+      event_type: document.getElementById('eventType').value,
+      event_date: document.getElementById('eventDate').value || null,
+      roadmap_stage: stageNum, roadmap_stage_title: stageTitle,
+    });
+    document.getElementById('eventTitle').value = '';
+    document.getElementById('eventOrg').value = '';
+    document.getElementById('eventDate').value = '';
+    stageSelect.value = '';
+    renderEvents();
+  });
+
+  injectMetisWidget(function(){
+    let ctx = `You are Metis, the built-in guide inside "Kaidostar" for student-athletes. Answer questions about recruiting, athletic scholarships, coaching career paths, and sports management. Be concise and practical. Use **bold** sparingly and "- " for bullet lists.\n\n`;
+    ctx += `This athlete's sport: "${athleteProfile.sport}". Level: ${athleteProfile.level}. Career direction: ${athleteProfile.careerDirection}. Achievements: "${athleteProfile.achievements}".\n\n`;
+    if(lastScored.length){
+      ctx += `Their current top matches:\n`;
+      lastScored.slice(0,6).forEach(l => { ctx += `- ${l.title} at ${l.org} (${l.pct}% match, due ${l.deadline})\n`; });
+    }
+    const roadmap = getAthleteRoadmap();
+    if(roadmap){ ctx += `\nTheir roadmap strategy: ${roadmap.summary}\n`; }
+    const apps = getAthleteApplications();
+    const pending = apps.filter(a => a.status === 'pending_review').length;
+    const approved = apps.filter(a => a.status === 'approved').length;
+    if(apps.length){ ctx += `\nApplications Inbox: ${pending} awaiting review, ${approved} approved and queued to send.`; }
+    const autoSettings = getAthleteAutoSettings();
+    ctx += `\nAuto mode is currently ${autoSettings.enabled ? `ON (threshold ${autoSettings.threshold}%)` : 'off'}.`;
+    ctx += `\n\nAll data is illustrative demo data except real sports-career jobs, which come from a live jobs API.`;
+    return ctx;
+  }, {
+    subtitle: 'Your AI recruiting guide',
+    greeting: "Hi - I can help with recruiting strategy, scholarship applications, or your current matches. What's on your mind?",
+    suggestions: [
+      { label: 'Improve my outreach', q: 'How can I write a better outreach message to a college coach?' },
+      { label: 'Prioritize my matches', q: 'Which of my current matches should I prioritize?' },
+      { label: "What's in my Inbox?", q: 'What applications are waiting for my review right now?' },
+    ],
+  });
+}
+</script>
+<script>
+// Visible tier switcher (preview - no payment) so plan differences are testable everywhere.
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+</body>
+</html>
