@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inbox — Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+/* ---- Summary stat strip ---- */
+.inbox-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.inbox-stat{ background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:13px 15px; }
+.inbox-stat-num{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:24px; line-height:1; color:var(--text); letter-spacing:-0.02em; }
+.inbox-stat-num.gold{ color:var(--gold); }
+.inbox-stat-label{ font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint); margin-top:7px; }
+@media (max-width:620px){ .inbox-stats{ grid-template-columns:repeat(2,1fr); } }
+
+/* ---- Filter bar ---- */
+.inbox-toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px; }
+.inbox-search{ flex:1; min-width:180px; box-sizing:border-box; font-family:inherit; font-size:13px; padding:9px 12px; border-radius:8px; border:1px solid var(--line); background:var(--void); color:var(--text); }
+.inbox-search:focus{ outline:none; border-color:var(--gold); }
+.inbox-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+.inbox-chip{ font-family:'Manrope',sans-serif; font-size:11.5px; font-weight:600; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--panel-2); color:var(--text-dim); cursor:pointer; transition:all .15s ease; display:inline-flex; align-items:center; gap:6px; }
+.inbox-chip:hover{ border-color:var(--gold); color:var(--text); }
+.inbox-chip.on{ background:var(--gold); border-color:var(--gold); color:#0b0b0f; }
+.inbox-chip-count{ font-family:'JetBrains Mono',monospace; font-size:9.5px; opacity:0.75; }
+.inbox-unread-toggle{ font-family:'Manrope',sans-serif; font-size:11.5px; font-weight:600; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--panel-2); color:var(--text-dim); cursor:pointer; display:inline-flex; align-items:center; gap:7px; }
+.inbox-unread-toggle.on{ border-color:var(--gold); color:var(--text); }
+.inbox-unread-toggle .dot{ width:7px; height:7px; border-radius:50%; background:var(--line); }
+.inbox-unread-toggle.on .dot{ background:var(--gold); }
+
+/* ---- Day groups ---- */
+.inbox-daygroup-head{ font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.09em; text-transform:uppercase; color:var(--text-faint); margin:18px 0 4px; padding-top:8px; }
+.inbox-daygroup-head:first-child{ margin-top:0; padding-top:0; }
+
+/* ---- Feed items ---- */
+.inbox-list{ max-width: 720px; }
+.inbox-item{ display:flex; gap:14px; padding: 16px 0; border-bottom: 1px solid var(--line-soft); position:relative; }
+.inbox-item-unread{ background: var(--gold-dim); margin: 0 -16px; padding: 16px 16px; border-radius: 10px; border-bottom-color:transparent; }
+.inbox-unread-dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--gold); margin-left:6px; vertical-align:2px; }
+.inbox-item:last-child{ border-bottom:none; }
+.inbox-icon{ width:38px; height:38px; border-radius:9px; background: var(--panel-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size: 15px; color: var(--gold); }
+.inbox-body{ flex:1; min-width:0; }
+.inbox-title{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 14.5px; margin:0 0 3px; }
+.inbox-detail{ font-family:'Manrope', sans-serif; font-size: 13px; color: var(--text-dim); line-height:1.5; }
+.inbox-metarow{ display:flex; align-items:center; gap:10px; margin-top:7px; flex-wrap:wrap; }
+.inbox-ts{ font-family:'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-faint); }
+.inbox-typetag{ font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-faint); border:1px solid var(--line); border-radius:5px; padding:2px 6px; }
+.inbox-jump{ font-family:'Manrope',sans-serif; font-size:11px; font-weight:600; color:var(--gold); text-decoration:none; }
+.inbox-jump:hover{ text-decoration:underline; }
+.inbox-item-actions{ display:flex; gap:4px; flex-shrink:0; opacity:0; transition:opacity .15s ease; }
+.inbox-item:hover .inbox-item-actions, .inbox-item-unread .inbox-item-actions{ opacity:1; }
+.inbox-act-btn{ font-family:'Manrope',sans-serif; font-size:15px; line-height:1; width:26px; height:26px; border-radius:6px; border:1px solid transparent; background:transparent; color:var(--text-faint); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.inbox-act-btn:hover{ border-color:var(--line); color:var(--text); background:var(--panel-2); }
+.inbox-nofilter{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-faint); padding:26px 0; text-align:center; }
+
+.toggle-switch{ position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+.toggle-switch input{ opacity: 0; width: 0; height: 0; }
+.toggle-slider{ position: absolute; cursor: pointer; inset: 0; background: var(--line); border-radius: 999px; transition: all .2s ease; }
+.toggle-slider::before{ content: ''; position: absolute; height: 18px; width: 18px; left: 3px; top: 3px; background: var(--text); border-radius: 50%; transition: all .2s ease; }
+.toggle-switch input:checked + .toggle-slider{ background: linear-gradient(135deg, #F7C878, #EAA23C); }
+.toggle-switch input:checked + .toggle-slider::before{ transform: translateX(20px); background: #241704; }
+.notif-pref-row{ display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line-soft); }
+.notif-pref-row:last-child{ border-bottom:none; }
+.notif-pref-label{ font-family:'Manrope', sans-serif; font-size:13.5px; color:var(--text); }
+</style>
+</head>
+<body>
+
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow">Inbox</div>
+      <h1>What moved while you were away</h1>
+      <p>Everything the watch has found - new matches and scan activity, newest first.</p>
+    </div>
+
+    <div id="inboxStats" class="inbox-stats hidden"></div>
+
+    <div id="inboxToolbar" class="inbox-toolbar hidden">
+      <input type="text" id="inboxSearch" class="inbox-search" placeholder="Search notifications..." aria-label="Search notifications">
+      <button class="inbox-unread-toggle" id="inboxUnreadToggle" aria-pressed="false"><span class="dot"></span>Unread only</button>
+      <button class="btn ghost" id="clearInboxBtn">Clear all</button>
+    </div>
+    <div id="inboxChips" class="inbox-chips hidden"></div>
+
+    <div class="panel inbox-list" id="inboxPanel"></div>
+
+    <div class="panel" style="margin-top:20px; padding:20px 22px;">
+      <h3 style="font-family:'Space Grotesk',sans-serif; margin:0 0 4px;">Notification settings</h3>
+      <p style="font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); margin:0 0 4px;">Choose exactly which kinds of activity you want to hear about.</p>
+      <div id="notifPrefsList"></div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo - listings shown are illustrative, not live postings.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof renderNav === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+renderNav('inbox');
+
+const panel = document.getElementById('inboxPanel');
+const toolbar = document.getElementById('inboxToolbar');
+const statsEl = document.getElementById('inboxStats');
+const chipsEl = document.getElementById('inboxChips');
+
+function escapeHtml(str){ const d = document.createElement('div'); d.textContent = (str==null?'':str); return d.innerHTML; }
+
+// Per-type presentation: icon, short label, and where "View" jumps to.
+const NOTIF_META = {
+  scan:                  { icon:'&#9678;',  label:'Scan',        page:'dashboard.html' },
+  auto_apply:            { icon:'&#9889;',  label:'Auto mode',   page:'auto.html' },
+  outreach_sent:         { icon:'&#9993;',  label:'Outreach',    page:'dashboard.html' },
+  outreach_drafted:      { icon:'&#9998;',  label:'Draft',       page:'dashboard.html' },
+  application:           { icon:'&#9654;',  label:'Application', page:'dashboard.html' },
+  applications_approved: { icon:'&#10003;', label:'Approved',    page:'auto.html' },
+  athlete_application:   { icon:'&#9654;',  label:'Application', page:'athlete-dashboard.html' },
+};
+function metaFor(type){ return NOTIF_META[type] || { icon:'&#10022;', label:'Update', page:'dashboard.html' }; }
+
+// UI state (in-memory, resets per visit - intentional, like a real inbox view).
+let filterType = 'all';
+let unreadOnly = false;
+let searchQuery = '';
+
+// Snapshot which notifications were unread on ARRIVAL, captured before the
+// backend/demo mark-all-read runs below. This is what "unread" means for this
+// visit - what you hadn't seen yet - so the highlight and the "Unread only"
+// filter stay meaningful even after everything is marked read server-side.
+const arrivedUnread = new Set(getNotifications().filter(n => !n.read).map(n => String(n.id)));
+function isUnread(n){ return arrivedUnread.has(String(n.id)); }
+
+function relTime(ts){
+  const then = new Date(ts).getTime();
+  if(isNaN(then)) return '';
+  const diff = Date.now() - then;
+  const m = Math.round(diff/60000), h = Math.round(diff/3600000), d = Math.round(diff/86400000);
+  if(diff < 60000) return 'just now';
+  if(m < 60) return m + 'm ago';
+  if(h < 24) return h + 'h ago';
+  if(d < 7) return d + 'd ago';
+  return new Date(ts).toLocaleDateString([], {month:'short', day:'numeric'});
+}
+function dayBucket(ts){
+  const t = new Date(ts); if(isNaN(t.getTime())) return 'Earlier';
+  const now = new Date();
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startYest = startToday - 86400000;
+  const start7 = startToday - 6*86400000;
+  const v = t.getTime();
+  if(v >= startToday) return 'Today';
+  if(v >= startYest) return 'Yesterday';
+  if(v >= start7) return 'Earlier this week';
+  return 'Earlier';
+}
+const BUCKET_ORDER = ['Today','Yesterday','Earlier this week','Earlier'];
+
+// Local mutation helpers (best-effort; the backend copy is reconciled on next load).
+function setNotifications(list){ try{ _safeSetItem('kaidostar_notifications', JSON.stringify(list)); }catch(e){} }
+function toggleReadFor(id){
+  const key = String(id);
+  const list = getNotifications();
+  const n = list.find(x => String(x.id) === key);
+  // Drive both the arrival snapshot (what this visit shows) and the stored flag.
+  if(arrivedUnread.has(key)){ arrivedUnread.delete(key); if(n) n.read = true; }
+  else { arrivedUnread.add(key); if(n) n.read = false; }
+  setNotifications(list);
+  renderInbox();
+}
+function dismissOne(id){
+  const key = String(id);
+  arrivedUnread.delete(key);
+  setNotifications(getNotifications().filter(x => String(x.id) !== key));
+  renderInbox();
+}
+
+function renderStats(notes){
+  if(!notes.length){ statsEl.classList.add('hidden'); return; }
+  statsEl.classList.remove('hidden');
+  const unread = notes.filter(isUnread).length;
+  const weekAgo = Date.now() - 7*86400000;
+  const thisWeek = notes.filter(n => new Date(n.ts).getTime() >= weekAgo).length;
+  const counts = {};
+  notes.forEach(n => { counts[n.type] = (counts[n.type]||0)+1; });
+  let topType = null, topN = 0;
+  Object.entries(counts).forEach(([t,c]) => { if(c > topN){ topN = c; topType = t; } });
+  const topLabel = topType ? metaFor(topType).label : '--';
+  statsEl.innerHTML = `
+    <div class="inbox-stat"><div class="inbox-stat-num">${notes.length}</div><div class="inbox-stat-label">Total</div></div>
+    <div class="inbox-stat"><div class="inbox-stat-num ${unread?'gold':''}">${unread}</div><div class="inbox-stat-label">Unread</div></div>
+    <div class="inbox-stat"><div class="inbox-stat-num">${thisWeek}</div><div class="inbox-stat-label">This week</div></div>
+    <div class="inbox-stat"><div class="inbox-stat-num" style="font-size:16px; padding-top:5px;">${escapeHtml(topLabel)}</div><div class="inbox-stat-label">Most activity</div></div>`;
+}
+
+function renderChips(notes){
+  if(!notes.length){ chipsEl.classList.add('hidden'); return; }
+  chipsEl.classList.remove('hidden');
+  const counts = {};
+  notes.forEach(n => { counts[n.type] = (counts[n.type]||0)+1; });
+  const types = Object.keys(counts).sort((a,b) => counts[b]-counts[a]);
+  const chip = (key, label, count) =>
+    `<button class="inbox-chip ${filterType===key?'on':''}" data-type="${escapeHtml(key)}">${escapeHtml(label)}<span class="inbox-chip-count">${count}</span></button>`;
+  chipsEl.innerHTML = chip('all','All',notes.length) +
+    types.map(t => chip(t, metaFor(t).label, counts[t])).join('');
+  chipsEl.querySelectorAll('.inbox-chip').forEach(b => {
+    b.addEventListener('click', () => { filterType = b.dataset.type; renderInbox(); });
+  });
+}
+
+function renderInbox(){
+  const all = getNotifications();
+  toolbar.classList.toggle('hidden', all.length === 0);
+  renderStats(all);
+  renderChips(all);
+
+  if(all.length === 0){
+    panel.innerHTML = `<div class="empty-state">
+      <div class="glyph">&#10022;</div>
+      Nothing here yet.
+      <div class="sub">Start the watch on the Job Search page - new matches will show up here as they're found.</div>
+      <a class="btn" href="dashboard.html">Open job search &rarr;</a>
+    </div>`;
+    return;
+  }
+
+  // Apply filters
+  let notes = all.slice();
+  if(filterType !== 'all') notes = notes.filter(n => n.type === filterType);
+  if(unreadOnly) notes = notes.filter(isUnread);
+  if(searchQuery){
+    const q = searchQuery.toLowerCase();
+    notes = notes.filter(n => (n.title||'').toLowerCase().includes(q) || (n.detail||'').toLowerCase().includes(q));
+  }
+
+  if(notes.length === 0){
+    panel.innerHTML = `<div class="inbox-nofilter">No notifications match this filter.<br><span style="color:var(--text-dim); cursor:pointer; text-decoration:underline;" id="inboxResetFilter">Clear filters</span></div>`;
+    document.getElementById('inboxResetFilter')?.addEventListener('click', () => {
+      filterType='all'; unreadOnly=false; searchQuery='';
+      document.getElementById('inboxSearch').value=''; syncUnreadToggle(); renderInbox();
+    });
+    return;
+  }
+
+  // Group by day bucket, newest first within each
+  const groups = {};
+  notes.forEach(n => { const b = dayBucket(n.ts); (groups[b] = groups[b] || []).push(n); });
+
+  let html = '';
+  BUCKET_ORDER.forEach(bucket => {
+    const items = groups[bucket];
+    if(!items || !items.length) return;
+    items.sort((a,b) => new Date(b.ts) - new Date(a.ts));
+    html += `<div class="inbox-daygroup-head">${bucket} &middot; ${items.length}</div>`;
+    html += items.map(n => {
+      const meta = metaFor(n.type);
+      const unread = isUnread(n);
+      const abs = new Date(n.ts).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+      return `<div class="inbox-item${unread ? ' inbox-item-unread' : ''}">
+        <div class="inbox-icon">${meta.icon}</div>
+        <div class="inbox-body">
+          <p class="inbox-title">${escapeHtml(n.title)}${unread ? ' <span class="inbox-unread-dot"></span>' : ''}</p>
+          <div class="inbox-detail">${escapeHtml(n.detail || '')}</div>
+          <div class="inbox-metarow">
+            <span class="inbox-typetag">${escapeHtml(meta.label)}</span>
+            <span class="inbox-ts" title="${escapeHtml(abs)}">${relTime(n.ts)}</span>
+            <a class="inbox-jump" href="${meta.page}">View &rarr;</a>
+          </div>
+        </div>
+        <div class="inbox-item-actions">
+          <button class="inbox-act-btn" data-act="read" data-id="${escapeHtml(String(n.id))}" title="${unread?'Mark read':'Mark unread'}">${unread ? '&#9675;' : '&#9679;'}</button>
+          <button class="inbox-act-btn" data-act="dismiss" data-id="${escapeHtml(String(n.id))}" title="Dismiss">&times;</button>
+        </div>
+      </div>`;
+    }).join('');
+  });
+  panel.innerHTML = html;
+
+  panel.querySelectorAll('.inbox-act-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      const id = b.dataset.id;
+      if(b.dataset.act === 'read') toggleReadFor(id);
+      else dismissOne(id);
+    });
+  });
+}
+
+function syncUnreadToggle(){
+  const t = document.getElementById('inboxUnreadToggle');
+  t.classList.toggle('on', unreadOnly);
+  t.setAttribute('aria-pressed', unreadOnly ? 'true' : 'false');
+}
+document.getElementById('inboxUnreadToggle').addEventListener('click', () => {
+  unreadOnly = !unreadOnly; syncUnreadToggle(); renderInbox();
+});
+document.getElementById('inboxSearch').addEventListener('input', (e) => {
+  searchQuery = e.target.value.trim(); renderInbox();
+});
+
+const NOTIF_TYPE_LABELS = {
+  scan: 'New match found during a scan',
+  auto_apply: 'Auto mode activity (applications and outreach)',
+  outreach_sent: 'Outreach email sent',
+  applications_approved: 'Applications approved',
+};
+
+function renderNotifPrefs(){
+  const container = document.getElementById('notifPrefsList');
+  const prefs = getNotificationPreferences();
+  container.innerHTML = Object.entries(NOTIF_TYPE_LABELS).map(([type, label]) => {
+    const enabled = prefs[type] !== false;
+    return `<div class="notif-pref-row">
+      <span class="notif-pref-label">${escapeHtml(label)}</span>
+      <label class="toggle-switch">
+        <input type="checkbox" data-notif-type="${type}" ${enabled ? 'checked' : ''}>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>`;
+  }).join('');
+  container.querySelectorAll('[data-notif-type]').forEach(input => {
+    input.addEventListener('change', () => {
+      updateNotificationPreference(input.dataset.notifType, input.checked);
+    });
+  });
+}
+renderNotifPrefs();
+
+document.getElementById('clearInboxBtn').addEventListener('click', () => {
+  clearNotifications();               // local first
+  const session = getSession();
+  const userId = session && session.user_id;
+  if(userId){ apiClearNotifications(userId); }   // persist to backend
+  filterType='all'; unreadOnly=false; searchQuery='';
+  document.getElementById('inboxSearch').value=''; syncUnreadToggle();
+  renderInbox();
+});
+
+renderInbox();
+
+// Backend hydration + mark-all-read. When logged in, pull the real
+// notifications, render them, THEN mark all read on the backend (so
+// unread highlighting is visible this visit and cleared next time,
+// matching how real inboxes behave). Best-effort + async so the page
+// shows local state instantly.
+(async () => {
+  const session = getSession();
+  const userId = session && session.user_id;
+  if(!userId){
+    markAllNotificationsRead();  // demo path - local only
+    return;
+  }
+  try{
+    const backendNotifs = await apiListNotifications(userId);
+    if(Array.isArray(backendNotifs)){
+      _safeSetItem('kaidostar_notifications', JSON.stringify(backendNotifs));
+      renderInbox();
+    }
+  }catch(e){ /* best-effort - local already rendered */ }
+  // Mark read locally (for instant UI next render) and on the backend.
+  markAllNotificationsRead();
+  apiMarkAllNotificationsRead(userId);
+})();
+</script>
+<script>
+// Visible tier switcher (preview - no payment) so plan differences are testable everywhere.
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+</body>
+</html>
