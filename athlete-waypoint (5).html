@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waypoint — Kaidostar Athlete</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow">Waypoint</div>
+      <h1>Every move, on the record</h1>
+      <p>Log what's actually happening on your path - tag it to a roadmap stage, get an honest reflection on each entry, and a real pattern reflection once you've logged a few.</p>
+    </div>
+
+    <div id="noProfile" class="empty-state hidden">
+      <div class="glyph">&#10022;</div>
+      No survey answers yet.
+      <div class="sub">Complete the athlete survey first so entries can be tagged to a real roadmap stage.</div>
+      <a class="btn" href="athlete-survey.html">Go to survey &rarr;</a>
+    </div>
+
+    <div id="waypointContent" class="hidden">
+      <div class="panel compose-panel" style="margin-bottom:26px;">
+        <h2>New entry</h2>
+        <div class="sub">Progress, a setback, a lesson - whatever's actually happening.</div>
+        <textarea id="postBody" placeholder="What's happening on your path right now?"></textarea>
+        <div class="compose-row">
+          <input type="text" id="postVideoUrl" placeholder="Optional: link to a video (YouTube, Loom, etc.)">
+          <select class="compose-tag-select" id="postStageSelect">
+            <option value="">No roadmap stage</option>
+          </select>
+          <button class="btn" id="postSubmitBtn">Add entry</button>
+        </div>
+      </div>
+
+      <div class="pattern-panel hidden" id="patternPanel">
+        <h3>Reflect across your recent entries</h3>
+        <div class="sub">A single-entry reflection can only restate what you just wrote. This looks across several entries at once for a pattern you might not notice yourself.</div>
+        <button class="btn ghost" id="patternBtn">Reflect on my last 5 entries</button>
+        <div class="pattern-result" id="patternResult"></div>
+      </div>
+
+      <div class="results-head">
+        <h2>Your entries</h2>
+        <div class="results-count" id="entryCount">0 entries</div>
+      </div>
+      <input type="text" id="entrySearchInput" placeholder="Search your own entries..." style="width:100%; box-sizing:border-box; font-family:inherit; padding:9px 12px; margin-bottom:14px; border-radius:8px; border:1px solid var(--line); background:var(--void); color:var(--text);">
+      <div id="entryList"></div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo - this is a private journal, not shared with anyone else. Video entries are links to wherever you already host your video, not an upload/hosting service.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script src="charts.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof renderNav === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+_safeSetItem('kaidostar_role', 'athlete');
+renderNav('athlete-waypoint');
+
+const STORAGE_KEY = 'kaidostar_waypoint_athlete';
+const athleteProfile = getAthleteProfile();
+if(!athleteProfile){
+  document.getElementById('noProfile').classList.remove('hidden');
+} else {
+  document.getElementById('waypointContent').classList.remove('hidden');
+}
+
+function getContextSummary(){
+  const roadmap = getAthleteRoadmap();
+  return roadmap ? roadmap.summary : null;
+}
+
+function populateStageSelect(){
+  const roadmap = getAthleteRoadmap();
+  const select = document.getElementById('postStageSelect');
+  if(roadmap && roadmap.milestones){
+    roadmap.milestones.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.stage;
+      opt.textContent = `Stage ${m.stage}: ${m.title}`;
+      select.appendChild(opt);
+    });
+  }
+}
+
+const journalOpts = {
+  storageKey: STORAGE_KEY,
+  profile: athleteProfile,
+  getContextSummary: getContextSummary,
+  listElId: 'entryList',
+  countElId: 'entryCount',
+  patternPanelId: 'patternPanel',
+  searchQuery: '',
+};
+
+document.getElementById('entrySearchInput')?.addEventListener('input', (e) => {
+  journalOpts.searchQuery = e.target.value;
+  renderWaypointJournal(journalOpts);
+});
+
+document.getElementById('postSubmitBtn')?.addEventListener('click', () => {
+  const body = document.getElementById('postBody').value.trim();
+  if(!body) return;
+  const videoUrl = document.getElementById('postVideoUrl').value.trim();
+  const stageSelect = document.getElementById('postStageSelect');
+  const roadmap = getAthleteRoadmap();
+  const stageNum = stageSelect.value ? parseInt(stageSelect.value) : null;
+  const stageTitle = stageNum && roadmap ? (roadmap.milestones.find(m => m.stage === stageNum) || {}).title : null;
+
+  const newPost = {
+    id: 'entry_' + Date.now(),
+    body,
+    video_url: videoUrl || null,
+    tag_value: stageNum,
+    tag_label: stageTitle ? `Stage ${stageNum}: ${stageTitle}` : null,
+    created_at: new Date().toISOString(),
+  };
+  saveWaypointPost(STORAGE_KEY, newPost);   // local first - instant UI + demo fallback
+  const jSession = getSession();
+  const jUserId = jSession && jSession.user_id;
+  if(jUserId){ apiCreateJournalPost(jUserId, newPost); }
+  document.getElementById('postBody').value = '';
+  document.getElementById('postVideoUrl').value = '';
+  stageSelect.value = '';
+  renderWaypointJournal(journalOpts);
+});
+
+document.getElementById('patternBtn')?.addEventListener('click', async () => {
+  const entries = getWaypointPosts(STORAGE_KEY).slice(0, 5);
+  const btn = document.getElementById('patternBtn');
+  const result = document.getElementById('patternResult');
+  btn.disabled = true; btn.textContent = 'Looking across your entries...';
+  result.innerHTML = `<p style="color:var(--text-faint); font-style:italic;">Reflecting...</p>`;
+  result.classList.add('open');
+  const text = await reflectOnEntryPattern(athleteProfile, getContextSummary(), entries);
+  btn.disabled = false; btn.textContent = 'Reflect on my last 5 entries';
+  result.innerHTML = text ? escapeForHtml(text) : `<span style="color:var(--danger);">Couldn't reach Metis just now - try again.</span>`;
+});
+
+if(athleteProfile){
+  populateStageSelect();
+  renderWaypointJournal(journalOpts);
+
+  // Backend hydration: pull the real journal posts when logged in.
+  (async () => {
+    const session = getSession();
+    const userId = session && session.user_id;
+    if(!userId) return;
+    try{
+      const backendPosts = await apiListJournalPosts(userId);
+      if(Array.isArray(backendPosts) && backendPosts.length){
+        _safeSetItem(STORAGE_KEY, JSON.stringify(backendPosts));
+        renderWaypointJournal(journalOpts);
+      }
+    }catch(e){ /* best-effort - local journal already rendered */ }
+  })();
+
+  injectMetisWidget(function(){
+    let ctx = `You are Metis, the built-in guide inside "Kaidostar" for student-athletes. You can also help with Waypoint, the athlete's private progress journal - answer questions about what to log or how a recent entry connects to their roadmap. Be concise and practical.\n\n`;
+    ctx += `This athlete's sport: "${athleteProfile.sport}". Level: ${athleteProfile.level}. Career direction: ${athleteProfile.careerDirection}.\n`;
+    const roadmap = getAthleteRoadmap();
+    if(roadmap){ ctx += `Their roadmap strategy: ${roadmap.summary}\n`; }
+    return ctx;
+  }, {
+    subtitle: 'Your AI recruiting guide',
+    greeting: "Hi - I can help you think through a journal entry or how it connects to your roadmap. What's on your mind?",
+    suggestions: [
+      { label: 'What should I log?', q: 'What kind of progress is actually worth logging in my Waypoint journal right now?' },
+    ],
+  });
+}
+</script>
+<script>
+// Visible tier switcher (preview - no payment) so plan differences are testable everywhere.
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+<style>
+.wp-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:22px; }
+.wp-stat{ background:var(--panel-2,#16161f); border:1px solid var(--line,#2a2a36); border-radius:12px; padding:13px 15px; }
+.wp-stat-num{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:23px; line-height:1; color:var(--gold,#F0B24E); letter-spacing:-0.02em; }
+.wp-stat-num.plain{ color:var(--text,#eee); }
+.wp-stat-label{ font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint,#778); margin-top:7px; }
+@media (max-width:620px){ .wp-stats{ grid-template-columns:repeat(2,1fr); } }
+</style>
+<script>
+/* Waypoint stats strip: total entries, this week, day streak, and how many
+   entries are tagged to a roadmap stage - read-only, computed off the same
+   journal store the list renders from. Guarded; refreshes with the list. */
+(function(){
+  try{
+    var KEY = (typeof STORAGE_KEY!=='undefined' && STORAGE_KEY) ? STORAGE_KEY : 'kaidostar_waypoint_athlete';
+    var wc=document.getElementById('waypointContent'); if(!wc) return;
+    var strip=document.createElement('div'); strip.id='waypointStats'; strip.className='wp-stats';
+    wc.insertBefore(strip, wc.firstChild);
+    function posts(){ try{ return (typeof getWaypointPosts==='function') ? (getWaypointPosts(KEY)||[]) : []; }catch(e){ return []; } }
+    function dk(d){ return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate(); }
+    function streak(ps){
+      var days={}; ps.forEach(function(p){ var d=new Date(p.created_at); if(!isNaN(d.getTime())) days[dk(d)]=1; });
+      var cur=new Date(), s=0;
+      if(!days[dk(cur)]) cur.setDate(cur.getDate()-1);
+      while(days[dk(cur)]){ s++; cur.setDate(cur.getDate()-1); }
+      return s;
+    }
+    function render(){
+      var ps=posts();
+      var wk=Date.now()-7*86400000;
+      var thisWeek=ps.filter(function(p){ var t=new Date(p.created_at).getTime(); return !isNaN(t)&&t>=wk; }).length;
+      var tagged=ps.filter(function(p){ return p.tag_value!=null; }).length;
+      var st=streak(ps);
+      var rows=[
+        ['num plain', ps.length, 'Entries'],
+        ['num plain', thisWeek, 'This week'],
+        ['num', st + (st===1?' day':' days'), 'Streak'],
+        ['num plain', tagged, 'Tagged to a stage']
+      ];
+      strip.innerHTML=rows.map(function(r){ return '<div class="wp-stat"><div class="wp-stat-'+r[0]+'">'+r[1]+'</div><div class="wp-stat-label">'+r[2]+'</div></div>'; }).join('');
+    }
+    var box=document.getElementById('entryList');
+    if(box){ var t; new MutationObserver(function(){ clearTimeout(t); t=setTimeout(render,60); }).observe(box,{childList:true,subtree:true}); }
+    render();
+    setTimeout(render, 500);
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
