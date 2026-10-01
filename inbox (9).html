@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inbox — Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+/* ---- Summary stat strip ---- */
+.inbox-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.inbox-stat{ background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:13px 15px; }
+.inbox-stat-num{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:24px; line-height:1; color:var(--text); letter-spacing:-0.02em; }
+.inbox-stat-num.gold{ color:var(--gold); }
+.inbox-stat-label{ font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint); margin-top:7px; }
+@media (max-width:620px){ .inbox-stats{ grid-template-columns:repeat(2,1fr); } }
+
+/* ---- Metis copilot ---- */
+.inbox-copilot{ padding:18px 20px; margin-bottom:20px; background:linear-gradient(180deg, rgba(240,178,78,0.07), rgba(139,124,246,0.04)); border:1px solid var(--gold,#F0B24E); border-radius:14px; }
+.ic-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.ic-head .mk{ display:inline-flex; }
+.ic-head h3{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:16px; color:var(--text); margin:0; }
+.ic-head .tag{ font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--gold,#F0B24E); border:1px solid var(--gold,#F0B24E); border-radius:999px; padding:2px 8px; }
+.ic-item{ display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--line-soft); }
+.ic-item:last-child{ border-bottom:none; }
+.ic-rank{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:13px; color:#0b0b0f; background:var(--gold,#F0B24E); width:22px; height:22px; border-radius:7px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+.ic-main{ flex:1; min-width:0; }
+.ic-title{ font-family:'Manrope',sans-serif; font-size:13.5px; font-weight:600; color:var(--text); }
+.ic-why{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--gold,#F0B24E); margin-top:3px; }
+.ic-reply{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-dim); line-height:1.6; white-space:pre-wrap; }
+.ic-jump{ font-family:'Manrope',sans-serif; font-size:11.5px; font-weight:600; color:var(--gold); text-decoration:none; flex-shrink:0; margin-top:1px; }
+.ic-actions{ margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.ic-btn{ font-family:'Manrope',sans-serif; font-weight:700; font-size:12.5px; color:#0b0b0f; background:var(--gold,#F0B24E); border:none; border-radius:9px; padding:8px 14px; cursor:pointer; }
+.ic-btn:disabled{ opacity:.55; cursor:default; }
+.ic-note{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); }
+.ic-clear{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--aurora,#40C0A0); }
+
+/* ---- Filter bar ---- */
+.inbox-toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px; }
+.inbox-search{ flex:1; min-width:180px; box-sizing:border-box; font-family:inherit; font-size:13px; padding:9px 12px; border-radius:8px; border:1px solid var(--line); background:var(--void); color:var(--text); }
+.inbox-search:focus{ outline:none; border-color:var(--gold); }
+.inbox-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+.inbox-chip{ font-family:'Manrope',sans-serif; font-size:11.5px; font-weight:600; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--panel-2); color:var(--text-dim); cursor:pointer; transition:all .15s ease; display:inline-flex; align-items:center; gap:6px; }
+.inbox-chip:hover{ border-color:var(--gold); color:var(--text); }
+.inbox-chip.on{ background:var(--gold); border-color:var(--gold); color:#0b0b0f; }
+.inbox-chip-count{ font-family:'JetBrains Mono',monospace; font-size:9.5px; opacity:0.75; }
+.inbox-unread-toggle{ font-family:'Manrope',sans-serif; font-size:11.5px; font-weight:600; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--panel-2); color:var(--text-dim); cursor:pointer; display:inline-flex; align-items:center; gap:7px; }
+.inbox-unread-toggle.on{ border-color:var(--gold); color:var(--text); }
+.inbox-unread-toggle .dot{ width:7px; height:7px; border-radius:50%; background:var(--line); }
+.inbox-unread-toggle.on .dot{ background:var(--gold); }
+
+/* ---- Category groups ---- */
+.inbox-cathead{ display:flex; align-items:center; gap:9px; margin:20px 0 6px; padding-top:10px; }
+.inbox-cathead:first-child{ margin-top:0; padding-top:0; }
+.inbox-catdot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.inbox-catname{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); }
+.inbox-catcount{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); }
+
+/* ---- Feed items ---- */
+.inbox-list{ max-width: 760px; }
+.inbox-item{ display:flex; gap:14px; padding: 15px 0; border-bottom: 1px solid var(--line-soft); position:relative; }
+.inbox-item-unread{ background: var(--gold-dim); margin: 0 -16px; padding: 15px 16px; border-radius: 10px; border-bottom-color:transparent; }
+.inbox-unread-dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--gold); margin-left:6px; vertical-align:2px; }
+.inbox-item:last-child{ border-bottom:none; }
+.inbox-icon{ width:38px; height:38px; border-radius:9px; background: var(--panel-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size: 15px; }
+.inbox-body{ flex:1; min-width:0; }
+.inbox-title{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 14.5px; margin:0 0 3px; }
+.inbox-detail{ font-family:'Manrope', sans-serif; font-size: 13px; color: var(--text-dim); line-height:1.5; }
+.inbox-metarow{ display:flex; align-items:center; gap:10px; margin-top:7px; flex-wrap:wrap; }
+.inbox-ts{ font-family:'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-faint); }
+.inbox-typetag{ font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.06em; text-transform:uppercase; border-radius:5px; padding:2px 6px; }
+.inbox-from{ font-family:'Manrope',sans-serif; font-size:10.5px; color:var(--text-faint); }
+.inbox-from b{ color:var(--text-dim); font-weight:600; }
+.inbox-jump{ font-family:'Manrope',sans-serif; font-size:11px; font-weight:600; color:var(--gold); text-decoration:none; }
+.inbox-jump:hover{ text-decoration:underline; }
+.inbox-item-actions{ display:flex; gap:4px; flex-shrink:0; opacity:0; transition:opacity .15s ease; }
+.inbox-item:hover .inbox-item-actions, .inbox-item-unread .inbox-item-actions{ opacity:1; }
+.inbox-act-btn{ font-family:'Manrope',sans-serif; font-size:15px; line-height:1; width:26px; height:26px; border-radius:6px; border:1px solid transparent; background:transparent; color:var(--text-faint); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.inbox-act-btn:hover{ border-color:var(--line); color:var(--text); background:var(--panel-2); }
+.inbox-nofilter{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-faint); padding:26px 0; text-align:center; }
+
+.toggle-switch{ position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+.toggle-switch input{ opacity: 0; width: 0; height: 0; }
+.toggle-slider{ position: absolute; cursor: pointer; inset: 0; background: var(--line); border-radius: 999px; transition: all .2s ease; }
+.toggle-slider::before{ content: ''; position: absolute; height: 18px; width: 18px; left: 3px; top: 3px; background: var(--text); border-radius: 50%; transition: all .2s ease; }
+.toggle-switch input:checked + .toggle-slider{ background: linear-gradient(135deg, var(--gold-l), var(--gold-d)); }
+.toggle-switch input:checked + .toggle-slider::before{ transform: translateX(20px); background: #241704; }
+.notif-pref-row{ display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line-soft); }
+.notif-pref-row:last-child{ border-bottom:none; }
+.notif-pref-label{ font-family:'Manrope', sans-serif; font-size:13.5px; color:var(--text); }
+</style>
+</head>
+<body>
+
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow">Inbox</div>
+      <h1>What moved while you were away</h1>
+      <p>Everything the watch, your applications and Auto mode have surfaced — sorted into categories, with Metis flagging what actually needs you.</p>
+    </div>
+
+    <div class="panel inbox-copilot" id="inboxCopilot" style="display:none;">
+      <div class="ic-head"><span class="mk" id="icMark"></span><h3>Metis — what to respond to</h3><span class="tag">copilot</span></div>
+      <div id="icList"></div>
+      <div class="ic-actions">
+        <button class="ic-btn" id="icAiBtn">Ask Metis to triage &rarr;</button>
+        <span class="ic-note" id="icNote">Ranked from your real inbox.</span>
+      </div>
+    </div>
+
+    <div id="inboxStats" class="inbox-stats hidden"></div>
+
+    <div id="inboxToolbar" class="inbox-toolbar hidden">
+      <input type="text" id="inboxSearch" class="inbox-search" placeholder="Search your inbox..." aria-label="Search inbox">
+      <button class="inbox-unread-toggle" id="inboxUnreadToggle" aria-pressed="false"><span class="dot"></span>Unread only</button>
+      <button class="btn ghost" id="clearInboxBtn">Clear all</button>
+    </div>
+    <div id="inboxChips" class="inbox-chips hidden"></div>
+
+    <div class="panel inbox-list" id="inboxPanel"></div>
+
+    <div class="panel" style="margin-top:20px; padding:20px 22px;">
+      <h3 style="font-family:'Space Grotesk',sans-serif; margin:0 0 4px;">Notification settings</h3>
+      <p style="font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); margin:0 0 4px;">Choose exactly which kinds of activity you want to hear about.</p>
+      <div id="notifPrefsList"></div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo - listings shown are illustrative, not live postings.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof renderNav === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+renderNav('inbox');
+
+const panel = document.getElementById('inboxPanel');
+const toolbar = document.getElementById('inboxToolbar');
+const statsEl = document.getElementById('inboxStats');
+const chipsEl = document.getElementById('inboxChips');
+const copilotEl = document.getElementById('inboxCopilot');
+document.getElementById('icMark').innerHTML = (typeof metisMark === 'function') ? metisMark(18, '#F0B24E') : '&#10022;';
+
+function escapeHtml(str){ const d = document.createElement('div'); d.textContent = (str==null?'':str); return d.innerHTML; }
+
+// Per-type presentation: icon + where "View" jumps to.
+const NOTIF_META = {
+  scan:                  { icon:'&#9678;',  page:'dashboard.html' },
+  auto_apply:            { icon:'&#9889;',  page:'mission-pipeline.html' },
+  outreach_sent:         { icon:'&#9993;',  page:'workshop.html' },
+  outreach_drafted:      { icon:'&#9998;',  page:'workshop.html' },
+  application:           { icon:'&#9654;',  page:'mission-pipeline.html' },
+  applications_approved: { icon:'&#10003;', page:'mission-pipeline.html' },
+  athlete_application:   { icon:'&#9654;',  page:'athlete-dashboard.html' },
+  interview_invite:      { icon:'&#9733;',  page:'mission-interviews.html' },
+  employer_reply:        { icon:'&#9993;',  page:'workshop.html' },
+  weekly_digest:         { icon:'&#9432;',  page:'mission.html' },
+  document:              { icon:'&#9776;',  page:'workshop.html' },
+  query:                 { icon:'&#9432;',  page:'dashboard.html' },
+};
+function metaFor(type){ return NOTIF_META[type] || { icon:'&#10022;', page:'mission.html' }; }
+
+// ---- Categories: the higher-level buckets the feed is grouped into ----
+const CATEGORIES = {
+  action:        { label:'Needs you',     color:'var(--gold,#F0B24E)' },
+  applications:  { label:'Applications',  color:'var(--aurora,#40C0A0)' },
+  opportunities: { label:'Opportunities', color:'#7BA9FF' },
+  outreach:      { label:'Outreach',      color:'var(--comet,#8B7CF6)' },
+  updates:       { label:'Updates',       color:'var(--text-faint,#8890a0)' },
+};
+const CATEGORY_ORDER = ['action','applications','opportunities','outreach','updates'];
+
+function _txt(n){ return ((n.title||'') + ' ' + (n.detail||'')).toLowerCase(); }
+function categorize(n){
+  const s = _txt(n), t = n.type;
+  // "Needs you" = anything that genuinely wants a response or a decision now.
+  if(t==='interview_invite' || t==='employer_reply') return 'action';
+  if(/\binterview\b|\boffer\b|\breply|respond|awaiting|deadline|closes?|due |within|undo window|needs? (your )?review|action needed|please confirm/.test(s)) return 'action';
+  if(t==='outreach_drafted' || /drafted.*unsent|unsent/.test(s)) return 'action';
+  if(t==='applications_approved' || t==='application' || t==='athlete_application' || t==='auto_apply') return 'applications';
+  if(t==='scan') return 'opportunities';
+  if(t==='outreach_sent' || t==='outreach_drafted') return 'outreach';
+  return 'updates';
+}
+
+// ---- Source ("where from") ----
+const EMPLOYER_TYPES = new Set(['scan','outreach_sent','outreach_drafted','application','applications_approved','athlete_application','auto_apply','interview_invite','employer_reply']);
+function sourceOf(n){
+  const txt = (n.title||'') + ' — ' + (n.detail||'');
+  // Pull a company/org name when the message names one ("... at Fernway Labs",
+  // "Outreach sent: Fernway Labs", "New match: Cobalt Systems").
+  const m = txt.match(/(?:\bat\s+|:\s+|—\s+)([A-Z][A-Za-z0-9&.\-]*(?:\s+[A-Z][A-Za-z0-9&.\-]*){0,3})/);
+  if(m){ let org = m[1].trim().replace(/\s+(and|more|within|both|each)\b.*$/i,'').replace(/[.,]$/,'').trim(); if(org.length>=2 && org.length<=40) return { kind:'employer', name:org }; }
+  return EMPLOYER_TYPES.has(n.type) ? { kind:'opportunity', name:'An opportunity' } : { kind:'system', name:'Kaidostar' };
+}
+
+// ---- Priority: how much an item deserves attention now ----
+function priorityOf(n){
+  const cat = categorize(n), s = _txt(n);
+  let p = ({action:100, applications:50, opportunities:40, outreach:30, updates:10})[cat] || 0;
+  if(isUnread(n)) p += 25;
+  const pctM = s.match(/(\d{2,3})\s*%/);
+  if(pctM){ const pc = +pctM[1]; if(pc>=85) p += 30; else if(pc>=75) p += 18; }
+  if(/close|deadline|due|within|\bundo\b|today|tomorrow|\b\d+\s*day/.test(s)) p += 25;
+  const age = (Date.now() - new Date(n.ts).getTime())/86400000;
+  if(!isNaN(age)) p += Math.max(0, 10 - age);
+  return p;
+}
+function whyFor(n){
+  const s = _txt(n), bits = [];
+  if(isUnread(n)) bits.push('unread');
+  const pctM = s.match(/(\d{2,3})\s*%/); if(pctM && +pctM[1]>=75) bits.push(pctM[1]+'% fit');
+  if(/\bundo\b/.test(s)) bits.push('in the undo window');
+  else if(/close|deadline|due|within|today|tomorrow|\b\d+\s*day/.test(s)) bits.push('time-sensitive');
+  if(categorize(n)==='action' && !bits.length) bits.push('awaiting you');
+  return bits.slice(0,3).join(' · ') || 'worth a look';
+}
+
+// UI state
+let filterCat = 'all';
+let unreadOnly = false;
+let searchQuery = '';
+
+const arrivedUnread = new Set(getNotifications().filter(n => !n.read).map(n => String(n.id)));
+function isUnread(n){ return arrivedUnread.has(String(n.id)); }
+
+function relTime(ts){
+  const then = new Date(ts).getTime();
+  if(isNaN(then)) return '';
+  const diff = Date.now() - then;
+  const m = Math.round(diff/60000), h = Math.round(diff/3600000), d = Math.round(diff/86400000);
+  if(diff < 60000) return 'just now';
+  if(m < 60) return m + 'm ago';
+  if(h < 24) return h + 'h ago';
+  if(d < 7) return d + 'd ago';
+  return new Date(ts).toLocaleDateString([], {month:'short', day:'numeric'});
+}
+
+function setNotifications(list){ try{ _safeSetItem('kaidostar_notifications', JSON.stringify(list)); }catch(e){} }
+function toggleReadFor(id){
+  const key = String(id);
+  const list = getNotifications();
+  const n = list.find(x => String(x.id) === key);
+  let nowRead;
+  if(arrivedUnread.has(key)){ arrivedUnread.delete(key); if(n) n.read = true; nowRead = true; }
+  else { arrivedUnread.add(key); if(n) n.read = false; nowRead = false; }
+  setNotifications(list);
+  const s = getSession(); const uid = s && s.user_id;
+  if(uid && typeof apiSetNotificationRead === 'function'){ apiSetNotificationRead(key, nowRead); }
+  renderInbox();
+}
+function dismissOne(id){
+  const key = String(id);
+  arrivedUnread.delete(key);
+  setNotifications(getNotifications().filter(x => String(x.id) !== key));
+  const s = getSession(); const uid = s && s.user_id;
+  if(uid && typeof apiDeleteNotification === 'function'){ apiDeleteNotification(uid, key); }
+  renderInbox();
+}
+
+function renderStats(notes){
+  if(!notes.length){ statsEl.classList.add('hidden'); return; }
+  statsEl.classList.remove('hidden');
+  const unread = notes.filter(isUnread).length;
+  const needsYou = notes.filter(n => categorize(n)==='action').length;
+  const weekAgo = Date.now() - 7*86400000;
+  const thisWeek = notes.filter(n => new Date(n.ts).getTime() >= weekAgo).length;
+  statsEl.innerHTML = `
+    <div class="inbox-stat"><div class="inbox-stat-num">${notes.length}</div><div class="inbox-stat-label">Total</div></div>
+    <div class="inbox-stat"><div class="inbox-stat-num ${unread?'gold':''}">${unread}</div><div class="inbox-stat-label">Unread</div></div>
+    <div class="inbox-stat"><div class="inbox-stat-num ${needsYou?'gold':''}">${needsYou}</div><div class="inbox-stat-label">Needs you</div></div>
+    <div class="inbox-stat"><div class="inbox-stat-num">${thisWeek}</div><div class="inbox-stat-label">This week</div></div>`;
+}
+
+function renderChips(notes){
+  if(!notes.length){ chipsEl.classList.add('hidden'); return; }
+  chipsEl.classList.remove('hidden');
+  const counts = {};
+  notes.forEach(n => { const c = categorize(n); counts[c] = (counts[c]||0)+1; });
+  const chip = (key, label, count) =>
+    `<button class="inbox-chip ${filterCat===key?'on':''}" data-cat="${escapeHtml(key)}">${escapeHtml(label)}<span class="inbox-chip-count">${count}</span></button>`;
+  let html = chip('all','All',notes.length);
+  CATEGORY_ORDER.forEach(c => { if(counts[c]) html += chip(c, CATEGORIES[c].label, counts[c]); });
+  chipsEl.innerHTML = html;
+  chipsEl.querySelectorAll('.inbox-chip').forEach(b => {
+    b.addEventListener('click', () => { filterCat = b.dataset.cat; renderInbox(); });
+  });
+}
+
+// ---- Metis copilot: the top items that deserve a response/action now ----
+function topActionable(all){
+  return all.map(n => ({ n, p: priorityOf(n), cat: categorize(n) }))
+            .filter(x => x.cat === 'action' || x.p >= 60)
+            .sort((a,b) => b.p - a.p)
+            .slice(0, 3);
+}
+function renderCopilot(all){
+  if(!all.length){ copilotEl.style.display='none'; return; }
+  copilotEl.style.display='block';
+  const top = topActionable(all);
+  const list = document.getElementById('icList');
+  if(!top.length){
+    list.innerHTML = `<p class="ic-clear">You're all caught up — nothing needs a response right now.</p>`;
+    return;
+  }
+  list.innerHTML = top.map((x,i) => {
+    const n = x.n, meta = metaFor(n.type);
+    return `<div class="ic-item">
+      <div class="ic-rank">${i+1}</div>
+      <div class="ic-main"><div class="ic-title">${escapeHtml(n.title)}</div><div class="ic-why">${escapeHtml(whyFor(n))}</div></div>
+      <a class="ic-jump" href="${meta.page}">Act &rarr;</a>
+    </div>`;
+  }).join('');
+}
+
+// Build the compact snapshot the AI triage reads (top ~15 by priority).
+function inboxSnapshot(all){
+  return all.map(n => ({ n, p: priorityOf(n) })).sort((a,b)=>b.p-a.p).slice(0,15).map(x => {
+    const n = x.n, src = sourceOf(n);
+    return `- [${CATEGORIES[categorize(n)].label}] ${n.title}${n.detail?(' — '+n.detail):''} (${relTime(n.ts)}; ${isUnread(n)?'unread':'read'}; from ${src.name})`;
+  }).join('\n');
+}
+document.getElementById('icAiBtn').addEventListener('click', async () => {
+  const all = getNotifications();
+  if(!all.length) return;
+  const btn = document.getElementById('icAiBtn'), note = document.getElementById('icNote');
+  const s = getSession(); const uid = s && s.user_id;
+  if(!uid || typeof apiAiAssist !== 'function'){ note.textContent = 'Sign in to get Metis’s AI triage.'; return; }
+  btn.disabled = true; const old = btn.textContent; btn.textContent = 'Metis is reading your inbox…';
+  try{
+    const text = await apiAiAssist(uid, 'inbox_triage', { items: inboxSnapshot(all) });
+    if(!text) throw new Error('no result');
+    // Parse "TOP:\n- ...\nTHEN: ..."
+    const lines = String(text).split('\n'); const tops = []; let then = '';
+    let mode = '';
+    lines.forEach(l => { const t = l.trim(); if(!t) return;
+      if(/^top\s*:/i.test(t)){ mode='top'; return; }
+      if(/^then\s*:/i.test(t)){ then = t.replace(/^then\s*:/i,'').trim(); mode='then'; return; }
+      const m = t.match(/^[-*•]\s+(.*)$/); if(m && mode==='top') tops.push(m[1]);
+      else if(mode==='top' && !tops.length) tops.push(t);
+    });
+    const list = document.getElementById('icList');
+    if(tops.length){
+      list.innerHTML = tops.map((t,i)=>`<div class="ic-item"><div class="ic-rank">${i+1}</div><div class="ic-main"><div class="ic-reply">${escapeHtml(t)}</div></div></div>`).join('')
+        + (then ? `<p class="ic-why" style="margin-top:10px;">Then: ${escapeHtml(then)}</p>` : '');
+    } else {
+      list.innerHTML = `<p class="ic-reply">${escapeHtml(text)}</p>`;
+    }
+    note.textContent = 'Triaged by Metis from your real inbox.';
+  }catch(e){
+    note.textContent = 'Couldn’t reach Metis just now — the ranked list above is still live.';
+  }finally{ btn.disabled = false; btn.textContent = old; }
+});
+
+function renderInbox(){
+  const all = getNotifications();
+  toolbar.classList.toggle('hidden', all.length === 0);
+  renderStats(all);
+  renderChips(all);
+  renderCopilot(all);
+
+  if(all.length === 0){
+    panel.innerHTML = `<div class="empty-state">
+      <div class="glyph">&#10022;</div>
+      Nothing here yet.
+      <div class="sub">Start the watch on the Job Search page - new matches, applications and Auto-mode activity will show up here, sorted into categories.</div>
+      <a class="btn" href="dashboard.html">Open job search &rarr;</a>
+    </div>`;
+    return;
+  }
+
+  let notes = all.slice();
+  if(filterCat !== 'all') notes = notes.filter(n => categorize(n) === filterCat);
+  if(unreadOnly) notes = notes.filter(isUnread);
+  if(searchQuery){
+    const q = searchQuery.toLowerCase();
+    notes = notes.filter(n => (n.title||'').toLowerCase().includes(q) || (n.detail||'').toLowerCase().includes(q) || sourceOf(n).name.toLowerCase().includes(q));
+  }
+
+  if(notes.length === 0){
+    panel.innerHTML = `<div class="inbox-nofilter">Nothing matches this filter.<br><span style="color:var(--text-dim); cursor:pointer; text-decoration:underline;" id="inboxResetFilter">Clear filters</span></div>`;
+    document.getElementById('inboxResetFilter')?.addEventListener('click', () => {
+      filterCat='all'; unreadOnly=false; searchQuery='';
+      document.getElementById('inboxSearch').value=''; syncUnreadToggle(); renderInbox();
+    });
+    return;
+  }
+
+  // Group by CATEGORY (priority order), newest first within each.
+  const groups = {};
+  notes.forEach(n => { const c = categorize(n); (groups[c] = groups[c] || []).push(n); });
+
+  let html = '';
+  CATEGORY_ORDER.forEach(cat => {
+    const items = groups[cat];
+    if(!items || !items.length) return;
+    items.sort((a,b) => priorityOf(b) - priorityOf(a) || (new Date(b.ts) - new Date(a.ts)));
+    const meta = CATEGORIES[cat];
+    html += `<div class="inbox-cathead"><span class="inbox-catdot" style="background:${meta.color};"></span><span class="inbox-catname">${escapeHtml(meta.label)}</span><span class="inbox-catcount">${items.length}</span></div>`;
+    html += items.map(n => {
+      const nmeta = metaFor(n.type), unread = isUnread(n), src = sourceOf(n);
+      const abs = new Date(n.ts).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+      return `<div class="inbox-item${unread ? ' inbox-item-unread' : ''}">
+        <div class="inbox-icon" style="color:${meta.color};">${nmeta.icon}</div>
+        <div class="inbox-body">
+          <p class="inbox-title">${escapeHtml(n.title)}${unread ? ' <span class="inbox-unread-dot"></span>' : ''}</p>
+          <div class="inbox-detail">${escapeHtml(n.detail || '')}</div>
+          <div class="inbox-metarow">
+            <span class="inbox-typetag" style="color:${meta.color}; border:1px solid ${meta.color};">${escapeHtml(meta.label)}</span>
+            <span class="inbox-from">from <b>${escapeHtml(src.name)}</b></span>
+            <span class="inbox-ts" title="${escapeHtml(abs)}">${relTime(n.ts)}</span>
+            <a class="inbox-jump" href="${nmeta.page}">View &rarr;</a>
+          </div>
+        </div>
+        <div class="inbox-item-actions">
+          <button class="inbox-act-btn" data-act="read" data-id="${escapeHtml(String(n.id))}" title="${unread?'Mark read':'Mark unread'}">${unread ? '&#9675;' : '&#9679;'}</button>
+          <button class="inbox-act-btn" data-act="dismiss" data-id="${escapeHtml(String(n.id))}" title="Dismiss">&times;</button>
+        </div>
+      </div>`;
+    }).join('');
+  });
+  panel.innerHTML = html;
+
+  panel.querySelectorAll('.inbox-act-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      const id = b.dataset.id;
+      if(b.dataset.act === 'read') toggleReadFor(id);
+      else dismissOne(id);
+    });
+  });
+}
+
+function syncUnreadToggle(){
+  const t = document.getElementById('inboxUnreadToggle');
+  t.classList.toggle('on', unreadOnly);
+  t.setAttribute('aria-pressed', unreadOnly ? 'true' : 'false');
+}
+document.getElementById('inboxUnreadToggle').addEventListener('click', () => {
+  unreadOnly = !unreadOnly; syncUnreadToggle(); renderInbox();
+});
+document.getElementById('inboxSearch').addEventListener('input', (e) => {
+  searchQuery = e.target.value.trim(); renderInbox();
+});
+
+const NOTIF_TYPE_LABELS = {
+  scan: 'New match found during a scan',
+  auto_apply: 'Auto mode activity (applications and outreach)',
+  outreach_sent: 'Outreach email sent',
+  applications_approved: 'Applications approved',
+};
+function renderNotifPrefs(){
+  const container = document.getElementById('notifPrefsList');
+  const prefs = getNotificationPreferences();
+  container.innerHTML = Object.entries(NOTIF_TYPE_LABELS).map(([type, label]) => {
+    const enabled = prefs[type] !== false;
+    return `<div class="notif-pref-row">
+      <span class="notif-pref-label">${escapeHtml(label)}</span>
+      <label class="toggle-switch">
+        <input type="checkbox" data-notif-type="${type}" ${enabled ? 'checked' : ''}>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>`;
+  }).join('');
+  container.querySelectorAll('[data-notif-type]').forEach(input => {
+    input.addEventListener('change', () => { updateNotificationPreference(input.dataset.notifType, input.checked); });
+  });
+}
+renderNotifPrefs();
+
+document.getElementById('clearInboxBtn').addEventListener('click', () => {
+  clearNotifications();
+  const session = getSession();
+  const userId = session && session.user_id;
+  if(userId){ apiClearNotifications(userId); }
+  filterCat='all'; unreadOnly=false; searchQuery='';
+  document.getElementById('inboxSearch').value=''; syncUnreadToggle();
+  renderInbox();
+});
+
+renderInbox();
+
+(async () => {
+  const session = getSession();
+  const userId = session && session.user_id;
+  if(!userId){ markAllNotificationsRead(); return; }
+  try{
+    const backendNotifs = await apiListNotifications(userId);
+    if(Array.isArray(backendNotifs)){
+      _safeSetItem('kaidostar_notifications', JSON.stringify(backendNotifs));
+      renderInbox();
+    }
+  }catch(e){ /* best-effort - local already rendered */ }
+  markAllNotificationsRead();
+  apiMarkAllNotificationsRead(userId);
+})();
+</script>
+<script>
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+</body>
+</html>
