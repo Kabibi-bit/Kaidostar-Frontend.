@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline & Secured — Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow">Mission Control</div>
+      <h1>Pipeline &amp; Secured</h1>
+      <p>Every application from saved to offer — your funnel, conversions, what you&rsquo;ve secured, and your sending pace.</p>
+    </div>
+    <div id="missionNav"></div>
+    <div id="missionRoot"></div>
+  </div>
+  <footer>Kaidostar is a demo — listings shown are illustrative, not live postings.</footer>
+</div>
+<div id="diagRoot"></div>
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script src="charts.js"></script>
+<script src="mission.js"></script>
+<script>
+window.addEventListener("error", function(e){ var m="Script error: "+e.message; if(!document.getElementById("diagBanner")){var b=document.createElement("div");b.id="diagBanner";b.style.cssText="position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px;font-family:monospace;font-size:13px;text-align:center;";b.textContent="Kaidostar failed to load - "+m;document.body.prepend(b);} });
+</script>
+<script>
+if(typeof initStarfield==='function') initStarfield();
+if(typeof _safeSetItem==='function') _safeSetItem('kaidostar_role','candidate');
+if(typeof renderNav==='function') renderNav('mission');
+MISSION.page('pipeline');
+</script>
+</body>
+</html>
