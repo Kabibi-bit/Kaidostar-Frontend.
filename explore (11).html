@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explore — Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.explore-wrap{ max-width: 720px; margin: 0 auto; }
+.slider-row{ margin-bottom: 22px; }
+.slider-row label{ display:flex; justify-content: space-between; margin-bottom: 8px; }
+.slider-label-text{ font-family:'Manrope', sans-serif; font-weight: 600; font-size: 13px; color: var(--text-dim); text-transform: none; letter-spacing: 0; }
+.slider-value{ color: var(--gold); font-family:'Space Grotesk', sans-serif; font-weight: 700; font-size: 12px; }
+/* Custom polished range slider (replaces the flat browser default) */
+input[type=range]{
+  width: 100%;
+  -webkit-appearance: none; appearance: none;
+  height: 8px; border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold) var(--fill,33%), var(--line-soft) var(--fill,33%), var(--line-soft) 100%);
+  outline: none; cursor: pointer;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance: none; appearance: none;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #FBD79A, var(--gold-d));
+  border: 2px solid #241704;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 12px -2px rgba(240,178,78,0.7);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+input[type=range]::-webkit-slider-thumb:hover{ transform: scale(1.15); box-shadow: 0 2px 10px rgba(0,0,0,0.6), 0 0 18px -2px rgba(240,178,78,0.9); }
+input[type=range]::-moz-range-thumb{
+  width: 20px; height: 20px; border-radius: 50%; border: 2px solid #241704;
+  background: radial-gradient(circle at 35% 30%, #FBD79A, var(--gold-d));
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 12px -2px rgba(240,178,78,0.7);
+}
+input[type=range]::-moz-range-track{ height: 8px; border-radius: 999px; background: var(--line-soft); }
+input[type=range]::-moz-range-progress{ height: 8px; border-radius: 999px; background: var(--gold); }
+.slider-hint{ display:flex; justify-content: space-between; font-family:'JetBrains Mono', monospace; font-size: 10px; color: var(--text-faint); margin-top: 4px; }
+
+.direction-card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
+.direction-card.top{ border-color: var(--gold); }
+.direction-body{ display:grid; grid-template-columns: 56px 1fr; gap: 18px; }
+.direction-title{ font-family:'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px; margin: 0 0 6px; }
+.direction-desc{ font-family:'Manrope', sans-serif; font-size: 14px; color: var(--text-dim); line-height: 1.55; margin: 0 0 10px; }
+.direction-meta{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--comet); margin-bottom: 12px; }
+.direction-actions{ display:flex; gap: 10px; flex-wrap: wrap; }
+.direction-deep{ margin-top: 14px; padding: 14px; background: var(--void); border: 1px solid var(--line-soft); border-radius: 10px; font-family:'Manrope', sans-serif; font-size: 13px; line-height: 1.6; color: var(--text); white-space: pre-wrap; display:none; }
+.direction-deep.open{ display:block; }
+/* rich direction fields */
+.dir-section{ margin:10px 0; }
+.dir-section-label{ font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint); margin-bottom:5px; }
+.dir-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.dir-chip{ font-family:'Manrope',sans-serif; font-size:11.5px; padding:4px 10px; border-radius:999px; border:1px solid var(--line); color:var(--text-dim); background:var(--void); }
+.dir-chip.have{ border-color:var(--aurora); color:var(--aurora); }
+.dir-chip.gap{ border-color:var(--gold); color:var(--gold); }
+.dir-roles,.dir-outlook{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); line-height:1.5; }
+.dir-outlook{ font-style:italic; }
+/* commit ("lock in this goal") */
+.commit-panel{ margin-top:14px; padding:14px 16px; background:var(--void); border:1px solid var(--gold); border-radius:10px; display:none; }
+.commit-panel.open{ display:block; }
+.commit-panel p{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text); margin:0; }
+.commit-panel ul{ margin:8px 0 12px; padding-left:18px; } .commit-panel li{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); line-height:1.5; margin-bottom:3px; }
+.commit-panel li b{ color:var(--text); }
+.commit-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+/* compare */
+.explore-compare-btn{ margin-bottom:14px; }
+.cmp-grid{ overflow-x:auto; margin-bottom:16px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:6px 10px; }
+.cmp-table{ width:100%; border-collapse:collapse; }
+.cmp-table th,.cmp-table td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--line-soft); font-family:'Manrope',sans-serif; font-size:12.5px; vertical-align:top; color:var(--text-dim); }
+.cmp-table tr:last-child td{ border-bottom:none; }
+.cmp-table th{ font-family:'Space Grotesk',sans-serif; font-size:13px; color:var(--text); font-weight:700; }
+.cmp-table td.cmp-dim{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.04em; text-transform:uppercase; color:var(--text-faint); white-space:nowrap; }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow">Explore</div>
+      <h1>Calibrate your direction</h1>
+      <p>A short assessment surfaces real directions worth considering - each one connected to actual current opportunities, not just a description that dead-ends.</p>
+    </div>
+
+    <div class="explore-wrap">
+      <div class="panel" id="quizPanel">
+        <h2>1. What you've actually done</h2>
+        <div class="sub">The strongest signal isn't what you'd rate yourself - it's real things you've done. Be specific.</div>
+
+        <label for="proudMoment">Something you've built, led, organized, or solved that you're genuinely proud of</label>
+        <textarea id="proudMoment" placeholder="e.g. I organized a fundraiser that brought in 3x our target, I taught myself to fix my car's engine, I ran the social media for my club and grew it from 20 to 500 followers..."></textarea>
+
+        <label for="flowMoment">A time you lost track of time doing something - what were you actually doing?</label>
+        <textarea id="flowMoment" placeholder="e.g. Debugging a program until 3am without noticing, rearranging furniture and thinking about layout for hours, writing a long argument in a group chat..."></textarea>
+
+        <label for="soughtFor">What do people already come to you for help with?</label>
+        <textarea id="soughtFor" placeholder="e.g. Friends ask me to help plan things, people bring me their broken laptops, classmates ask me to explain concepts before exams..."></textarea>
+
+        <h2 style="margin-top:32px;">2. What actually matters to you</h2>
+        <div class="sub">Pick up to 3 - what you'd protect even if it cost you something else.</div>
+        <div class="chip-row" id="valuesChips">
+          <div class="chip" data-val="stability">Stability &amp; security</div>
+          <div class="chip" data-val="autonomy">Autonomy / independence</div>
+          <div class="chip" data-val="money">Financial upside</div>
+          <div class="chip" data-val="creativity">Creative expression</div>
+          <div class="chip" data-val="impact">Directly helping people</div>
+          <div class="chip" data-val="recognition">Recognition / status</div>
+          <div class="chip" data-val="learning">Constant learning</div>
+          <div class="chip" data-val="balance">Work-life balance</div>
+        </div>
+
+        <h2 style="margin-top:32px;">3. How you actually like to work</h2>
+        <div class="sub">Not abstract interests - real preferences about the shape of the work itself.</div>
+
+        <div class="slider-row">
+          <label><span class="slider-label-text">Working directly with people vs. working alone</span><span class="slider-value" id="peopleVal">1</span></label>
+          <input type="range" id="peopleSlider" min="0" max="3" value="1" aria-label="Working directly with people vs. working alone">
+          <div class="slider-hint"><span>Prefer solo work</span><span>Energized by people</span></div>
+        </div>
+        <div class="slider-row">
+          <label><span class="slider-label-text">Digging into data and analysis</span><span class="slider-value" id="dataVal">1</span></label>
+          <input type="range" id="dataSlider" min="0" max="3" value="1" aria-label="Digging into data and analysis">
+          <div class="slider-hint"><span>Not my thing</span><span>Love digging into numbers</span></div>
+        </div>
+        <div class="slider-row">
+          <label><span class="slider-label-text">Open-ended, ambiguous work vs. clear structure</span><span class="slider-value" id="structureVal">1</span></label>
+          <input type="range" id="structureSlider" min="0" max="3" value="1" aria-label="Open-ended, ambiguous work vs. clear structure">
+          <div class="slider-hint"><span>Give me a clear process</span><span>Give me an open problem</span></div>
+        </div>
+        <div class="slider-row">
+          <label><span class="slider-label-text">Risk tolerance: stable path vs. uncertain/entrepreneurial</span><span class="slider-value" id="riskVal">1</span></label>
+          <input type="range" id="riskSlider" min="0" max="3" value="1" aria-label="Risk tolerance: stable path vs. uncertain or entrepreneurial">
+          <div class="slider-hint"><span>I want predictability</span><span>I want to bet on myself</span></div>
+        </div>
+        <div class="slider-row">
+          <label><span class="slider-label-text">Pace: steady and predictable vs. fast-changing and varied</span><span class="slider-value" id="paceVal">1</span></label>
+          <input type="range" id="paceSlider" min="0" max="3" value="1" aria-label="Pace: steady and predictable vs. fast-changing and varied">
+          <div class="slider-hint"><span>Steady rhythm</span><span>Constant variety</span></div>
+        </div>
+
+        <h2 style="margin-top:32px;">4. What to steer away from</h2>
+        <div class="sub">Just as useful as what you're drawn to.</div>
+        <label for="avoidText">What would you actively want to avoid in a career?</label>
+        <textarea id="avoidText" placeholder="e.g. Cold-calling strangers all day, sitting in the same spot for 8 hours, work with no visible outcome, constant public speaking..."></textarea>
+
+        <h2 style="margin-top:32px;">5. Where you're starting from</h2>
+        <div class="chip-row" id="timelineChips">
+          <div class="chip active" data-val="now">Need direction now - deciding soon</div>
+          <div class="chip" data-val="exploring">Just exploring - no deadline</div>
+        </div>
+        <label style="margin-top:18px;">Open to more school or training if it's the right fit?</label>
+        <div class="chip-row" id="trainingChips">
+          <div class="chip active" data-val="yes">Yes, if it's worth it</div>
+          <div class="chip" data-val="no">Prefer to avoid more school</div>
+        </div>
+
+        <h2 style="margin-top:32px;">6. Fields that pull you</h2>
+        <div class="sub">Pick any that genuinely interest you - even loosely. This sharpens the directions.</div>
+        <div class="chip-row" id="interestChips">
+          <div class="chip" data-val="technology &amp; software">Technology &amp; software</div>
+          <div class="chip" data-val="data &amp; analytics">Data &amp; analytics</div>
+          <div class="chip" data-val="design &amp; creative">Design &amp; creative</div>
+          <div class="chip" data-val="business &amp; strategy">Business &amp; strategy</div>
+          <div class="chip" data-val="people &amp; communication">People &amp; communication</div>
+          <div class="chip" data-val="health &amp; science">Health &amp; science</div>
+          <div class="chip" data-val="finance">Finance &amp; numbers</div>
+          <div class="chip" data-val="building &amp; hands-on">Building &amp; hands-on</div>
+          <div class="chip" data-val="writing &amp; media">Writing &amp; media</div>
+          <div class="chip" data-val="education &amp; social impact">Education &amp; social impact</div>
+        </div>
+
+        <h2 style="margin-top:32px;">7. Your real strengths</h2>
+        <div class="sub">What you're genuinely good at - pick up to 4.</div>
+        <div class="chip-row" id="strengthChips">
+          <div class="chip" data-val="problem-solving">Problem-solving</div>
+          <div class="chip" data-val="communication">Communication</div>
+          <div class="chip" data-val="organization">Organization</div>
+          <div class="chip" data-val="creativity">Creativity</div>
+          <div class="chip" data-val="analysis">Analysis</div>
+          <div class="chip" data-val="leadership">Leadership</div>
+          <div class="chip" data-val="technical skill">Technical skill</div>
+          <div class="chip" data-val="persistence">Persistence</div>
+          <div class="chip" data-val="empathy">Empathy</div>
+        </div>
+
+        <h2 style="margin-top:32px;">8. Any hard constraints?</h2>
+        <div class="sub">Only if they genuinely bound your choices - leave blank if not.</div>
+        <label for="constraintsText">Location, pay floor, timing, or anything non-negotiable</label>
+        <textarea id="constraintsText" placeholder="e.g. Must be remote or in Austin, need to earn from day one (can't do unpaid), want to start within 3 months..."></textarea>
+
+        <button class="btn block" id="discoverBtn">See possible directions &rarr;</button>
+      </div>
+
+      <div id="resultsArea" class="hidden">
+        <div class="results-head">
+          <h2>Directions worth considering</h2>
+          <div class="results-count"><a href="#" id="retakeBtn" style="color:var(--gold);">Retake</a></div>
+        </div>
+        <div id="directionsList"></div>
+      </div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo - "related opportunities" counts are drawn from the same illustrative listings used elsewhere in the demo.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script src="charts.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof renderNav === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+renderNav('explore');
+
+// Keep the custom slider's gold fill in sync with its value (WebKit needs this;
+// it has no ::-moz-range-progress equivalent). Sets a --fill % the track gradient uses.
+(function setupSliderFills(){
+  function paint(el){
+    const min = parseFloat(el.min || 0), max = parseFloat(el.max || 100);
+    const pct = max > min ? ((parseFloat(el.value) - min) / (max - min)) * 100 : 0;
+    el.style.setProperty('--fill', pct + '%');
+  }
+  document.querySelectorAll('input[type=range]').forEach(el => {
+    paint(el);
+    el.addEventListener('input', () => paint(el));
+  });
+})();
+
+// Prefer the backend (server-side AI, no exposed key) when logged in;
+// fall back to the existing local Anthropic call otherwise, or if the
+// backend call fails, so the feature always produces a result.
+// Turn the assessment into a tight text brief for the AI.
+function answersToText(a){
+  const L = [];
+  if(a.proudMoment) L.push('Proud of: ' + a.proudMoment);
+  if(a.flowMoment) L.push('Loses track of time doing: ' + a.flowMoment);
+  if(a.soughtFor) L.push('People already seek them out for: ' + a.soughtFor);
+  if(a.values && a.values.length) L.push('Values most: ' + a.values.join(', '));
+  if(a.interests && a.interests.length) L.push('Drawn to fields: ' + a.interests.join(', '));
+  if(a.strengths && a.strengths.length) L.push('Real strengths: ' + a.strengths.join(', '));
+  const scale = v => (['low','some','high','very high'][Math.max(0,Math.min(3, v|0))] || String(v));
+  L.push('Work style — people-facing: '+scale(a.people)+'; data/analysis: '+scale(a.data)+'; comfort with ambiguity: '+scale(a.structure)+'; risk appetite: '+scale(a.risk)+'; pace preference: '+scale(a.pace));
+  if(a.avoidText) L.push('Wants to avoid: ' + a.avoidText);
+  if(a.constraints) L.push('Hard constraints: ' + a.constraints);
+  if(a.timeline) L.push('Timeline: ' + a.timeline);
+  if(a.openToTraining) L.push('Open to more training: ' + a.openToTraining);
+  return L.join('\n');
+}
+// Count live opportunities whose title/tags overlap a direction's search terms.
+function countRelated(terms){
+  try{
+    if(typeof LISTINGS === 'undefined' || !Array.isArray(LISTINGS) || !terms || !terms.length) return 0;
+    const t = terms.map(x => String(x).toLowerCase()).filter(Boolean);
+    return LISTINGS.filter(l => { const hay = ((l.title||'')+' '+((l.tags||[]).join(' '))+' '+(l.org||'')).toLowerCase(); return t.some(term => term && hay.includes(term)); }).length;
+  }catch(e){ return 0; }
+}
+// True AI-reasoned, structured directions (server-side, no exposed key). Returns
+// null on any failure so the caller falls back to the grounded/offline paths.
+async function aiExploreDirections(answers){
+  const session = getSession(); const uid = session && session.user_id;
+  if(!uid || typeof apiAiAssist !== 'function') return null;
+  let text;
+  try{ text = await apiAiAssist(uid, 'explore_directions', { answers: answersToText(answers) }); }catch(e){ return null; }
+  if(!text) return null;
+  try{
+    let t = String(text).trim();
+    const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i); if(fence) t = fence[1].trim();
+    const a0 = t.indexOf('['), a1 = t.lastIndexOf(']'); if(a0>=0 && a1>a0) t = t.slice(a0, a1+1);
+    const arr = JSON.parse(t);
+    if(!Array.isArray(arr) || !arr.length) return null;
+    return arr.slice(0,5).map((d,i)=>({
+      id:'ai'+i, title:String(d.title||'Direction'), description:String(d.description||''),
+      why_fits:String(d.why_fits||''), day_to_day:String(d.day_to_day||''),
+      transferable_skills:Array.isArray(d.transferable_skills)?d.transferable_skills.slice(0,8):[],
+      skills_to_build:Array.isArray(d.skills_to_build)?d.skills_to_build.slice(0,8):[],
+      typical_roles:Array.isArray(d.typical_roles)?d.typical_roles.slice(0,6):[],
+      outlook:String(d.outlook||''), first_step:String(d.first_step||''),
+      target_types:(Array.isArray(d.target_types)?d.target_types:[]).map(x=>String(x).toLowerCase()).filter(x=>['job','internship','college','admissions','athletic'].includes(x)),
+      search_terms:Array.isArray(d.search_terms)?d.search_terms.slice(0,8):[],
+      pct: (typeof d.fit==='number') ? Math.max(0,Math.min(100,Math.round(d.fit))) : null,
+      relatedCount: countRelated(Array.isArray(d.search_terms)?d.search_terms:[]),
+      ai:true,
+    }));
+  }catch(e){ return null; }
+}
+async function getDirectionsPreferBackend(answers){
+  const ai = await aiExploreDirections(answers);              // 1) reasoned, structured AI
+  if(ai && ai.length) return ai;
+  const session = getSession(); const userId = session && session.user_id;
+  if(userId){                                                  // 2) deterministic, listing-grounded
+    const res = await apiGetCareerDirections(userId, answers);
+    if(res.ok && res.directions.length){ return res.directions; }
+  }
+  return await generateCareerDirectionsAI(answers);            // 3) local AI fallback
+}
+async function explainDirectionPreferBackend(direction, answers){
+  const session = getSession();
+  const userId = session && session.user_id;
+  if(userId){
+    const text = await apiExplainCareerDirection(userId, direction.id);
+    if(text){ return text; }
+    // fall through to local on backend failure
+  }
+  return await explainCareerDirectionDeep(direction, answers);
+}
+
+['people','data','structure','risk','pace'].forEach(dim => {
+  const slider = document.getElementById(dim+'Slider');
+  const val = document.getElementById(dim+'Val');
+  if(slider && val){ slider.addEventListener('input', () => { val.textContent = slider.value; }); }
+});
+
+function multiSelectChips(id, min, max){
+  document.getElementById(id).querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const parent = chip.parentElement;
+      const activeCount = parent.querySelectorAll('.chip.active').length;
+      if(chip.classList.contains('active')){
+        if(activeCount<=min) return;
+        chip.classList.remove('active');
+      } else {
+        if(activeCount>=max) return;
+        chip.classList.add('active');
+      }
+    });
+  });
+}
+function singleSelectChips(id){
+  document.getElementById(id).querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      chip.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+}
+multiSelectChips('valuesChips', 0, 3);
+multiSelectChips('interestChips', 0, 6);
+multiSelectChips('strengthChips', 0, 4);
+singleSelectChips('timelineChips');
+singleSelectChips('trainingChips');
+function getActiveChipVals(id){ return Array.from(document.querySelectorAll('#'+id+' .chip.active')).map(c => c.dataset.val); }
+
+const existing = getCareerDiscoveryResult();
+if(existing){
+  document.getElementById('quizPanel').classList.add('hidden');
+  document.getElementById('resultsArea').classList.remove('hidden');
+  renderDirections(existing.directions, existing.answers);
+}
+
+document.getElementById('discoverBtn').addEventListener('click', async () => {
+  const proudMoment = document.getElementById('proudMoment').value.trim();
+  const flowMoment = document.getElementById('flowMoment').value.trim();
+  const soughtFor = document.getElementById('soughtFor').value.trim();
+
+  // The whole point of this feature is grounding directions in real
+  // evidence, not generic categories - the prompt explicitly weighs
+  // these three fields as the strongest signal and calls the sliders
+  // "secondary." Submitting with all three genuinely empty would
+  // silently fall back to a much weaker result with no warning.
+  if(!proudMoment && !flowMoment && !soughtFor){
+    const proceed = confirm("You haven't filled in any of the three questions about what you're actually proud of, in flow doing, or sought out for - those matter far more than the sliders below for a result that's genuinely about you, not a generic category. Continue anyway with just the sliders?");
+    if(!proceed) return;
+  }
+
+  const answers = {
+    proudMoment,
+    flowMoment,
+    soughtFor,
+    values: getActiveChipVals('valuesChips'),
+    interests: getActiveChipVals('interestChips'),
+    strengths: getActiveChipVals('strengthChips'),
+    constraints: (document.getElementById('constraintsText')?document.getElementById('constraintsText').value.trim():''),
+    people: parseInt(document.getElementById('peopleSlider').value),
+    data: parseInt(document.getElementById('dataSlider').value),
+    structure: parseInt(document.getElementById('structureSlider').value),
+    risk: parseInt(document.getElementById('riskSlider').value),
+    pace: parseInt(document.getElementById('paceSlider').value),
+    avoidText: document.getElementById('avoidText').value.trim(),
+    timeline: getActiveChipVals('timelineChips')[0] || 'now',
+    openToTraining: getActiveChipVals('trainingChips')[0] || 'yes',
+    // kept for backward compatibility with the offline fallback matcher
+    freeText: [proudMoment, flowMoment, soughtFor].filter(Boolean).join(' '),
+    creative: parseInt(document.getElementById('structureSlider').value) <= 1 ? 3 : 1,
+  };
+
+  const btn = document.getElementById('discoverBtn');
+  btn.disabled = true;
+  btn.textContent = 'Thinking...';
+
+  let directions = await getDirectionsPreferBackend(answers);
+  let usedFallback = false;
+  if(!directions){
+    directions = scoreCareerDirections(answers);
+    usedFallback = true;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'See possible directions \u2192';
+
+  saveCareerDiscoveryResult({ answers, directions, usedFallback });
+  document.getElementById('quizPanel').classList.add('hidden');
+  document.getElementById('resultsArea').classList.remove('hidden');
+  renderDirections(directions, answers, usedFallback);
+});
+
+document.getElementById('retakeBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('quizPanel').classList.remove('hidden');
+  document.getElementById('resultsArea').classList.add('hidden');
+});
+
+function dirChips(arr, cls){ if(!arr || !arr.length) return ''; return '<div class="dir-chips">'+arr.map(s=>`<span class="dir-chip ${cls}">${escapeForHtml(s)}</span>`).join('')+'</div>'; }
+
+function renderCompare(top){
+  const rows = [
+    ['Fit', d => (typeof d.pct==='number' ? d.pct+'%' : '—')],
+    ['What it is', d => escapeForHtml(d.description || '—')],
+    ['You already have', d => (d.transferable_skills&&d.transferable_skills.length) ? escapeForHtml(d.transferable_skills.slice(0,4).join(', ')) : '—'],
+    ['To build', d => (d.skills_to_build&&d.skills_to_build.length) ? escapeForHtml(d.skills_to_build.slice(0,4).join(', ')) : '—'],
+    ['Live opps', d => (d.relatedCount||0)],
+  ];
+  let html = '<div class="cmp-grid"><table class="cmp-table"><tr><th></th>'+top.map(d=>`<th>${escapeForHtml(d.title)}</th>`).join('')+'</tr>';
+  rows.forEach(r => { html += `<tr><td class="cmp-dim">${r[0]}</td>`+top.map(d=>`<td>${r[1](d)}</td>`).join('')+'</tr>'; });
+  return html + '</table></div>';
+}
+
+async function commitGoal(direction, btn){
+  if(!direction) return;
+  const prof = (typeof getProfile==='function' && getProfile()) || {};
+  const types = (direction.target_types && direction.target_types.length) ? direction.target_types
+              : (Array.isArray(prof.types) && prof.types.length ? prof.types : ['job','internship']);
+  const desc = (direction.description || '').toLowerCase().replace(/\.$/,'');
+  const patch = Object.assign({}, prof, {
+    northstar: `Build a career in ${direction.title.toLowerCase()}${desc ? (' — ' + desc) : ''}`,
+    finalidea: direction.title,
+    types: types,
+  });
+  if(typeof saveProfile==='function') saveProfile(patch);
+  _safeSetItem('kaidostar_role','candidate');
+  try{ localStorage.setItem('kaidostar_steering_goal', JSON.stringify({ title: direction.title, at: Date.now() })); }catch(e){}
+  if(btn){ btn.disabled = true; btn.textContent = 'Re-targeting your app…'; }
+  const session = getSession(); const uid = session && session.user_id;
+  // Clear cached matches so everything re-scores to the new goal.
+  try{ if(typeof saveMatches==='function') saveMatches([]); else _safeSetItem('kaidostar_matches','[]'); }catch(e){}
+  if(uid){
+    try{ if(typeof apiSaveProfile==='function') await apiSaveProfile(uid, patch); }catch(e){}
+    try{ if(typeof apiTriggerScan==='function'){ const r = await apiTriggerScan(uid); if(r && r.ok && Array.isArray(r.matches) && typeof saveMatches==='function') saveMatches(r.matches); } }catch(e){}
+  }
+  window.location.href = 'mission.html';
+}
+
+function renderDirections(directions, answers, usedFallback){
+  const list = (Array.isArray(directions) ? directions : []);
+  const top = list.slice(0, 4);
+  const fallbackNotice = usedFallback
+    ? `<div class="hint" style="margin-bottom:16px;">Couldn't reach the AI just now, so these are offline best-guess matches from a fixed list rather than reasoned from your specific answers. <a href="#" id="retryAiBtn" style="color:var(--gold);">Try again for a personalized version</a>.</div>`
+    : '';
+  const compareBtn = top.length > 1 ? `<button class="btn ghost explore-compare-btn" id="compareToggle">Compare these directions</button><div id="compareGrid"></div>` : '';
+  document.getElementById('directionsList').innerHTML = fallbackNotice + compareBtn + top.map((d, i) => {
+    const whyFits = d.why_fits || null, firstStep = d.first_step || null;
+    const types = (d.target_types && d.target_types.length) ? d.target_types : ['job','internship'];
+    return `
+    <div class="direction-card ${i===0?'top':''}" data-id="${escapeForHtml(d.id)}">
+      <div class="direction-body">
+        <div class="score-ring">${typeof d.pct === 'number' ? `${ringSvg(d.pct, i===0?'#F0B24E':'#7BA9FF')}<span>${d.pct}%</span>` : ''}</div>
+        <div>
+          <p class="direction-title">${escapeForHtml(d.title)}</p>
+          <p class="direction-desc">${escapeForHtml(d.description)}</p>
+          ${whyFits ? `<p class="direction-desc" style="color:var(--text);"><b style="color:var(--gold);">Why this fits you:</b> ${escapeForHtml(whyFits)}</p>` : ''}
+          ${d.day_to_day ? `<div class="dir-section"><div class="dir-section-label">Day to day</div><div class="dir-roles">${escapeForHtml(d.day_to_day)}</div></div>` : ''}
+          ${(d.transferable_skills&&d.transferable_skills.length) ? `<div class="dir-section"><div class="dir-section-label">You already have</div>${dirChips(d.transferable_skills,'have')}</div>` : ''}
+          ${(d.skills_to_build&&d.skills_to_build.length) ? `<div class="dir-section"><div class="dir-section-label">To build</div>${dirChips(d.skills_to_build,'gap')}</div>` : ''}
+          ${(d.typical_roles&&d.typical_roles.length) ? `<div class="dir-section"><div class="dir-section-label">Typical entry roles</div><div class="dir-roles">${escapeForHtml(d.typical_roles.join(' · '))}</div></div>` : ''}
+          ${d.outlook ? `<div class="dir-section"><div class="dir-section-label">Honest outlook</div><div class="dir-outlook">${escapeForHtml(d.outlook)}</div></div>` : ''}
+          ${firstStep ? `<p class="direction-desc" style="color:var(--text);"><b style="color:var(--aurora);">Try this first:</b> ${escapeForHtml(firstStep)}</p>` : ''}
+          <div class="direction-meta">
+            ${d.relatedCount||0} related opportunit${(d.relatedCount===1)?'y':'ies'} live now
+            ${(d.relatedCount>0) ? ` &middot; <a href="#" data-action="view-related" data-id="${escapeForHtml(d.id)}" style="color:var(--gold); text-decoration:underline;">See them</a>` : ''}
+          </div>
+          <div class="direction-actions">
+            ${!whyFits ? `<button class="btn ghost" data-action="explain" data-id="${escapeForHtml(d.id)}">Explain why this fits</button>` : ''}
+            <button class="btn" data-action="lock-in" data-id="${escapeForHtml(d.id)}">Lock in as my goal &rarr;</button>
+          </div>
+          <div class="direction-deep" id="deep-${escapeForHtml(d.id)}"></div>
+          <div class="commit-panel" id="commit-${escapeForHtml(d.id)}">
+            <p>Locking this in re-points your <b>whole app</b> to <b>${escapeForHtml(d.title)}</b>:</p>
+            <ul>
+              <li>Your <b>goal</b> (north-star) becomes this direction</li>
+              <li><b>Job Search</b> re-ranks to ${escapeForHtml(types.join(', '))} opportunities for it</li>
+              <li>Your <b>Roadmap</b> and <b>Mission Control</b> re-target to this goal</li>
+            </ul>
+            <div class="commit-actions">
+              <button class="btn" data-action="commit-go" data-id="${escapeForHtml(d.id)}">Lock it in &rarr;</button>
+              <button class="btn ghost" data-action="commit-cancel" data-id="${escapeForHtml(d.id)}">Not yet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const retryBtn = document.getElementById('retryAiBtn');
+  if(retryBtn){
+    retryBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const fresh = await getDirectionsPreferBackend(answers);
+      if(fresh){ saveCareerDiscoveryResult({ answers, directions: fresh, usedFallback: false }); renderDirections(fresh, answers, false); }
+    });
+  }
+
+  const cmpToggle = document.getElementById('compareToggle');
+  if(cmpToggle){
+    cmpToggle.addEventListener('click', () => {
+      const g = document.getElementById('compareGrid');
+      if(g.innerHTML){ g.innerHTML=''; cmpToggle.textContent='Compare these directions'; }
+      else { g.innerHTML = renderCompare(top); cmpToggle.textContent='Hide comparison'; }
+    });
+  }
+
+  document.querySelectorAll('[data-action="explain"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id, direction = list.find(d => d.id === id), container = document.getElementById('deep-' + id);
+      btn.disabled = true; btn.textContent = 'Thinking...';
+      container.innerHTML = `<p style="color:var(--text-faint); font-style:italic;">Generating a personalized explanation...</p>`;
+      container.classList.add('open');
+      const text = await explainDirectionPreferBackend(direction, answers);
+      btn.disabled = false; btn.textContent = 'Explain why this fits';
+      container.innerHTML = text ? escapeForHtml(text) : `<span style="color:var(--danger);">Couldn't generate an explanation just now - try again.</span>`;
+    });
+  });
+
+  document.querySelectorAll('[data-action="lock-in"]').forEach(btn => {
+    btn.addEventListener('click', () => { const p = document.getElementById('commit-' + btn.dataset.id); if(p) p.classList.toggle('open'); });
+  });
+  document.querySelectorAll('[data-action="commit-cancel"]').forEach(btn => {
+    btn.addEventListener('click', () => { const p = document.getElementById('commit-' + btn.dataset.id); if(p) p.classList.remove('open'); });
+  });
+  document.querySelectorAll('[data-action="commit-go"]').forEach(btn => {
+    btn.addEventListener('click', () => { commitGoal(list.find(d => d.id === btn.dataset.id), btn); });
+  });
+
+  document.querySelectorAll('[data-action="view-related"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const direction = list.find(d => d.id === btn.dataset.id);
+      _safeSetItem('kaidostar_dashboard_search_prefill', direction.title);
+      window.location.href = 'dashboard.html';
+    });
+  });
+}
+</script>
+<script>
+// Visible tier switcher (preview - no payment) so plan differences are testable everywhere.
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+</body>
+</html>
