@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workshop — Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+:root{
+  /* The shared --text-faint (#6E71A0) genuinely fails WCAG AA for
+     normal text against both backgrounds this file uses it on -
+     measured directly: 4.17:1 on the page background, 3.71:1 on
+     card panels, both below the required 4.5:1. This override is
+     the minimal lightening (computed, not guessed) that clears 4.5:1
+     against both, scoped to this file only rather than changing the
+     shared token in styles.css, which is used across 23 other pages
+     this session hasn't reviewed. */
+  --text-faint: #8386BE; /* aligned with the global AA-compliant faint tone (was #7E81B8, still sub-AA) */
+}
+.workshop-list{ max-width: 760px; }
+.app-card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
+.app-top{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+.app-title{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 16.5px; margin: 0 0 4px; }
+.app-org{ font-family:'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-faint); }
+.app-status-pill{ font-family:'JetBrains Mono', monospace; font-size: 10.5px; padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
+.app-status-pill.pending_review, .app-status-pill.drafted{ color: var(--gold); background: var(--gold-dim); border:1px solid rgba(240,178,78,0.4); }
+.app-status-pill.approved{ color: var(--comet); background: var(--comet-dim); border:1px solid rgba(123,169,255,0.4); }
+.app-status-pill.sent{ color: var(--aurora); background: var(--aurora-dim); border:1px solid rgba(95,224,184,0.4); }
+.app-status-pill.ready_to_submit{ color: var(--comet); background: var(--comet-dim); border:1px solid rgba(123,169,255,0.4); }
+.app-status-pill.undone, .app-status-pill.failed{ color: var(--text-faint); background: var(--line-soft); border:1px solid var(--line); }
+.app-delivery-note{ font-family:'Manrope', sans-serif; font-size: 12px; color: var(--text-dim); margin: 8px 0; padding: 9px 11px; border-radius: 8px; background: var(--comet-dim); border:1px solid rgba(123,169,255,0.25); }
+.app-delivery-note.email-sent{ background: var(--aurora-dim); border-color: rgba(95,224,184,0.3); }
+.app-delivery-note a{ color: var(--comet); font-weight:600; word-break: break-all; }
+.app-status-pill.auto-tag{ color: var(--violet); background: rgba(155,135,245,0.14); border:1px solid rgba(155,135,245,0.4); margin-left:6px; }
+.app-confidence{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); margin-top: 8px; }
+.app-stale-note{ font-family:'Manrope', sans-serif; font-size: 12px; color: var(--gold); margin-top: 8px; padding: 8px 10px; background: var(--gold-dim); border-radius: 6px; }
+.app-followup-note{ font-family:'Manrope', sans-serif; font-size: 12px; color: #7DD8A8; margin-top: 8px; padding: 8px 10px; background: rgba(125,216,168,0.1); border-radius: 6px; }
+.app-draft{ margin-top: 14px; padding: 16px; background: var(--void); border: 1px solid var(--line-soft); border-radius: 10px; font-family:'Manrope', sans-serif; font-size: 13.5px; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
+.app-actions{ display:flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.app-actions .btn{ padding: 10px 18px; font-size: 13px; }
+.app-countdown{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); margin-top: 10px; }
+.outcome-section{ margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+.outcome-prompt{ font-family:'Manrope', sans-serif; font-size: 12.5px; color: var(--text-dim); margin-bottom: 10px; }
+.outcome-btn-row{ display:flex; gap: 8px; flex-wrap: wrap; }
+.outcome-btn{ padding: 7px 14px !important; font-size: 12px !important; }
+.outcome-logged{ font-family:'Manrope', sans-serif; font-size: 12.5px; color: var(--text-dim); margin-bottom: 10px; }
+.outcome-logged b{ color: var(--text); }
+.wp-deep{ margin-top: 10px; padding: 12px 14px; background: var(--void); border: 1px solid var(--gold); border-radius: 8px; font-family:'Manrope', sans-serif; font-size: 13px; line-height:1.55; color: var(--text); display:none; }
+.wp-deep.open{ display:block; }
+.prep-block{ margin-bottom: 14px; }
+.prep-block:last-child{ margin-bottom: 0; }
+.prep-label{ font-family:'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--comet); margin-bottom: 8px; }
+.prep-item{ margin-bottom: 8px; }
+.prep-q{ font-family:'Manrope', sans-serif; font-size: 13px; color: var(--text); line-height: 1.5; margin: 0; }
+.prep-note{ font-family:'Manrope', sans-serif; font-size: 11.5px; color: var(--text-faint); margin: 3px 0 0; font-style: italic; }
+.workshop-tabs{ display:flex; gap: 8px; margin-bottom: 24px; }
+.section-toggle{ display:flex; gap: 10px; margin-bottom: 24px; }
+.section-toggle button{ background: var(--panel); border: 1px solid var(--line); border-radius: 999px; color: var(--text-dim); font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 13px; padding: 10px 20px; cursor:pointer; }
+.section-toggle button.active{ background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+.section-toggle button[data-section="outreach"].active{ background: var(--comet-dim); border-color: var(--comet); color: var(--comet); }
+.section-toggle button[data-section="resume"].active{ background: rgba(155,135,245,0.14); border-color: var(--violet); color: var(--violet); }
+/* Mobile: keep all tabs on one swipeable row instead of overflowing the screen. */
+@media (max-width: 560px){
+  .section-toggle{ overflow-x: auto; gap: 8px; margin-bottom: 18px; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .section-toggle::-webkit-scrollbar{ display: none; }
+  .section-toggle button{ flex: 0 0 auto; font-size: 12.5px; padding: 9px 15px; white-space: nowrap; }
+}
+.resume-entry-card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; }
+.resume-entry-top{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+.resume-entry-title{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 15.5px; margin: 0 0 4px; }
+.resume-entry-meta{ font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); }
+.resume-entry-type-pill{ font-family:'JetBrains Mono', monospace; font-size: 10px; text-transform:uppercase; letter-spacing:0.04em; padding: 4px 10px; border-radius: 999px; color: var(--violet); background: rgba(155,135,245,0.14); border:1px solid rgba(155,135,245,0.4); white-space:nowrap; }
+.resume-entry-desc{ font-family:'Manrope', sans-serif; font-size: 13px; color: var(--text-dim); margin-top: 10px; line-height: 1.55; }
+.resume-entry-actions{ display:flex; gap: 8px; margin-top: 14px; }
+.resume-entry-actions .btn{ padding: 7px 14px !important; font-size: 12px !important; }
+.resume-form{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+.resume-form-row{ display:flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.resume-form-row .editable-field{ margin-top: 0; flex:1; min-width: 160px; }
+.resume-form label{ font-family:'JetBrains Mono', monospace; font-size: 10.5px; text-transform:uppercase; letter-spacing:0.04em; color: var(--text-faint); display:block; margin-bottom: 6px; }
+.resume-type-select{ background: var(--void); border: 1px solid var(--line); border-radius: 8px; color: var(--text); font-family:'Manrope', sans-serif; font-size: 13.5px; padding: 10px 12px; }
+.resume-generate-bar{ display:flex; justify-content:space-between; align-items:center; background: var(--panel); border: 1px solid var(--violet); border-radius: var(--radius); padding: 18px 22px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.resume-generate-bar p{ font-family:'Manrope', sans-serif; font-size: 13px; color: var(--text-dim); margin:0; }
+.resume-generate-btn{ background: linear-gradient(135deg, #B6A4FF, #8A72F0); color: #14102E; border:none; border-radius: 999px; font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 13px; padding: 12px 22px; cursor:pointer; }
+.resume-generate-btn:disabled{ opacity:0.6; cursor:default; }
+.resume-summary-line{ font-family:'Manrope', sans-serif; font-size: 14px; color: var(--text); font-style: italic; padding: 16px 20px; background: var(--void); border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--line-soft); }
+.resume-review-note{ font-family:'Manrope', sans-serif; font-size: 12.5px; color: var(--gold); padding: 12px 16px; background: var(--gold-dim); border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(240,178,78,0.4); }
+.resume-bullet-list{ margin: 10px 0 0; padding-left: 18px; }
+.resume-bullet-list li{ font-family:'Manrope', sans-serif; font-size: 13px; line-height: 1.6; color: var(--text); margin-bottom: 6px; }
+.resume-bullet-flagged{ color: var(--gold); }
+.resume-flag-note{ font-family:'JetBrains Mono', monospace; font-size: 10.5px; color: var(--gold); margin-top: 8px; }
+.ats-panel{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-top: 24px; }
+.ats-coverage-bar-track{ height: 8px; background: var(--void); border-radius: 999px; overflow:hidden; margin: 12px 0 16px; }
+.ats-coverage-bar-fill{ height:100%; background: linear-gradient(90deg, var(--violet), #B6A4FF); border-radius: 999px; }
+.ats-keyword-tag{ display:inline-block; font-family:'JetBrains Mono', monospace; font-size: 11px; padding: 5px 12px; border-radius: 999px; margin: 0 6px 6px 0; }
+.ats-keyword-tag.matched{ color: var(--aurora); background: var(--aurora-dim); border:1px solid rgba(95,224,184,0.4); }
+.ats-keyword-tag.missing{ color: var(--text-faint); background: var(--line-soft); border:1px solid var(--line); }
+.skill-tag-suggested{ display:inline-flex; align-items:center; gap:5px; font-family:'JetBrains Mono', monospace; font-size: 11px; padding: 5px 10px 5px 12px; border-radius: 999px; margin: 0 6px 6px 0; color: var(--violet); background: transparent; border: 1px dashed var(--violet); cursor: pointer; transition: background 0.15s, border-style 0.15s; }
+.skill-tag-suggested:hover{ background: var(--violet-dim); border-style: solid; }
+.skill-tag-suggested .plus-icon{ font-family: 'Manrope', sans-serif; font-weight: 700; }
+.skill-tag-added-confirm{ font-family:'Manrope',sans-serif; font-size: 11.5px; color: var(--aurora); margin-left: 8px; }
+.skill-tag-removable{ cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+.skill-tag-removable:hover{ background: rgba(255,107,107,0.14); border-color: var(--danger); color: var(--danger); }
+.leadership-banner{ background: linear-gradient(135deg, rgba(155,135,245,0.14), rgba(95,224,184,0.10)); border: 1px solid var(--violet); border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; }
+.leadership-banner-label{ font-family:'JetBrains Mono', monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--violet); margin-bottom: 6px; }
+.leadership-banner-summary{ font-family:'Manrope', sans-serif; font-size: 13.5px; line-height: 1.55; color: var(--text); }
+.leadership-leader-row{ font-family:'Manrope', sans-serif; font-size: 12.5px; color: var(--text-faint); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.leadership-leader-name{ color: var(--text); font-weight: 600; }
+.leadership-source-link{ color: var(--violet); text-decoration: none; font-size: 11.5px; }
+.leadership-source-link:hover{ text-decoration: underline; }
+.leadership-empty-note{ font-family:'Manrope', sans-serif; font-size: 12.5px; color: var(--text-faint); font-style: italic; }
+.outreach-to-line{ font-family:'JetBrains Mono', monospace; font-size: 11.5px; color: var(--comet); margin-top: 8px; }
+.outreach-unverified-note{ font-family:'Manrope', sans-serif; font-size: 11.5px; color: var(--text-faint); margin-top: 4px; }
+.editable-field{ width:100%; background: var(--void); border: 1px solid var(--line); border-radius: 8px; color: var(--text); font-family:'Manrope', sans-serif; font-size: 13.5px; padding: 10px 12px; margin-top: 10px; resize: vertical; }
+.editable-field.subject{ min-height: unset; }
+.editable-field.body{ min-height: 120px; }
+.send-all-bar{ display:flex; justify-content:space-between; align-items:center; background: var(--panel); border: 1px solid var(--comet); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; }
+.send-all-bar p{ font-family:'Manrope', sans-serif; font-size: 13px; color: var(--text-dim); margin:0; }
+.send-all-btn{ background: var(--comet); color: #0B1230; border:none; border-radius: 999px; font-family:'Space Grotesk', sans-serif; font-weight:700; font-size: 13px; padding: 10px 20px; cursor:pointer; }
+.send-all-btn:disabled{ opacity:0.6; cursor:default; }
+
+/* Clarify hierarchy: section tabs = primary nav (bold pills); status filters =
+   secondary filtering (lighter, smaller). A thin divider separates the two rows. */
+.section-toggle{ margin-bottom: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--line-soft); }
+.workshop-tabs{ align-items: center; }
+.workshop-tabs::before{
+  content: 'Filter';
+  font-family:'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-faint); margin-right: 4px;
+}
+.workshop-tabs .chip{ font-size: 12px; padding: 6px 13px; }
+
+/* ============================================================
+   CAREER STUDIO — a professional two-column workspace: a left tool
+   rail grouping every tool, and a content pane. Self-contained; the
+   whole thing still lives under .page, so the Pro gate hides it as one.
+   ============================================================ */
+.studio{ display:flex; gap:22px; align-items:flex-start; }
+.studio-rail{ flex:0 0 232px; position:sticky; top:18px; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px 12px; max-height:calc(100vh - 36px); overflow-y:auto; }
+.studio-content{ flex:1; min-width:0; }
+.rail-group{ margin-bottom:14px; }
+.rail-group:last-child{ margin-bottom:0; }
+.rail-group-label{ font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); padding:0 8px; margin:6px 0 6px; }
+.rail-btn{ display:flex; align-items:center; gap:10px; width:100%; box-sizing:border-box; text-align:left; background:transparent; border:1px solid transparent; border-radius:10px; color:var(--text-dim); font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; padding:9px 11px; cursor:pointer; transition:background .14s ease, color .14s ease, border-color .14s ease; margin-bottom:2px; }
+.rail-btn:hover{ background:var(--panel-2); color:var(--text); }
+.rail-btn.active{ background:linear-gradient(135deg, rgba(240,178,78,0.16), rgba(240,178,78,0.05)); border-color:rgba(240,178,78,0.45); color:var(--text); }
+.rail-btn .rail-icon{ flex:0 0 20px; text-align:center; font-size:15px; opacity:0.9; }
+.rail-btn .rail-label{ flex:1; }
+.rail-btn .rail-count{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); background:var(--void); border:1px solid var(--line-soft); border-radius:999px; padding:1px 7px; min-width:14px; text-align:center; }
+.rail-btn.active .rail-count{ color:var(--gold); border-color:rgba(240,178,78,0.4); }
+.studio-toolhead{ margin-bottom:18px; }
+.studio-toolhead h2{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:22px; margin:0 0 4px; letter-spacing:-0.01em; }
+.studio-toolhead p{ font-family:'Manrope',sans-serif; font-size:13.5px; color:var(--text-dim); margin:0; max-width:640px; line-height:1.55; }
+@media (max-width:860px){
+  .studio{ flex-direction:column; }
+  .studio-content{ width:100%; }
+  .studio-rail{ position:static; flex:1 1 auto; width:100%; max-height:none; display:flex; gap:8px; overflow-x:auto; }
+  .rail-group{ margin-bottom:0; flex:0 0 auto; }
+  .rail-group-label{ display:none; }
+  .rail-btn{ white-space:nowrap; }
+  .rail-btn .rail-count{ display:none; }
+}
+
+/* Studio Home */
+.home-hero{ background:linear-gradient(135deg, var(--panel), var(--panel-2)); border:1px solid var(--line); border-radius:16px; padding:24px 26px; margin-bottom:20px; }
+.readiness-top{ display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
+.readiness-ring{ flex:0 0 auto; }
+.readiness-meta{ flex:1; min-width:220px; }
+.readiness-pct{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:30px; color:var(--gold); line-height:1; }
+.readiness-label{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint); margin-top:6px; }
+.readiness-sub{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-dim); margin-top:10px; line-height:1.5; }
+.readiness-checks{ margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; }
+@media (max-width:560px){ .readiness-checks{ grid-template-columns:1fr; } }
+.readiness-check{ display:flex; align-items:center; gap:9px; font-family:'Manrope',sans-serif; font-size:13px; }
+.readiness-check .rc-mark{ flex:0 0 18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; }
+.readiness-check.done .rc-mark{ background:var(--aurora-dim); color:var(--aurora); border:1px solid rgba(95,224,184,0.4); }
+.readiness-check.todo .rc-mark{ background:var(--void); color:var(--text-faint); border:1px solid var(--line); }
+.readiness-check.done .rc-text{ color:var(--text); }
+.readiness-check.todo .rc-text{ color:var(--text-faint); }
+.readiness-check .rc-go{ margin-left:auto; font-family:'Manrope',sans-serif; font-size:11px; font-weight:600; color:var(--gold); cursor:pointer; }
+.home-tiles{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-bottom:20px; }
+.home-tile{ background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:15px 16px; cursor:pointer; transition:border-color .15s ease, transform .15s ease; }
+.home-tile:hover{ border-color:var(--gold); transform:translateY(-2px); }
+.home-tile-num{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:24px; color:var(--text); line-height:1; }
+.home-tile-label{ font-family:'Manrope',sans-serif; font-size:12px; color:var(--text-dim); margin-top:8px; }
+.home-tile-icon{ font-size:16px; opacity:0.85; margin-bottom:10px; }
+
+/* Pipeline (kanban) */
+.pipeline-board{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(210px,1fr); gap:14px; overflow-x:auto; padding-bottom:8px; }
+.pipe-col{ background:var(--panel-2); border:1px solid var(--line); border-radius:13px; padding:12px; min-height:120px; }
+.pipe-col-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.pipe-col-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12.5px; color:var(--text); }
+.pipe-col-count{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); background:var(--void); border-radius:999px; padding:2px 8px; }
+.pipe-card{ background:var(--panel); border:1px solid var(--line); border-left-width:3px; border-radius:9px; padding:11px 12px; margin-bottom:9px; cursor:pointer; transition:border-color .15s ease; }
+.pipe-card:hover{ border-color:var(--gold); }
+.pipe-card-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12.5px; color:var(--text); margin:0 0 3px; }
+.pipe-card-org{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); }
+.pipe-col.c-review .pipe-card{ border-left-color:var(--gold); }
+.pipe-col.c-approved .pipe-card{ border-left-color:var(--comet); }
+.pipe-col.c-sent .pipe-card{ border-left-color:var(--violet); }
+.pipe-col.c-interview .pipe-card{ border-left-color:var(--aurora); }
+.pipe-col.c-offer .pipe-card{ border-left-color:#7DD8A8; }
+.pipe-col.c-closed .pipe-card{ border-left-color:var(--text-faint); opacity:0.8; }
+.pipe-empty{ font-family:'Manrope',sans-serif; font-size:11.5px; color:var(--text-faint); font-style:italic; padding:6px 2px; }
+
+/* Generic studio tool card + analyzer */
+.tool-card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px 24px; margin-bottom:16px; }
+.tool-card h3{ font-family:'Space Grotesk',sans-serif; font-size:15px; margin:0 0 4px; }
+.tool-card .tc-sub{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); margin:0 0 14px; line-height:1.5; }
+.analyzer-score{ display:flex; align-items:baseline; gap:10px; margin-bottom:14px; }
+.analyzer-score .as-num{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:30px; }
+.analyzer-score .as-out{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-faint); }
+.as-strong{ color:var(--aurora); }
+.as-mid{ color:var(--gold); }
+.as-weak{ color:var(--danger); }
+.finding{ display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--line-soft); font-family:'Manrope',sans-serif; font-size:13px; line-height:1.5; }
+.finding:last-child{ border-bottom:none; }
+.finding .f-icon{ flex:0 0 18px; }
+.finding.good .f-icon{ color:var(--aurora); }
+.finding.warn .f-icon{ color:var(--gold); }
+.finding.bad .f-icon{ color:var(--danger); }
+.finding .f-text b{ color:var(--text); }
+.verb-chip{ display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; padding:4px 10px; border-radius:999px; margin:0 6px 6px 0; color:var(--comet); background:var(--comet-dim); border:1px solid rgba(123,169,255,0.35); cursor:pointer; }
+.verb-chip:hover{ background:rgba(123,169,255,0.25); }
+.crud-item{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:12px; }
+.crud-item-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+.crud-item-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; margin:0; }
+.crud-item-meta{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-faint); margin-top:3px; }
+.crud-item-body{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-dim); line-height:1.55; margin-top:10px; white-space:pre-wrap; }
+.crud-actions{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+.crud-actions .btn{ padding:6px 13px !important; font-size:12px !important; }
+.net-overdue{ color:var(--danger); font-weight:700; }
+.net-soon{ color:var(--gold); }
+.pitch-variant{ margin-bottom:16px; }
+.pitch-variant label{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:var(--comet); display:block; margin-bottom:6px; }
+.pill-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+/* AI output blocks */
+.ai-btn{ background:linear-gradient(135deg,#B6A4FF,#8A72F0); color:#14102E; border:none; border-radius:999px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12.5px; padding:9px 16px; cursor:pointer; }
+.ai-btn:disabled{ opacity:0.6; cursor:default; }
+.ai-out{ margin-top:12px; }
+.ai-out.ai-muted{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); font-style:italic; padding:10px 0; }
+.ai-badge{ font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:var(--violet); margin-bottom:8px; }
+.ai-text{ white-space:pre-wrap; font-family:'Manrope',sans-serif; font-size:13.5px; line-height:1.6; color:var(--text); background:var(--void); border:1px solid var(--line-soft); border-radius:10px; padding:14px 16px; }
+.ai-inline-box{ margin-top:10px; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/index.umd.min.js"></script>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow">Workshop</div>
+      <h1>Draft, refine, send</h1>
+      <p>Star a match, click "Find a contact," or enable Auto - everything AI-drafted lands here for you to review, edit, and send.</p>
+    </div>
+
+    <div class="studio">
+      <aside class="studio-rail" id="studioRail">
+        <div class="rail-group">
+          <div class="rail-group-label">Overview</div>
+          <button class="rail-btn" data-tool="home" id="railHomeBtn"><span class="rail-icon">&#9672;</span><span class="rail-label">Studio home</span></button>
+        </div>
+        <div class="rail-group">
+          <div class="rail-group-label">Documents</div>
+          <button class="rail-btn" data-tool="resume" id="sectionResumeBtn"><span class="rail-icon">&#9636;</span><span class="rail-label">Resume Studio</span></button>
+          <button class="rail-btn" data-tool="references" id="railRefBtn"><span class="rail-icon">&#10063;</span><span class="rail-label">Reference sheet</span><span class="rail-count" id="railRefCount">0</span></button>
+          <button class="rail-btn" data-tool="portfolio" id="railPortBtn"><span class="rail-icon">&#9741;</span><span class="rail-label">Portfolio &amp; links</span><span class="rail-count" id="railPortCount">0</span></button>
+          <button class="rail-btn" data-tool="brag" id="railBragBtn"><span class="rail-icon">&#9873;</span><span class="rail-label">Achievements</span><span class="rail-count" id="railBragCount">0</span></button>
+        </div>
+        <div class="rail-group">
+          <div class="rail-group-label">Writing tools</div>
+          <button class="rail-btn" data-tool="bullet" id="railBulletBtn"><span class="rail-icon">&#10548;</span><span class="rail-label">Bullet strengthener</span></button>
+          <button class="rail-btn" data-tool="pitch" id="railPitchBtn"><span class="rail-icon">&#9687;</span><span class="rail-label">Elevator pitch</span></button>
+          <button class="rail-btn" data-tool="thanks" id="railThanksBtn"><span class="rail-icon">&#9993;</span><span class="rail-label">Thank-you notes</span></button>
+          <button class="rail-btn" data-tool="ats" id="railAtsBtn"><span class="rail-icon">&#9118;</span><span class="rail-label">ATS scanner</span></button>
+        </div>
+        <div class="rail-group">
+          <div class="rail-group-label">Interview</div>
+          <button class="rail-btn" data-tool="star" id="railStarBtn"><span class="rail-icon">&#9733;</span><span class="rail-label">STAR story bank</span><span class="rail-count" id="railStarCount">0</span></button>
+        </div>
+        <div class="rail-group">
+          <div class="rail-group-label">AI writer</div>
+          <button class="rail-btn" data-tool="coverltr" id="railCoverBtn"><span class="rail-icon">&#9997;</span><span class="rail-label">Cover letter</span></button>
+          <button class="rail-btn" data-tool="linkedin" id="railLinkedinBtn"><span class="rail-icon">&#9741;</span><span class="rail-label">LinkedIn optimizer</span></button>
+          <button class="rail-btn" data-tool="skillsgap" id="railGapBtn"><span class="rail-icon">&#9695;</span><span class="rail-label">Skills gap</span></button>
+          <button class="rail-btn" data-tool="jdtailor" id="railJdBtn"><span class="rail-icon">&#9636;</span><span class="rail-label">Tailor to a job</span></button>
+        </div>
+        <div class="rail-group">
+          <div class="rail-group-label">Pipeline &amp; outreach</div>
+          <button class="rail-btn" data-tool="applications" id="sectionAppsBtn"><span class="rail-icon">&#9998;</span><span class="rail-label">Applications</span><span class="rail-count" id="railAppCount">0</span></button>
+          <button class="rail-btn" data-tool="pipeline" id="railPipeBtn"><span class="rail-icon">&#9638;</span><span class="rail-label">Pipeline board</span></button>
+          <button class="rail-btn" data-tool="target" id="railTargetBtn"><span class="rail-icon">&#9678;</span><span class="rail-label">Target roles</span><span class="rail-count" id="railTargetCount">0</span></button>
+          <button class="rail-btn" data-tool="outreach" id="sectionOutreachBtn"><span class="rail-icon">&#9993;</span><span class="rail-label">Outreach emails</span></button>
+          <button class="rail-btn" data-tool="network" id="railNetBtn"><span class="rail-icon">&#10682;</span><span class="rail-label">Networking</span><span class="rail-count" id="railNetCount">0</span></button>
+          <button class="rail-btn" data-tool="engage" id="sectionEngageBtn"><span class="rail-icon">&#10078;</span><span class="rail-label">Engage</span></button>
+        </div>
+      </aside>
+      <div class="studio-content">
+
+    <div id="studioHomeSection">
+      <div class="studio-toolhead">
+        <h2>Career Studio</h2>
+        <p>Your whole job-search workspace - resume, applications, outreach, interview prep and more, each built from your real profile, never fabricated. Pick a tool from the rail, or start with whatever needs attention below.</p>
+      </div>
+      <div class="home-hero">
+        <div class="readiness-top">
+          <div class="readiness-ring" id="readinessRing"></div>
+          <div class="readiness-meta">
+            <div class="readiness-pct" id="readinessPct">0%</div>
+            <div class="readiness-label">Application readiness</div>
+            <div class="readiness-sub" id="readinessSub"></div>
+          </div>
+        </div>
+        <div class="readiness-checks" id="readinessChecks"></div>
+      </div>
+      <div class="home-tiles" id="homeTiles"></div>
+    </div>
+
+    <div id="applicationsSection" class="hidden">
+      <div class="workshop-tabs chip-row" id="statusFilter">
+        <div class="chip active" data-val="all">All</div>
+        <div class="chip" data-val="pending_review">Needs review</div>
+        <div class="chip" data-val="approved">Approved</div>
+        <div class="chip" data-val="sent">Sent</div>
+      </div>
+      <div class="workshop-list" id="workshopList"></div>
+    </div>
+
+    <div id="outreachSection" class="hidden">
+      <div class="send-all-bar" id="sendAllBar" style="display:none;">
+        <p id="pendingOutreachCount"></p>
+        <button class="send-all-btn" id="sendAllBtn">Send all pending</button>
+      </div>
+      <div class="workshop-tabs chip-row" id="outreachFilter">
+        <div class="chip active" data-val="all">All</div>
+        <div class="chip" data-val="drafted">Needs review</div>
+        <div class="chip" data-val="sent">Sent</div>
+      </div>
+      <div class="workshop-list" id="outreachList"></div>
+    </div>
+
+    <div id="resumeSection" class="hidden">
+      <div id="resumeStudio"></div>
+      <div id="rsBuildPanel">
+      <div class="resume-form">
+        <div class="resume-form-row">
+          <div style="flex:0 0 140px;">
+            <label>Type</label>
+            <select class="resume-type-select" id="resumeEntryType">
+              <option value="work">Work</option>
+              <option value="education">Education</option>
+              <option value="project">Project</option>
+            </select>
+          </div>
+          <div>
+            <label>Title / role / degree</label>
+            <input class="editable-field" id="resumeEntryTitle" placeholder="e.g. Cashier, or B.A. Economics">
+          </div>
+          <div>
+            <label>Organization (optional)</label>
+            <input class="editable-field" id="resumeEntryOrg" placeholder="e.g. Target, or Ohio State University">
+          </div>
+        </div>
+        <div class="resume-form-row">
+          <div style="flex:0 0 140px;">
+            <label>Start</label>
+            <input class="editable-field" id="resumeEntryStart" placeholder="e.g. Jun 2024">
+          </div>
+          <div style="flex:0 0 140px;">
+            <label>End</label>
+            <input class="editable-field" id="resumeEntryEnd" placeholder="e.g. Present">
+          </div>
+        </div>
+        <label>What you actually did, in your own words</label>
+        <textarea class="editable-field body" id="resumeEntryDesc" placeholder="Describe it plainly - the AI will only strengthen your phrasing, never add details, numbers, or achievements you didn't mention here."></textarea>
+        <button class="btn block" id="resumeAddEntryBtn">Add entry</button>
+      </div>
+
+      <div class="workshop-list" id="resumeEntriesList"></div>
+
+      <div class="resume-generate-bar">
+        <p id="resumeGenerateStatus">Add at least one real entry above, then generate.</p>
+        <div style="display:flex; gap:10px;">
+          <button class="resume-generate-btn" id="resumeGenerateBtn" disabled>Generate resume</button>
+          <button class="resume-generate-btn" id="resumeDownloadBtn" style="display:none; background:linear-gradient(135deg, #7DD8A8, #4FB87E);">Download .docx</button>
+        </div>
+      </div>
+
+      <div id="resumeResultContainer"></div>
+      <div id="atsPanelContainer"></div>
+      <div id="skillsPanelContainer"></div>
+      </div>
+      <div id="rsToolPanel" class="hidden"></div>
+    </div>
+
+    <div id="engageSection" class="hidden">
+      <div class="resume-form">
+        <p style="font-family:'Manrope', sans-serif; font-size:12.5px; color:var(--text-faint); margin-bottom:14px;">Paste in a real post you found - Kaidostar never reads LinkedIn or any platform directly (their own terms prohibit that kind of automated access), so you bring the real content and we draft a genuinely thoughtful reply for you to post yourself.</p>
+        <div class="resume-form-row">
+          <div style="flex:1;">
+            <label for="engagePostContent">The real post text</label>
+            <textarea class="editable-field body" id="engagePostContent" placeholder="Paste the actual post text here..."></textarea>
+          </div>
+        </div>
+        <div class="resume-form-row">
+          <div style="flex:1;">
+            <label for="engagePosterContext">What you know about who posted it (optional)</label>
+            <input class="editable-field" id="engagePosterContext" placeholder="e.g. solo founder of a small design studio">
+          </div>
+        </div>
+        <button class="btn block" id="engageDraftBtn">Draft a thoughtful reply</button>
+        <p id="engageDraftStatus" style="font-family:'Manrope', sans-serif; font-size:12.5px; color:var(--text-faint); margin-top:8px;"></p>
+      </div>
+      <div id="engageList" class="workshop-list"></div>
+    </div>
+
+    <div id="pipelineSection" class="hidden">
+      <div class="studio-toolhead"><h2>Pipeline board</h2><p>Every application as a card, grouped by where it really stands - drafted, approved, sent, interviewing, offer, closed. Click any card to open it in Applications.</p></div>
+      <div class="pipeline-board" id="pipelineBoard"></div>
+    </div>
+
+    <div id="bulletSection" class="hidden">
+      <div class="studio-toolhead"><h2>Bullet strengthener</h2><p>Paste a resume bullet or a plain line about what you did. You'll get an honest read on weak openers, passive voice, filler, and whether it's quantified - plus stronger action verbs to consider. It never invents achievements; you do the rewrite.</p></div>
+      <div class="tool-card">
+        <textarea class="editable-field body" id="bulletInput" placeholder="e.g. Responsible for helping with the team's social media and was tasked with various duties"></textarea>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+          <button class="btn" id="bulletAnalyzeBtn">Analyze (instant)</button>
+          <button class="ai-btn" id="bulletAiBtn">Rewrite with AI</button>
+        </div>
+      </div>
+      <div id="bulletResult"></div>
+      <div id="bulletAiResult"></div>
+    </div>
+
+    <div id="pitchSection" class="hidden">
+      <div class="studio-toolhead"><h2>Elevator pitch</h2><p>Three lengths of a spoken intro, assembled from your real goal and skills. Edit any of them to sound like you - they save automatically as you type.</p></div>
+      <div id="pitchResult"></div>
+    </div>
+
+    <div id="atsScanSection" class="hidden">
+      <div class="studio-toolhead"><h2>ATS keyword scanner</h2><p>Paste a real job description. See which of its key terms your resume entries and skills already cover, and which are missing - honest overlap, computed right here in your browser, nothing sent anywhere.</p></div>
+      <div class="tool-card">
+        <textarea class="editable-field body" id="atsJdInput" placeholder="Paste the full job description here..."></textarea>
+        <button class="btn" id="atsScanBtn" style="margin-top:12px;">Scan against my resume</button>
+      </div>
+      <div id="atsScanResult"></div>
+    </div>
+
+    <div id="starSection" class="hidden">
+      <div class="studio-toolhead"><h2>STAR story bank</h2><p>Build and keep behavioral-interview stories in the Situation - Task - Action - Result shape. Pull them up before any interview, and copy any one as a clean paragraph.</p></div>
+      <div class="tool-card">
+        <div class="resume-form-row"><div style="flex:1;"><label>Title - what's it about?</label><input class="editable-field" id="starTitle" placeholder="e.g. Turned around a failing group project"></div></div>
+        <label>Situation</label><textarea class="editable-field" id="starS" placeholder="Set the scene - where and when."></textarea>
+        <label style="margin-top:10px; display:block;">Task</label><textarea class="editable-field" id="starT" placeholder="What you were responsible for."></textarea>
+        <label style="margin-top:10px; display:block;">Action</label><textarea class="editable-field" id="starA" placeholder="What YOU specifically did."></textarea>
+        <label style="margin-top:10px; display:block;">Result</label><textarea class="editable-field" id="starR" placeholder="The outcome - with real numbers if you have them."></textarea>
+        <button class="btn block" id="starAddBtn" style="margin-top:12px;">Save story</button>
+      </div>
+      <div id="starList" class="workshop-list"></div>
+    </div>
+
+    <div id="referencesSection" class="hidden">
+      <div class="studio-toolhead"><h2>Reference sheet</h2><p>Keep your professional references in one place, formatted and ready. Copy the whole sheet the moment an employer asks for it.</p></div>
+      <div class="tool-card">
+        <div class="resume-form-row">
+          <div style="flex:1;"><label>Name</label><input class="editable-field" id="refName" placeholder="e.g. Dana Alvarez"></div>
+          <div style="flex:1;"><label>Relationship</label><input class="editable-field" id="refRel" placeholder="e.g. Former manager"></div>
+        </div>
+        <div class="resume-form-row">
+          <div style="flex:1;"><label>Title &amp; organization</label><input class="editable-field" id="refTitle" placeholder="e.g. Store Manager, Target"></div>
+          <div style="flex:1;"><label>Email or phone</label><input class="editable-field" id="refContact" placeholder="e.g. dana@example.com"></div>
+        </div>
+        <label>Note (optional)</label><input class="editable-field" id="refNote" placeholder="e.g. Can speak to my reliability and teamwork">
+        <button class="btn block" id="refAddBtn" style="margin-top:12px;">Add reference</button>
+      </div>
+      <div id="refToolbar" style="display:none; margin-bottom:12px;"><button class="btn ghost" id="refCopyBtn">Copy full reference sheet</button><span id="refCopyConfirm" style="margin-left:10px; font-family:'Manrope',sans-serif; font-size:12px; color:var(--aurora);"></span></div>
+      <div id="refList" class="workshop-list"></div>
+    </div>
+
+    <div id="networkSection" class="hidden">
+      <div class="studio-toolhead"><h2>Networking tracker</h2><p>Track the people worth staying in touch with and when to follow up next. Overdue and upcoming nudges rise to the top.</p></div>
+      <div class="tool-card">
+        <div class="resume-form-row">
+          <div style="flex:1;"><label>Name</label><input class="editable-field" id="netName" placeholder="e.g. Priya Shah"></div>
+          <div style="flex:1;"><label>Company / role</label><input class="editable-field" id="netCompany" placeholder="e.g. PM at Fernway"></div>
+        </div>
+        <div class="resume-form-row">
+          <div style="flex:1;"><label>How you know them</label><input class="editable-field" id="netHow" placeholder="e.g. Met at a design meetup"></div>
+          <div style="flex:0 0 170px;"><label>Next follow-up</label><input class="editable-field" id="netFollowup" type="date"></div>
+        </div>
+        <button class="btn block" id="netAddBtn" style="margin-top:12px;">Add contact</button>
+      </div>
+      <div id="netList" class="workshop-list"></div>
+    </div>
+
+    <div id="thanksSection" class="hidden">
+      <div class="studio-toolhead"><h2>Thank-you &amp; follow-up notes</h2><p>Pick the moment, fill in a couple of real details, and get a clean, genuine note to send. Nothing is fabricated - you supply the specifics and edit before sending.</p></div>
+      <div class="tool-card">
+        <div class="pill-row" id="thanksTypeRow">
+          <button class="chip active" data-thanks="interview">After an interview</button>
+          <button class="chip" data-thanks="followup">Checking in</button>
+          <button class="chip" data-thanks="offer">Accepting an offer</button>
+          <button class="chip" data-thanks="decline">Declining politely</button>
+          <button class="chip" data-thanks="networking">After a coffee chat</button>
+        </div>
+        <div class="resume-form-row">
+          <div style="flex:1;"><label>Their name</label><input class="editable-field" id="thanksName" placeholder="e.g. Ms. Alvarez"></div>
+          <div style="flex:1;"><label>Role / company</label><input class="editable-field" id="thanksRole" placeholder="e.g. the PM role at Fernway"></div>
+        </div>
+        <label>One specific thing worth mentioning (optional)</label>
+        <input class="editable-field" id="thanksDetail" placeholder="e.g. the discussion about your onboarding revamp">
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+          <button class="btn" id="thanksGenBtn">Compose (instant)</button>
+          <button class="ai-btn" id="thanksAiBtn">Personalize with AI</button>
+        </div>
+      </div>
+      <div id="thanksResult"></div>
+      <div id="thanksAiResult"></div>
+    </div>
+
+    <div id="portfolioSection" class="hidden">
+      <div class="studio-toolhead"><h2>Portfolio &amp; links</h2><p>Keep the work you'd actually show an employer - projects, writing, a site, a repo - in one place, ready to drop into an application.</p></div>
+      <div class="tool-card">
+        <div class="resume-form-row">
+          <div style="flex:1;"><label>Title</label><input class="editable-field" id="portTitle" placeholder="e.g. Sales dashboard (React)"></div>
+          <div style="flex:1;"><label>Link (optional)</label><input class="editable-field" id="portUrl" placeholder="https://..."></div>
+        </div>
+        <label>What it shows (optional)</label>
+        <input class="editable-field" id="portNote" placeholder="e.g. Built end-to-end; used by 3 teams">
+        <button class="btn block" id="portAddBtn" style="margin-top:12px;">Add to portfolio</button>
+      </div>
+      <div id="portList" class="workshop-list"></div>
+    </div>
+
+    <div id="bragSection" class="hidden">
+      <div class="studio-toolhead"><h2>Achievements (brag sheet)</h2><p>Bank your real wins, with a number wherever you have one. Pull from here when you write bullets, answer "tell me about a time...", or make the case for a raise.</p></div>
+      <div class="tool-card">
+        <label>What you achieved</label>
+        <textarea class="editable-field" id="bragText" placeholder="e.g. Cut order-processing time by rebuilding the intake form"></textarea>
+        <div class="resume-form-row" style="margin-top:10px;">
+          <div style="flex:1;"><label>Metric / result (optional)</label><input class="editable-field" id="bragMetric" placeholder="e.g. 40% faster, ~5 hrs/week saved"></div>
+          <div style="flex:0 0 160px;"><label>When (optional)</label><input class="editable-field" id="bragDate" placeholder="e.g. Summer 2025"></div>
+        </div>
+        <button class="btn block" id="bragAddBtn" style="margin-top:12px;">Add achievement</button>
+      </div>
+      <div id="bragList" class="workshop-list"></div>
+    </div>
+
+    <div id="targetSection" class="hidden">
+      <div class="studio-toolhead"><h2>Target roles</h2><p>The specific roles and companies you're aiming at, with where each one stands - your own shortlist, separate from what you've already applied to.</p></div>
+      <div class="tool-card">
+        <div class="resume-form-row">
+          <div style="flex:1;"><label>Role</label><input class="editable-field" id="targetRole" placeholder="e.g. Associate PM"></div>
+          <div style="flex:1;"><label>Company</label><input class="editable-field" id="targetCompany" placeholder="e.g. Fernway Labs"></div>
+        </div>
+        <div class="resume-form-row">
+          <div style="flex:0 0 180px;"><label>Status</label>
+            <select class="resume-type-select" id="targetStatus" style="width:100%;">
+              <option value="researching">Researching</option>
+              <option value="preparing">Preparing</option>
+              <option value="applied">Applied</option>
+              <option value="networking">Networking in</option>
+            </select>
+          </div>
+          <div style="flex:1;"><label>Note (optional)</label><input class="editable-field" id="targetNote" placeholder="e.g. Referral from Priya; deadline mid-Nov"></div>
+        </div>
+        <button class="btn block" id="targetAddBtn" style="margin-top:12px;">Add target</button>
+      </div>
+      <div id="targetList" class="workshop-list"></div>
+    </div>
+
+    <div id="coverltrSection" class="hidden">
+      <div class="studio-toolhead"><h2>Cover letter</h2><p>A genuine, specific letter built from your real background - never fabricated. Paste the job description for a sharper, tailored result. Signed in, this uses the live AI writer.</p></div>
+      <div class="tool-card">
+        <div class="resume-form-row">
+          <div style="flex:1;"><label>Role</label><input class="editable-field" id="clRole" placeholder="e.g. Associate PM"></div>
+          <div style="flex:1;"><label>Company</label><input class="editable-field" id="clCompany" placeholder="e.g. Fernway Labs"></div>
+        </div>
+        <label>Job description (optional, improves tailoring)</label>
+        <textarea class="editable-field body" id="clJd" placeholder="Paste the job description..."></textarea>
+        <button class="ai-btn" id="clGenBtn" style="margin-top:12px;">Write my cover letter</button>
+      </div>
+      <div id="clResult"></div>
+    </div>
+
+    <div id="linkedinSection" class="hidden">
+      <div class="studio-toolhead"><h2>LinkedIn optimizer</h2><p>A sharper headline and About section, generated from your real goal and experience.</p></div>
+      <div class="tool-card">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="ai-btn" id="liHeadBtn">Headline options</button>
+          <button class="ai-btn" id="liAboutBtn">About section</button>
+        </div>
+        <div id="liResult"></div>
+      </div>
+    </div>
+
+    <div id="skillsgapSection" class="hidden">
+      <div class="studio-toolhead"><h2>Skills gap analysis</h2><p>Name a role you're targeting and get an honest read on where you're already strong and what to build next - grounded in your real skills.</p></div>
+      <div class="tool-card">
+        <label>Target role</label>
+        <input class="editable-field" id="gapRole" placeholder="e.g. Senior Product Manager">
+        <button class="ai-btn" id="gapBtn" style="margin-top:12px;">Analyze my gap</button>
+      </div>
+      <div id="gapResult"></div>
+    </div>
+
+    <div id="jdtailorSection" class="hidden">
+      <div class="studio-toolhead"><h2>Tailor to a job</h2><p>Paste a job description and Kaidostar rewrites your real resume to suit it - leading with your most relevant experience, using the job's own language where your experience genuinely supports it, and flagging anything that doesn't match. It never invents facts; whether you typed your resume or imported one, this works the same.</p></div>
+      <div class="tool-card">
+        <label>Job description</label>
+        <textarea class="editable-field body" id="jdText" placeholder="Paste the full job description..."></textarea>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center;">
+          <button class="ai-btn" id="tailorResumeBtn">Tailor my resume to this job &rarr;</button>
+          <button class="btn" id="jdBtn">Just give me tips</button>
+        </div>
+        <p id="tailorStatus" style="font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); margin-top:10px;"></p>
+      </div>
+      <div id="tailorResumeResult"></div>
+      <div id="jdResult"></div>
+    </div>
+
+      </div>
+    </div>
+  </div>
+  <footer>Kaidostar is a demo - sending here does not submit to a real job site or company inbox from this standalone frontend; see the honest note on each item.</footer>
+</div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script src="charts.js"></script>
+<script src="resume-studio.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  var msg = "Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")";
+  showDiagBanner(msg);
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div");
+  b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof renderNav === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+renderNav('workshop');
+_safeSetItem('kaidostar_role', 'candidate');
+
+// The Application Workshop is a Pro+ feature. Lock the whole page for Free users
+// (the nav + plan pill from renderNav above stay visible). gateWholePage returns
+// true and does nothing for Pro/Max, so the workshop works normally for them.
+if(typeof gateWholePage === 'function'){ gateWholePage('workshop', '.page', 'Application Workshop',
+  'Draft tailored applications, build your resume, and manage referral outreach in one place - each generated from your real profile, never fabricated. Available on Pro and Max.'); }
+
+/* ---------------- Section toggle ---------------- */
+const WORKSHOP_SECTION_IDS = {
+  home: { btn: 'railHomeBtn', section: 'studioHomeSection' },
+  applications: { btn: 'sectionAppsBtn', section: 'applicationsSection' },
+  pipeline: { btn: 'railPipeBtn', section: 'pipelineSection' },
+  outreach: { btn: 'sectionOutreachBtn', section: 'outreachSection' },
+  network: { btn: 'railNetBtn', section: 'networkSection' },
+  engage: { btn: 'sectionEngageBtn', section: 'engageSection' },
+  resume: { btn: 'sectionResumeBtn', section: 'resumeSection' },
+  references: { btn: 'railRefBtn', section: 'referencesSection' },
+  portfolio: { btn: 'railPortBtn', section: 'portfolioSection' },
+  brag: { btn: 'railBragBtn', section: 'bragSection' },
+  bullet: { btn: 'railBulletBtn', section: 'bulletSection' },
+  pitch: { btn: 'railPitchBtn', section: 'pitchSection' },
+  thanks: { btn: 'railThanksBtn', section: 'thanksSection' },
+  ats: { btn: 'railAtsBtn', section: 'atsScanSection' },
+  star: { btn: 'railStarBtn', section: 'starSection' },
+  target: { btn: 'railTargetBtn', section: 'targetSection' },
+  coverltr: { btn: 'railCoverBtn', section: 'coverltrSection' },
+  linkedin: { btn: 'railLinkedinBtn', section: 'linkedinSection' },
+  skillsgap: { btn: 'railGapBtn', section: 'skillsgapSection' },
+  jdtailor: { btn: 'railJdBtn', section: 'jdtailorSection' },
+};
+function switchWorkshopSection(target){
+  Object.entries(WORKSHOP_SECTION_IDS).forEach(([name, ids]) => {
+    const btn = document.getElementById(ids.btn);
+    const section = document.getElementById(ids.section);
+    if(!btn || !section) return;
+    if(name === target){ btn.classList.add('active'); section.classList.remove('hidden'); }
+    else { btn.classList.remove('active'); section.classList.add('hidden'); }
+  });
+  if(target === 'resume') renderResumeWorkshop();
+  // Outreach drafting is a Pro+ feature - gate the section by tier.
+  if(target === 'outreach' && typeof gateElement === 'function'){
+    gateElement('outreach_drafting', '#outreachSection', 'Referral & outreach drafting',
+      'Draft specific, honest referral and cold-outreach emails built from your real profile - never fabricated. Available on Pro and Max.');
+  }
+  // New Career Studio tools - render on show (each guarded; defined in the studio script below).
+  try{
+    if(target === 'home' && typeof renderStudioHome === 'function') renderStudioHome();
+    if(target === 'pipeline' && typeof renderPipeline === 'function') renderPipeline();
+    if(target === 'references' && typeof renderReferences === 'function') renderReferences();
+    if(target === 'star' && typeof renderStar === 'function') renderStar();
+    if(target === 'network' && typeof renderNetwork === 'function') renderNetwork();
+    if(target === 'pitch' && typeof renderPitch === 'function') renderPitch();
+    if(target === 'portfolio' && typeof renderPortfolio === 'function') renderPortfolio();
+    if(target === 'brag' && typeof renderBrag === 'function') renderBrag();
+    if(target === 'target' && typeof renderTargets === 'function') renderTargets();
+  }catch(e){}
+}
+Object.keys(WORKSHOP_SECTION_IDS).forEach(function(name){
+  var ids = WORKSHOP_SECTION_IDS[name];
+  var btn = ids && document.getElementById(ids.btn);
+  if(btn) btn.addEventListener('click', function(){ switchWorkshopSection(name); });
+});
+
+/* ---------------- Applications (unchanged logic) ---------------- */
+let activeFilter = 'all';
+document.getElementById('statusFilter').querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#statusFilter .chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeFilter = chip.dataset.val;
+    renderWorkshop();
+  });
+});
+
+function timeRemaining(sendableAt){
+  const diff = new Date(sendableAt) - new Date();
+  if(diff <= 0) return null;
+  const mins = Math.ceil(diff / 60000);
+  return `${mins} minute${mins===1?'':'s'} left in the undo window`;
+}
+const STALE_THRESHOLD_DAYS = 14;
+function getStaleDays(app){
+  if(app.status !== 'sent' || app.outcome_status || !app.sent_at) return null;
+  const days = Math.floor((Date.now() - new Date(app.sent_at)) / 86400000);
+  return days >= STALE_THRESHOLD_DAYS ? days : null;
+}
+
+const INTERVIEW_FOLLOWUP_DAYS = 7;
+function getInterviewFollowupDays(app){
+  // A genuinely different, higher-stakes case than getStaleDays
+  // above: an application that reached 'interview' but has since
+  // gone quiet with no further outcome (no offer, no rejection)
+  // logged. This is a real, time-sensitive moment worth a nudge -
+  // interview momentum decays faster than a cold application, so it
+  // gets a shorter window. Measures from when the interview status
+  // was actually logged (outcome_logged_at), not from send time.
+  if(app.outcome_status !== 'interview' || !app.outcome_logged_at) return null;
+  const days = Math.floor((Date.now() - new Date(app.outcome_logged_at)) / 86400000);
+  return days >= INTERVIEW_FOLLOWUP_DAYS ? days : null;
+}
+
+function statusLabel(status){
+  return { pending_review: 'Needs review', approved: 'Approved - ready to send', sent: 'Sent', ready_to_submit: 'Ready to submit', undone: 'Undone', drafted: 'Needs review', failed: 'Failed' }[status] || status;
+}
+
+// Apply a /send (or retry) response to the local application object, reflecting
+// the REAL delivery outcome the backend reports (emailed / auto-submitted / hand-off).
+function _applyDeliveryResult(app, d){
+  if(d.status === 'sent' && d.channel === 'email'){
+    app.status = 'sent'; app.sent_at = d.sent_at || new Date().toISOString();
+    app.sent_channel = 'email'; app.sent_to_address = d.to_address || null;
+  } else if(d.status === 'sent' && d.channel === 'web_auto'){
+    app.status = 'sent'; app.sent_at = d.sent_at || new Date().toISOString();
+    app.sent_channel = 'web_auto'; app.apply_url = d.apply_url || app.apply_url;
+  } else {
+    app.status = 'ready_to_submit'; app.sent_channel = 'web';
+    app.apply_url = d.apply_url || app.apply_url; app.send_reasoning = d.reasoning || '';
+    app.auto_submit_pro_only = !!d.auto_submit_pro_only;
+    app.auto_submit_consent_needed = !!d.auto_submit_consent_needed;
+    app.auto_submit_note = d.auto_submit_note || '';
+    app.auto_submit_possibly_sent = !!d.auto_submit_possibly_sent;
+  }
+}
+
+const OUTCOME_LABELS = { interview: 'Got an interview', offer: 'Got an offer', rejected: 'Rejected', ghosted: 'No response (ghosted)' };
+const pendingOutcomeChoice = {};
+function renderOutcomeSection(app){
+  if(app.outcome_status){
+    const isNegative = app.outcome_status === 'rejected' || app.outcome_status === 'ghosted';
+    const isInterviewing = app.outcome_status === 'interview' || app.outcome_status === 'offer';
+    const prepCache = getInterviewPrepCache();
+    const hasPrep = !!prepCache[app.id];
+    return `<div class="outcome-section">
+      <div class="outcome-logged">Outcome: <b>${escapeForAttr(OUTCOME_LABELS[app.outcome_status] || app.outcome_status)}</b></div>
+      ${isNegative ? `<button class="btn ghost" data-autopsy-id="${escapeForAttr(app.id)}">Why did this happen?</button><div class="wp-deep" id="autopsy-${escapeForAttr(app.id)}"></div>` : ''}
+      ${isInterviewing ? `<button class="btn ghost" data-prep-id="${escapeForAttr(app.id)}">${hasPrep ? 'View interview prep' : 'Get interview prep'}</button><div class="wp-deep" id="prep-${escapeForAttr(app.id)}"></div>` : ''}
+    </div>`;
+  }
+  // The other major "something real just happened" moment this app
+  // tracks, alongside milestone completion. Once a real outcome is
+  // chosen, offers a grounded reflection - naming the real listing
+  // and outcome - before actually committing it, the same pattern
+  // just proven for marking a roadmap milestone done.
+  const pending = pendingOutcomeChoice[app.id];
+  if(pending){
+    const outcomeLabel = OUTCOME_LABELS[pending] || pending;
+    return `<div class="outcome-section">
+      <div class="detail-block success">
+        <div class="dlabel">${escapeForAttr(outcomeLabel)} at ${escapeForAttr(app.listing_org)} - worth a real note?</div>
+        <p style="margin-bottom:8px;">What genuinely happened, what you'd do differently, or what stood out? Saved to your Waypoint, tagged to this real outcome.</p>
+        <textarea class="outcome-reflection-input" data-id="${escapeForAttr(app.id)}" rows="3" placeholder="Optional, but this is what makes your own history worth re-reading later..." style="width:100%; box-sizing:border-box; font-family:inherit; padding:8px; border-radius:8px; border:1px solid var(--line); background:var(--void); color:var(--text);"></textarea>
+        <div style="margin-top:8px; display:flex; gap:8px;">
+          <button class="btn save-outcome-reflection-btn" data-id="${escapeForAttr(app.id)}">Save reflection &amp; log outcome</button>
+          <button class="btn ghost skip-outcome-reflection-btn" data-id="${escapeForAttr(app.id)}">Just log outcome</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  return `<div class="outcome-section">
+    <div class="outcome-prompt">What happened with this one?</div>
+    <div class="outcome-btn-row">
+      <button class="btn ghost outcome-btn" data-outcome-action="interview">Interview</button>
+      <button class="btn ghost outcome-btn" data-outcome-action="offer">Offer</button>
+      <button class="btn ghost outcome-btn" data-outcome-action="rejected">Rejected</button>
+      <button class="btn ghost outcome-btn" data-outcome-action="ghosted">Ghosted</button>
+    </div>
+  </div>`;
+}
+
+function renderInterviewPrep(container, prep){
+  container.innerHTML = `
+    <div class="prep-block">
+      <div class="prep-label">Likely questions</div>
+      ${(Array.isArray(prep.likely_questions) ? prep.likely_questions : []).map(q => `<div class="prep-item"><p class="prep-q">${escapeForAttr((q && q.question) || q)}</p>${q && q.note ? `<p class="prep-note">${escapeForAttr(q.note)}</p>` : ''}</div>`).join('')}
+    </div>
+    <div class="prep-block">
+      <div class="prep-label">Talking points from your background</div>
+      ${prep.talking_points.map(t => `<div class="prep-item"><p class="prep-q">${t}</p></div>`).join('')}
+    </div>
+    <div class="prep-block">
+      <div class="prep-label">Questions to ask them</div>
+      ${prep.questions_to_ask.map(q => `<div class="prep-item"><p class="prep-q">${q}</p></div>`).join('')}
+    </div>
+    <div class="prep-block">
+      <div class="prep-label">How this connects to your roadmap</div>
+      <p class="prep-q">${prep.roadmap_connection}</p>
+    </div>
+  `;
+}
+
+function escapeForAttr(str){
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function renderLeadershipResult(container, draft, listing){
+  if(draft.leadership_grounded){
+    const sourcesHtml = (draft.leadership_research_sources || []).map(s => `<a class="leadership-source-link" href="${safeHref(s.url)}" target="_blank" rel="noopener">${escapeForAttr(s.title)}</a>`).join(' &middot; ');
+    container.innerHTML = `<div class="leadership-banner">
+      <div class="leadership-banner-label">Tailoring your email around</div>
+      <div class="leadership-banner-summary">${escapeForAttr(draft.priorities_summary)}</div>
+      ${sourcesHtml ? `<div class="leadership-leader-row">Real sources: ${sourcesHtml}</div>` : ''}
+    </div>
+    <p style="font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); margin:10px 0 4px;">A draft grounded in this has been added to your Outreach tab, ready to review and send.</p>`;
+  } else {
+    const emptySourcesHtml = (draft.leadership_research_sources || []).map(s => `<a class="leadership-source-link" href="${safeHref(s.url)}" target="_blank" rel="noopener">${escapeForAttr(s.title)}</a>`).join(' &middot; ');
+    container.innerHTML = `<p class="leadership-empty-note">No specific, current public statements from ${escapeForAttr(listing.org)}'s leadership could be confidently confirmed - drafted a genuine, honest referral email instead, grounded in your real background and the role itself. It's in your Outreach tab, ready to review.</p>${emptySourcesHtml ? `<p class="leadership-empty-note" style="margin-top:8px;">Pages the search actually looked at, in case one of these is genuinely the right company and worth checking yourself: ${emptySourcesHtml}</p>` : ''}`;
+  }
+}
+
+function commitApplicationOutcome(id, status, reflectionText){
+  const app = logApplicationOutcome(id, status);
+  delete pendingOutcomeChoice[id];
+
+  // Persist the outcome to the real backend, keyed on the listing_id
+  // (the backend's outcome endpoint keys on listing, not application).
+  const session = getSession();
+  const userId = session && session.user_id;
+  if(userId && app && app.listing_id){
+    apiLogOutcome(userId, app.listing_id, status, reflectionText && reflectionText.trim() ? reflectionText.trim() : null);
+  }
+
+  if(app && reflectionText && reflectionText.trim()){
+    const outcomeLabel = OUTCOME_LABELS[status] || status;
+    saveOwnWaypointPost({
+      id: 'entry_' + Date.now(),
+      body: reflectionText.trim(),
+      video_url: null,
+      tag_value: status,
+      tag_label: `${outcomeLabel}: ${app.listing_title} at ${app.listing_org}`,
+      created_at: new Date().toISOString(),
+    });
+  }
+  renderWorkshop();
+}
+
+function renderWorkshop(){
+  const apps = getApplications();
+  const filtered = activeFilter === 'all' ? apps : apps.filter(a => a.status === activeFilter);
+  const list = document.getElementById('workshopList');
+
+  if(apps.length === 0){
+    list.innerHTML = `<div class="empty-state"><div class="glyph">&#9998;</div>No applications drafted yet.<div class="sub">Star a match on the Job Search page, or enable Auto - an AI-tailored application will be drafted here automatically.</div><a class="btn" href="dashboard.html">Go to Job Search &rarr;</a></div>`;
+    return;
+  }
+  if(filtered.length === 0){
+    list.innerHTML = `<div class="empty-state"><div class="glyph">&#9998;</div>Nothing in this filter.<div class="sub">Try a different tab above.</div></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(a => {
+    const remaining = a.status === 'approved' && a.sendable_at ? timeRemaining(a.sendable_at) : null;
+    const staleDays = getStaleDays(a);
+    const staleNote = staleDays !== null
+      ? `<div class="app-stale-note">No response logged ${staleDays} day${staleDays===1?'':'s'} after sending - log what actually happened below, or treat the silence itself as a real signal to focus elsewhere.</div>`
+      : '';
+    const followupDays = getInterviewFollowupDays(a);
+    const followupNote = followupDays !== null
+      ? `<div class="app-followup-note">You logged an interview here ${followupDays} days ago with no update since - a brief, genuine follow-up note to your contact is often worth sending around now.</div>`
+      : '';
+    // Honest delivery status: an emailed application says exactly where it went
+    // (a best-effort address, never claimed as verified); a web-form listing
+    // can't be auto-submitted, so it's handed back with the real apply link.
+    let deliveryNote = '';
+    if(a.status === 'sent' && a.sent_channel === 'email' && a.sent_to_address){
+      deliveryNote = `<div class="app-delivery-note email-sent">Emailed to <b>${escapeForAttr(a.sent_to_address)}</b> - a best-effort general company address, not a verified individual. If it bounces, apply directly at the posting.</div>`;
+    } else if(a.status === 'sent' && a.sent_channel === 'web_auto'){
+      const link = a.apply_url ? ` <a href="${escapeForAttr(a.apply_url)}" target="_blank" rel="noopener noreferrer">Verify at the posting</a>` : '';
+      deliveryNote = `<div class="app-delivery-note email-sent">Submitted automatically at the posting and confirmed.${link} It's worth a quick check that it went through as expected.</div>`;
+    } else if(a.status === 'sent' && a.sent_channel === 'web_ext'){
+      const link = a.apply_url ? ` <a href="${escapeForAttr(a.apply_url)}" target="_blank" rel="noopener noreferrer">Verify at the posting</a>` : '';
+      deliveryNote = `<div class="app-delivery-note email-sent">Submitted in your own browser with the Kaidostar Apply extension, and confirmed.${link} It's worth a quick check that it went through as expected.</div>`;
+    } else if(a.status === 'ready_to_submit'){
+      const link = a.apply_url ? `<a href="${escapeForAttr(a.apply_url)}" target="_blank" rel="noopener noreferrer">${escapeForAttr(a.apply_url)}</a>` : 'the job posting';
+      const why = a.auto_submit_possibly_sent
+        ? `<div style="margin-top:8px; color:var(--gold);"><b>Heads up - this may already be submitted.</b> Kaidostar filled and submitted the form but couldn't confirm it went through. <b>Check the posting before resubmitting</b> so you don't apply twice; if it did go through, mark it submitted below.</div>`
+        : a.auto_submit_consent_needed
+        ? `<div style="margin-top:8px; color:var(--text-dim);">Kaidostar can submit this for you automatically, with your permission to use your name, phone and resume. <button class="btn" data-action="grant-consent" style="margin-top:6px;">Give permission &amp; submit</button></div>`
+        : a.auto_submit_pro_only
+        ? `<div style="margin-top:6px; color:var(--gold);">Automatic submission is a Pro feature - <a href="site-pricing.html" style="color:var(--gold);">upgrade</a> to have Kaidostar submit eligible applications for you.</div>`
+        : (a.auto_submit_note ? `<div style="margin-top:6px; color:var(--text-faint);">Couldn't auto-submit this one: ${escapeForAttr(a.auto_submit_note)}</div>` : (a.send_reasoning ? `<div style="margin-top:6px; color:var(--text-faint);">${escapeForAttr(a.send_reasoning)}</div>` : ''));
+      // Pro members can also apply in their own browser via the Kaidostar Apply
+      // extension - the surest route for login-gated ATSes a server can't reach.
+      // Suppress the invite when the form may already be submitted, so we don't
+      // nudge the user into a duplicate application.
+      const canExt = (typeof hasFeature === 'function') && hasFeature('auto_submit') && !a.auto_submit_possibly_sent;
+      const extHint = canExt ? `<div style="margin-top:6px; color:var(--text-dim);">Or apply in your own browser: the <b>Kaidostar Apply</b> extension fills this form and submits it for you from your logged-in browser - the surest route for postings that require signing in.</div>` : '';
+      deliveryNote = `<div class="app-delivery-note">This role's real application route is its own posting. Your finished application is ready above: copy it, submit it at ${link}, then mark it submitted.${why}${extHint}</div>`;
+    }
+    return `<div class="app-card" data-id="${escapeForAttr(a.id)}">
+      <div class="app-top">
+        <div><p class="app-title">${escapeForAttr(a.listing_title)}</p><div class="app-org">${escapeForAttr(a.listing_org)}</div></div>
+        <span class="app-status-pill ${escapeForAttr(String(a.status || '').replace(/[^a-z_]/gi, ''))}">${escapeForAttr(statusLabel(a.status))}${a.auto_generated ? '<span class="app-status-pill auto-tag">Auto</span>' : ''}</span>
+      </div>
+      <div class="app-confidence">Match confidence: ${escapeForAttr(a.confidence_pct)}% ${a.status === 'approved' ? '(auto-approved - high confidence)' : a.status === 'sent' ? '(sent)' : a.status === 'ready_to_submit' ? '(ready to submit)' : a.status === 'undone' ? '(discarded)' : '(needs your review)'}</div>
+      ${staleNote}
+      ${followupNote}
+      <div class="app-draft">${escapeForAttr(a.draft || '')}</div>
+      ${deliveryNote}
+      ${remaining ? `<div class="app-countdown">${remaining}</div>` : ''}
+      <div class="app-actions">
+        ${a.status === 'pending_review' ? `<button class="btn" data-action="approve">Approve</button>` : ''}
+        ${a.status === 'approved' && !remaining ? `<button class="btn" data-action="send">Send application</button>` : ''}
+        ${a.status === 'ready_to_submit' && a.apply_url ? `<a class="btn" href="${escapeForAttr(a.apply_url)}" target="_blank" rel="noopener noreferrer">Open posting to apply</a>` : ''}
+        ${a.status === 'ready_to_submit' ? `<button class="btn ghost" data-action="copy-draft">Copy application</button>` : ''}
+        ${a.status === 'ready_to_submit' ? `<button class="btn" data-action="mark-submitted">Mark as submitted</button>` : ''}
+        ${(a.status === 'approved' || a.status === 'pending_review') ? `<button class="btn ghost" data-action="undo">Discard</button>` : ''}
+        ${a.status !== 'undone' ? `<button class="btn ghost" data-tailor-id="${escapeForAttr(a.id)}">Tailor my resume for this job</button>` : ''}
+        ${a.status !== 'undone' ? `<button class="btn ghost" data-leadership-id="${escapeForAttr(a.id)}">Tailor outreach to leadership</button>` : ''}
+      </div>
+      <div class="wp-deep" id="tailor-${escapeForAttr(a.id)}"></div>
+      <div class="wp-deep" id="leadership-${escapeForAttr(a.id)}"></div>
+      ${a.status === 'sent' ? renderOutcomeSection(a) : ''}
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-outcome-action]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.closest('.app-card').dataset.id;
+      pendingOutcomeChoice[id] = btn.dataset.outcomeAction;
+      renderWorkshop();
+    });
+  });
+  list.querySelectorAll('.save-outcome-reflection-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const status = pendingOutcomeChoice[id];
+      const input = document.querySelector(`.outcome-reflection-input[data-id="${(window.CSS && CSS.escape) ? CSS.escape(id) : String(id).replace(/["\\]/g, '')}"]`);
+      commitApplicationOutcome(id, status, input ? input.value : '');
+    });
+  });
+  list.querySelectorAll('.skip-outcome-reflection-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      commitApplicationOutcome(id, pendingOutcomeChoice[id], null);
+    });
+  });
+  list.querySelectorAll('[data-tailor-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.tailorId;
+      const container = document.getElementById('tailor-' + id);
+      const isOpen = container.classList.contains('open');
+      if(isOpen){ container.classList.remove('open'); btn.textContent = 'Tailor my resume for this job'; return; }
+
+      const app = getApplications().find(a => a.id === id);
+      const listing = LISTINGS.find(l => String(l.id) === String(app.listing_id));
+      const entries = getResumeEntries();
+
+      if(entries.length === 0){
+        container.innerHTML = `<p style="color:var(--text-faint); font-style:italic;">You haven't added any resume entries yet - add some on the Resume tab, then come back here to see how they'd rank for this job.</p>`;
+      } else if(!listing){
+        container.innerHTML = `<p style="color:var(--text-faint); font-style:italic;">Couldn't find the original listing details for this application.</p>`;
+      } else if(!getResumeDocument()){
+        container.innerHTML = `<p style="color:var(--text-faint); font-style:italic;">Generate your resume on the Resume tab first, then come back here to see how it'd tailor for this job.</p>`;
+      } else {
+        const ranked = rankEntriesForListing(entries, listing);
+        const anyOverlap = ranked.some(e => e.relevance_score > 0);
+        const introText = anyOverlap
+          ? "Your real entries, ordered by genuine overlap with this listing's own tags - nothing rewritten, just reordered by what's actually worth leading with here."
+          : "None of your real entries directly overlap with this listing's own tags - shown in your existing order, nothing reordered or rewritten. That's an honest signal worth noticing, not a rendering issue.";
+        container.innerHTML = `<p style="color:var(--text-faint); font-size:12.5px; margin-bottom:10px;">${escapeForAttr(introText)}</p>` +
+          ranked.map(e => `<div style="margin-bottom:10px; ${e.relevance_score === 0 ? 'opacity:0.55;' : ''}">
+            <div style="font-family:'Space Grotesk',sans-serif; font-size:13.5px;">${escapeForAttr(e.title)}${e.org ? ` <span style="color:var(--text-faint); font-weight:400;">at ${escapeForAttr(e.org)}</span>` : ''}</div>
+            ${e.relevance_tags.length ? e.relevance_tags.map(t => `<span class="ats-keyword-tag matched">${escapeForAttr(t)}</span>`).join('') : `<span style="font-size:12px; color:var(--text-faint);">No direct overlap with this listing's tags</span>`}
+          </div>`).join('') +
+          `<div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+            <button class="btn" data-action="download-tailored" data-listing-id="${listing.id}">Download resume tailored for this job &rarr;</button>
+            <button class="btn ghost" data-action="generate-cover-letter" data-listing-id="${listing.id}">Draft a cover letter for this job</button>
+          </div>
+          <div id="coverLetterResult-${escapeForAttr(a.id)}" style="margin-top:12px;"></div>`;
+        container.querySelector('[data-action="download-tailored"]').addEventListener('click', async (e) => {
+          const downloadBtn = e.target;
+          const targetListingId = downloadBtn.dataset.listingId;
+          const targetListing = LISTINGS.find(l => String(l.id) === String(targetListingId));
+          downloadBtn.disabled = true;
+          const originalText = downloadBtn.textContent;
+          downloadBtn.textContent = 'Preparing your file...';
+          try{
+            const result = await downloadResumeDocx(targetListing);
+            if(result.error){
+              downloadBtn.textContent = result.error;
+              setTimeout(() => { downloadBtn.textContent = originalText; }, 2500);
+              return;
+            }
+          }catch(err){
+            console.error('Tailored resume download failed:', err);
+            downloadBtn.textContent = "Couldn't generate the file - try again";
+            setTimeout(() => { downloadBtn.textContent = originalText; }, 2500);
+            return;
+          }
+          downloadBtn.disabled = false;
+          downloadBtn.textContent = originalText;
+        });
+        container.querySelector('[data-action="generate-cover-letter"]').addEventListener('click', async (e) => {
+          const btn = e.target;
+          const targetListingId = btn.dataset.listingId;
+          const targetListing = LISTINGS.find(l => String(l.id) === String(targetListingId));
+          const resultEl = document.getElementById(`coverLetterResult-${a.id}`);
+          btn.disabled = true;
+          const originalText = btn.textContent;
+          btn.textContent = 'Drafting a real, honest letter...';
+          const profile = JSON.parse(localStorage.getItem('kaidostar_profile') || 'null') || {};
+          const result = await generateCoverLetterJS(profile, entries, targetListing);
+          btn.disabled = false;
+          btn.textContent = originalText;
+          if(result.error || !result.letter){
+            resultEl.innerHTML = `<p style="color:var(--text-faint); font-size:12.5px;">${escapeForAttr(result.error || "Add at least one real resume entry first.")}</p>`;
+            return;
+          }
+          const reviewFlags = [...result.flagged_numbers, ...result.flagged_claims];
+          const reviewNote = reviewFlags.length
+            ? `<p style="font-size:12px; color:var(--gold); margin-bottom:8px; padding:6px 10px; background:var(--gold-dim); border-radius:6px;">Worth a quick check before sending - this appears in the letter but not in your real entries: ${reviewFlags.map(escapeForAttr).join(', ')}</p>`
+            : '';
+          resultEl.innerHTML = `${reviewNote}<div style="white-space:pre-wrap; font-family:'Manrope',sans-serif; font-size:13px; line-height:1.6; padding:14px; background:var(--panel-alt); border-radius:8px;">${escapeForAttr(result.letter)}</div>`;
+        });
+      }
+      container.classList.add('open');
+      btn.textContent = 'Hide resume tailoring';
+    });
+  });
+  list.querySelectorAll('[data-leadership-id]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.leadershipId;
+      const container = document.getElementById('leadership-' + id);
+      const isOpen = container.classList.contains('open');
+      if(isOpen){ container.classList.remove('open'); btn.textContent = 'Tailor outreach to leadership'; return; }
+
+      const app = getApplications().find(a => a.id === id);
+      const listing = LISTINGS.find(l => String(l.id) === String(app.listing_id));
+      if(!listing){
+        container.innerHTML = `<p class="leadership-empty-note">Couldn't find the original listing details for this application.</p>`;
+        container.classList.add('open');
+        return;
+      }
+
+      const profile = getProfile();
+      if(!profile){
+        container.innerHTML = `<p class="leadership-empty-note">Complete your profile first so a real outreach email can reference your actual background.</p>`;
+        container.classList.add('open');
+        return;
+      }
+
+      const existingDraft = getOutreachDraftForListing(listing.id);
+      if(existingDraft){
+        renderLeadershipResult(container, existingDraft, listing);
+        container.classList.add('open');
+        btn.textContent = 'Hide leadership research';
+        return;
+      }
+
+      container.innerHTML = `<p class="leadership-empty-note">Researching ${escapeForAttr(listing.org)}'s real, current leadership...</p>`;
+      container.classList.add('open');
+      btn.disabled = true;
+      btn.textContent = 'Researching...';
+
+      const research = await getOrResearchCompanyLeadership(listing.org);
+      const draft = await draftLeadershipGroundedOutreach(listing, profile, research);
+
+      btn.disabled = false;
+      if(!draft){
+        container.innerHTML = `<p class="leadership-empty-note">Couldn't draft this outreach email just now - try again in a moment.</p>`;
+        btn.textContent = 'Tailor outreach to leadership';
+        return;
+      }
+
+      renderLeadershipResult(container, draft, listing);
+      btn.textContent = 'Hide leadership research';
+    });
+  });
+  list.querySelectorAll('[data-autopsy-id]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.autopsyId;
+      const app = getApplications().find(a => a.id === id);
+      const listing = LISTINGS.find(l => String(l.id) === String(app.listing_id));
+      const profile = getProfile();
+      const container = document.getElementById('autopsy-' + id);
+      btn.disabled = true; btn.textContent = 'Analyzing...';
+      container.innerHTML = `<p style="color:var(--text-faint); font-style:italic;">Comparing your draft against the listing...</p>`;
+      container.classList.add('open');
+      // Backend-first: the server reads this application, its listing and its
+      // logged outcome by id and runs the identical honest hypothesis. Falls
+      // back to the direct call (needs the local listing) when logged out or
+      // the backend is unreachable.
+      let text = null;
+      const _apSession = (typeof getSession === 'function') ? getSession() : null;
+      if(_apSession && _apSession.user_id && app && app.id && typeof apiExplainOutcome === 'function'){
+        text = await apiExplainOutcome(app.id);
+      }
+      if(!text){ text = listing ? await explainOutcomeDeep(app, listing, profile) : null; }
+      btn.disabled = false; btn.textContent = 'Why did this happen?';
+      // escapeForAttr: explainOutcomeDeep returns raw model text - render it as escaped
+      // text, not innerHTML, so model/prompt-injected HTML can't execute.
+      container.innerHTML = text ? `<p>${escapeForAttr(text)}</p>` : `<span style="color:var(--danger);">Couldn't generate this just now - try again.</span>`;
+    });
+  });
+
+  list.querySelectorAll('[data-prep-id]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.prepId;
+      const app = getApplications().find(a => a.id === id);
+      const container = document.getElementById('prep-' + id);
+      const cache = getInterviewPrepCache();
+
+      if(cache[id]){
+        renderInterviewPrep(container, cache[id]);
+        container.classList.add('open');
+        return;
+      }
+
+      const profile = getProfile();
+      const roadmap = getRoadmap();
+      const companyCache = getCompanyResearchCache();
+      // Looks up by listing ID directly - the real, correct key this
+      // cache actually uses. The previous version searched for a
+      // .company_name field that's never set on any cached research
+      // object (confirmed directly), meaning this lookup always
+      // silently failed, even when research for this exact listing
+      // had just been done and was sitting right there in the cache.
+      const matchedResearch = companyCache[app.listing_id];
+
+      btn.disabled = true; btn.textContent = 'Preparing...';
+      container.innerHTML = `<p style="color:var(--text-faint); font-style:italic;">Building your prep brief...</p>`;
+      container.classList.add('open');
+
+      // Backend-first (server-side key + profile/roadmap context); direct call is the offline fallback.
+      const _ipSession = (typeof getSession === 'function') ? getSession() : null;
+      let prep = (_ipSession && _ipSession.user_id && typeof apiInterviewPrep === 'function')
+        ? await apiInterviewPrep(_ipSession.user_id, app.listing_org, app.listing_title, matchedResearch ? matchedResearch.findings : null)
+        : null;
+      if(!prep) prep = await generateInterviewPrep(
+        app.listing_org, app.listing_title,
+        matchedResearch ? matchedResearch.findings : null,
+        profile, roadmap ? roadmap.summary : null,
+      );
+      btn.disabled = false; btn.textContent = 'View interview prep';
+
+      if(prep){
+        cache[id] = prep;
+        saveInterviewPrepCache(cache);
+        renderInterviewPrep(container, prep);
+      } else {
+        container.innerHTML = `<span style="color:var(--danger);">Couldn't generate this just now - try again.</span>`;
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const card = btn.closest('.app-card');
+      const id = card.dataset.id;
+      const action = btn.dataset.action;
+      const apps = getApplications();
+      const app = apps.find(a => a.id === id);
+      if(!app) return;
+      const session = getSession();
+      const userId = session && session.user_id;
+
+      // Copy the finished application to the clipboard (web hand-off route).
+      if(action === 'copy-draft'){
+        try{ await navigator.clipboard.writeText(app.draft || ''); btn.textContent = 'Copied'; }
+        catch(e){ btn.textContent = 'Copy failed - select the text above'; }
+        setTimeout(() => { btn.textContent = 'Copy application'; }, 1600);
+        return;
+      }
+
+      if(action === 'approve'){
+        app.status = 'approved'; app.sendable_at = new Date(Date.now() + UNDO_WINDOW_MINUTES * 60000).toISOString();
+        saveApplications(apps);
+        if(userId) apiApproveApplication(id);
+        renderWorkshop();
+        return;
+      }
+
+      if(action === 'undo'){
+        app.status = 'undone'; saveApplications(apps);
+        if(userId) apiUndoApplication(id);
+        renderWorkshop();
+        return;
+      }
+
+      if(action === 'mark-submitted'){
+        app.status = 'sent'; app.sent_at = new Date().toISOString(); app.sent_channel = app.sent_channel || 'web';
+        saveApplications(apps);
+        if(userId) apiMarkApplicationSubmitted(id);
+        renderWorkshop();
+        return;
+      }
+
+      // Grant permission for Kaidostar to auto-submit, then retry the delivery.
+      if(action === 'grant-consent'){
+        if(!userId){ renderWorkshop(); return; }
+        btn.disabled = true; btn.textContent = 'Granting...';
+        const cres = await apiSetAutoSubmitConsent(userId, true);
+        if(!(cres && cres.ok)){ btn.disabled = false; btn.textContent = 'Give permission & submit'; return; }
+        app.auto_submit_consent_needed = false;
+        // Keep the LOCAL profile in sync with the consent we just granted on the
+        // backend. Without this, the survey (which pre-fills its consent checkbox
+        // from local profile state) would show it unchecked next time the user
+        // edits their profile, and saving would silently REVOKE the consent, since
+        // saving the survey writes a fresh profile with auto_submit_consent from the
+        // checkbox. Sync it here so consent granted in the workshop actually sticks.
+        try{ const _prof = getProfile(); if(_prof){ _prof.autoSubmitConsent = true; saveProfile(_prof); } }catch(e){}
+        btn.textContent = 'Submitting...';
+        const res = await apiSendApplication(id);
+        if(res && res.ok && res.data){ _applyDeliveryResult(app, res.data); saveApplications(apps); }
+        renderWorkshop();
+        return;
+      }
+
+      if(action === 'send'){
+        if(userId){
+          // Real delivery: the backend has Metis pick the most effective channel
+          // and either emails the employer or hands back the posting link. We
+          // reflect the REAL result, so we don't optimistically assume "sent".
+          btn.disabled = true; btn.textContent = 'Sending...';
+          const res = await apiSendApplication(id);
+          if(res && res.ok && res.data){
+            _applyDeliveryResult(app, res.data);
+            saveApplications(apps);
+          } else {
+            // Couldn't reach the backend - leave it approved so the user can retry.
+            btn.disabled = false; btn.textContent = 'Send application';
+          }
+          renderWorkshop();
+        } else {
+          // Not logged in (local demo): there's no real backend to deliver
+          // through, so this stays a local status change only.
+          app.status = 'sent'; app.sent_at = new Date().toISOString(); app.sent_channel = 'demo';
+          saveApplications(apps);
+          renderWorkshop();
+        }
+        return;
+      }
+    });
+  });
+}
+
+/* ---------------- Outreach emails (new) ---------------- */
+let outreachFilter = 'all';
+document.getElementById('outreachFilter').querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#outreachFilter .chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    outreachFilter = chip.dataset.val;
+    renderOutreach();
+  });
+});
+
+function renderOutreach(){
+  const items = getOutreachDrafts();
+  const filtered = outreachFilter === 'all' ? items : items.filter(o => o.status === outreachFilter);
+  const list = document.getElementById('outreachList');
+
+  const pending = items.filter(o => o.status === 'drafted');
+  const bar = document.getElementById('sendAllBar');
+  if(pending.length > 0){
+    bar.style.display = 'flex';
+    document.getElementById('pendingOutreachCount').textContent = `${pending.length} outreach email${pending.length===1?'':'s'} ready to send`;
+  } else {
+    bar.style.display = 'none';
+  }
+
+  if(items.length === 0){
+    list.innerHTML = `<div class="empty-state"><div class="glyph">&#9993;</div>No outreach drafted yet.<div class="sub">Click "Find a contact" on a match, or enable Auto on the Auto page - drafts land here, never sent automatically.</div><a class="btn" href="dashboard.html">Go to Job Search &rarr;</a></div>`;
+    return;
+  }
+  if(filtered.length === 0){
+    list.innerHTML = `<div class="empty-state"><div class="glyph">&#9993;</div>Nothing in this filter.<div class="sub">Try a different tab above.</div></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(o => `<div class="app-card" data-id="${o.id}">
+    <div class="app-top">
+      <div><p class="app-title">${o.listing_title}</p><div class="app-org">${o.listing_org}</div></div>
+      <span class="app-status-pill ${o.status}">${statusLabel(o.status)}${o.auto_generated ? '<span class="app-status-pill auto-tag">Auto</span>' : ''}</span>
+    </div>
+    <div class="outreach-to-line">To: <span class="outreach-to-editable" contenteditable="${o.status==='drafted'}" data-id="${o.id}" data-field="to_address">${o.to_address}</span></div>
+    <div class="outreach-unverified-note">Unverified guess at a general company contact - check it before sending.</div>
+    ${o.leadership_grounded ? `<div class="leadership-banner">
+      <div class="leadership-banner-label">Tailored around</div>
+      <div class="leadership-banner-summary">${escapeForAttr(o.priorities_summary)}</div>
+      ${(o.leadership_research_sources || []).length ? `<div class="leadership-leader-row">Real sources - verify before sending: ${o.leadership_research_sources.map(s => `<a class="leadership-source-link" href="${safeHref(s.url)}" target="_blank" rel="noopener">${escapeForAttr(s.title)}</a>`).join(' &middot; ')}</div>` : ''}
+    </div>` : ((o.leadership_research_sources || []).length ? `<div class="leadership-banner"><div class="leadership-leader-row">No leadership statement could be confidently confirmed, but the search looked at: ${o.leadership_research_sources.map(s => `<a class="leadership-source-link" href="${safeHref(s.url)}" target="_blank" rel="noopener">${escapeForAttr(s.title)}</a>`).join(' &middot; ')}</div></div>` : '')}
+    <input class="editable-field subject" data-id="${o.id}" data-field="subject" value="${escapeForAttr(o.subject||'')}" ${o.status!=='drafted' ? 'disabled' : ''}>
+    <textarea class="editable-field body" data-id="${o.id}" data-field="body" ${o.status!=='drafted' ? 'disabled' : ''}>${escapeForAttr(o.body||'')}</textarea>
+    <div class="app-actions">
+      ${o.status === 'drafted' ? `<button class="btn" data-action="send-one" data-id="${o.id}">Send</button>` : ''}
+      ${o.status === 'drafted' ? `<button class="btn ghost" data-action="discard-one" data-id="${o.id}">Discard</button>` : ''}
+    </div>
+  </div>`).join('');
+
+  list.querySelectorAll('.editable-field, .outreach-to-editable').forEach(field => {
+    const evt = field.tagName === 'DIV' ? 'blur' : 'change';
+    field.addEventListener(evt, () => {
+      const id = field.dataset.id;
+      const key = field.dataset.field;
+      const value = field.tagName === 'DIV' ? field.textContent.trim() : field.value;
+      updateOutreachDraft(id, key, value);
+    });
+  });
+  list.querySelectorAll('[data-action="send-one"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.textContent = 'Sending...';
+      await sendOutreachDraft(btn.dataset.id);
+      renderOutreach();
+    });
+  });
+  list.querySelectorAll('[data-action="discard-one"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      discardOutreachDraft(btn.dataset.id);
+      renderOutreach();
+    });
+  });
+}
+
+document.getElementById('sendAllBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('sendAllBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  await sendAllPendingOutreach();
+  btn.disabled = false; btn.textContent = 'Send all pending';
+  renderOutreach();
+});
+
+renderWorkshop();
+renderOutreach();
+setInterval(renderWorkshop, 15000); // keep countdown timers fresh
+
+// Backend hydration: pull the real applications list (with real
+// application ids that approve/send/undo depend on) when logged in,
+// then re-render. Async + best-effort so the page shows local state
+// instantly and never blocks on the network.
+(async () => {
+  const session = getSession();
+  const userId = session && session.user_id;
+  if(!userId) return;
+  try{
+    const backendApps = await apiListApplications(userId);
+    if(Array.isArray(backendApps) && backendApps.length){
+      saveApplications(backendApps);   // backend fields already match the frontend shape
+      renderWorkshop();
+    }
+  }catch(e){ /* best-effort - local applications already rendered */ }
+})();
+
+// Backend hydration for resume ENTRIES: if the person imported a resume (or built
+// one on another device) it lives in the backend; pull it in when local is empty
+// so the Resume builder and the per-job tailor have real content to work with.
+(async () => {
+  const session = getSession();
+  const userId = session && session.user_id;
+  if(!userId || typeof apiListResumeEntries !== 'function') return;
+  if(typeof getResumeEntries === 'function' && getResumeEntries().length) return; // local already populated
+  try{
+    const backendEntries = await apiListResumeEntries(userId);
+    if(Array.isArray(backendEntries) && backendEntries.length){
+      saveResumeEntries(backendEntries.map(e => ({
+        id: e.id, entry_type: e.entry_type, title: e.title, org: e.org,
+        start_date: e.start_date, end_date: e.end_date, raw_description: e.raw_description,
+        display_order: e.display_order,
+      })));
+      if(typeof renderResumeWorkshop === 'function') renderResumeWorkshop();
+    }
+  }catch(e){ /* best-effort - the builder works on local entries regardless */ }
+})();
+
+/* ---------------- Resume builder ---------------- */
+function entryTypeLabel(t){ return t === 'work' ? 'Work' : t === 'education' ? 'Education' : 'Project'; }
+
+function renderResumeEntries(){
+  const entries = getResumeEntries();
+  const list = document.getElementById('resumeEntriesList');
+  if(entries.length === 0){
+    list.innerHTML = `<div class="empty-state"><div class="glyph">&#9998;</div>No entries yet.<div class="sub">Add your real work, education, or project history above - in your own words, however rough. The AI only strengthens phrasing, never invents facts.</div></div>`;
+  } else {
+    list.innerHTML = entries.map(e => `<div class="resume-entry-card" data-id="${escapeForAttr(e.id)}">
+      <div class="resume-entry-top">
+        <div><p class="resume-entry-title">${escapeForAttr(e.title)}${e.org ? ` <span style="color:var(--text-faint); font-weight:400;">at ${escapeForAttr(e.org)}</span>` : ''}</p><div class="resume-entry-meta">${escapeForAttr([e.start_date, e.end_date].filter(Boolean).join(' - '))}</div></div>
+        <span class="resume-entry-type-pill">${entryTypeLabel(e.entry_type)}</span>
+      </div>
+      <div class="resume-entry-desc">${escapeForAttr(e.raw_description)}</div>
+      <div class="resume-entry-actions">
+        <button class="btn ghost" data-action="delete-entry">Delete</button>
+      </div>
+    </div>`).join('');
+    list.querySelectorAll('[data-action="delete-entry"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        deleteResumeEntry(btn.closest('.resume-entry-card').dataset.id);
+        renderResumeWorkshop();
+      });
+    });
+  }
+
+  const genBtn = document.getElementById('resumeGenerateBtn');
+  const genStatus = document.getElementById('resumeGenerateStatus');
+  if(entries.length === 0){
+    genBtn.disabled = true;
+    genStatus.textContent = 'Add at least one real entry above, then generate.';
+  } else {
+    genBtn.disabled = false;
+    genStatus.textContent = `${entries.length} real ${entries.length === 1 ? 'entry' : 'entries'} ready. Generating only strengthens phrasing - it never adds facts you didn't write.`;
+  }
+}
+
+function renderResumeResult(doc){
+  const container = document.getElementById('resumeResultContainer');
+  // Saved data can be old or damaged: only render well-formed entries, never throw on the rest.
+  if(doc && typeof doc === 'object' && Array.isArray(doc.entries)) doc = Object.assign({}, doc, { entries: doc.entries.filter(e => e && typeof e === 'object') });
+  if(!doc || !Array.isArray(doc.entries) || doc.entries.length === 0){ container.innerHTML = ''; return; }
+
+  const summaryHasFlags = Array.isArray(doc.summary_flagged_numbers) && doc.summary_flagged_numbers.length > 0;
+  const anyBulletFlags = doc.entries.some(e => Array.isArray(e.flagged_numbers) && e.flagged_numbers.length > 0);
+  // Prefer the already-computed review_note (from a fresh generateResume()
+  // call, which correctly distinguishes bullet-only/summary-only/both) -
+  // only fall back to a simpler recomputation for a doc persisted before
+  // this fix existed, which genuinely lacks review_note.
+  let reviewNoteText = doc.review_note;
+  if(reviewNoteText === undefined){
+    reviewNoteText = (anyBulletFlags && summaryHasFlags)
+      ? "One or more bullets AND the summary line include a number that wasn't in what you originally wrote - double check those before using this."
+      : summaryHasFlags
+      ? "The summary line includes a number that wasn't in what you originally wrote - double check it before using this."
+      : anyBulletFlags
+      ? "One or more bullets include a number that wasn't in what you originally wrote - double check those before using this."
+      : null;
+  }
+  const reviewNoteHtml = reviewNoteText ? `<div class="resume-review-note">&#9888; ${escapeForAttr(reviewNoteText)}</div>` : '';
+  const summaryHtml = doc.summary_line
+    ? `<div class="resume-summary-line${summaryHasFlags ? ' resume-bullet-flagged' : ''}" contenteditable="true" data-field="summary" title="Click to edit">${escapeForAttr(doc.summary_line)}${summaryHasFlags ? ' &#9888;' : ''}</div>${summaryHasFlags ? `<div class="resume-flag-note" data-flag-note="summary">Flagged: ${doc.summary_flagged_numbers.map(escapeForAttr).join(', ')} - not in what you originally wrote, double check before using.</div>` : ''}`
+    : '';
+  const entriesHtml = doc.entries.filter(e => e && typeof e === 'object').map(e => `<div class="resume-entry-card">
+    <div class="resume-entry-top">
+      <div><p class="resume-entry-title">${escapeForAttr(e.title)}${e.org ? ` <span style="color:var(--text-faint); font-weight:400;">at ${escapeForAttr(e.org)}</span>` : ''}</p><div class="resume-entry-meta">${escapeForAttr(e.dates || '')}</div></div>
+    </div>
+    <ul class="resume-bullet-list">
+      ${(Array.isArray(e.bullets) ? e.bullets : []).map((b, i) => {
+        const flagged = (Array.isArray(e.flagged_numbers) ? e.flagged_numbers : []).some(n => String(b).includes(String(n)));
+        return `<li class="${flagged ? 'resume-bullet-flagged' : ''}" contenteditable="true" data-entry-id="${escapeForAttr(e.entry_id)}" data-bullet-index="${i}" title="Click to edit">${escapeForAttr(b)}${flagged ? ' &#9888;' : ''}</li>`;
+      }).join('')}
+    </ul>
+    ${(Array.isArray(e.flagged_numbers) && e.flagged_numbers.length) ? `<div class="resume-flag-note" data-flag-note="${escapeForAttr(e.entry_id)}">Flagged: ${e.flagged_numbers.map(escapeForAttr).join(', ')} - not in your original description, double check before using.</div>` : ''}
+  </div>`).join('');
+
+  container.innerHTML = `<h3 style="font-family:'Space Grotesk',sans-serif; margin: 28px 0 14px;">Your resume</h3>${reviewNoteHtml}${summaryHtml}${entriesHtml}`;
+
+  const summaryEl = container.querySelector('[data-field="summary"]');
+  if(summaryEl){
+    summaryEl.addEventListener('blur', () => {
+      const freshDoc = getResumeDocument();
+      if(!freshDoc) return;
+      const newText = summaryEl.textContent;
+      freshDoc.summary_line = newText;
+      if(freshDoc.summary_flagged_numbers && freshDoc.summary_flagged_numbers.length){
+        freshDoc.summary_flagged_numbers = freshDoc.summary_flagged_numbers.filter(n => newText.includes(n));
+        if(freshDoc.summary_flagged_numbers.length === 0){
+          summaryEl.classList.remove('resume-bullet-flagged');
+          const note = container.querySelector('[data-flag-note="summary"]');
+          if(note) note.remove();
+        }
+      }
+      saveResumeDocument(freshDoc);
+    });
+  }
+  container.querySelectorAll('[data-entry-id]').forEach(bulletEl => {
+    bulletEl.addEventListener('blur', () => {
+      const freshDoc = getResumeDocument();
+      if(!freshDoc) return;
+      const entryId = bulletEl.dataset.entryId;
+      const bulletIndex = parseInt(bulletEl.dataset.bulletIndex);
+      const entry = (Array.isArray(freshDoc.entries) ? freshDoc.entries : []).find(e => e && String(e.entry_id) === entryId);
+      if(!entry || !Array.isArray(entry.bullets)) return;
+      const newText = bulletEl.textContent;
+      entry.bullets[bulletIndex] = newText;
+      if(entry.flagged_numbers && entry.flagged_numbers.length){
+        entry.flagged_numbers = entry.flagged_numbers.filter(n => entry.bullets.some(b => b.includes(n)));
+        if(entry.flagged_numbers.length === 0){
+          bulletEl.classList.remove('resume-bullet-flagged');
+          const note = container.querySelector(`[data-flag-note="${entryId}"]`);
+          if(note) note.remove();
+        }
+      }
+      saveResumeDocument(freshDoc);
+    });
+  });
+}
+
+function renderAtsPanel(profile){
+  const container = document.getElementById('atsPanelContainer');
+  const entries = getResumeEntries();
+  if(entries.length === 0){ container.innerHTML = ''; return; }
+
+  const result = checkAtsAlignment(profile, entries);
+  if(result.matched_keywords.length === 0 && result.missing_keywords.length === 0){ container.innerHTML = ''; return; }
+
+  const matchedTags = result.matched_keywords.map(k => `<span class="ats-keyword-tag matched">${k}</span>`).join('');
+  const missingTags = result.missing_keywords.map(k => `<span class="ats-keyword-tag missing">${k}</span>`).join('');
+  container.innerHTML = `<div class="ats-panel">
+    <h3 style="font-family:'Space Grotesk',sans-serif; margin:0 0 6px;">Keyword coverage</h3>
+    <p style="font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); margin:0 0 4px;">How well your resume's actual content covers what your stated goal and skills need - real overlap, not a guess.</p>
+    <div class="ats-coverage-bar-track"><div class="ats-coverage-bar-fill" style="width:${result.coverage_pct}%;"></div></div>
+    <p style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--violet); margin:0 0 14px;">${result.coverage_pct}% coverage</p>
+    ${matchedTags ? `<div style="margin-bottom:10px;">${matchedTags}</div>` : ''}
+    ${missingTags ? `<div>${missingTags}</div>` : ''}
+  </div>`;
+}
+
+function renderSkillsPanel(profile, justAddedSkill){
+  const container = document.getElementById('skillsPanelContainer');
+  const entries = getResumeEntries();
+  const result = buildSkillsSection(profile, entries);
+  if(result.skills.length === 0 && result.suggested_additions.length === 0){ container.innerHTML = ''; return; }
+
+  const skillTags = result.skills.map(s => {
+    const justConfirmed = justAddedSkill && s.toLowerCase() === justAddedSkill.toLowerCase();
+    return `<span class="ats-keyword-tag matched skill-tag-removable" data-action="remove-skill" data-skill="${escapeForAttr(s)}" title="Click to remove">${escapeForAttr(s)} &times;</span>${justConfirmed ? `<span class="skill-tag-added-confirm">&#10003; Added</span>` : ''}`;
+  }).join('');
+  const suggestedTags = result.suggested_additions.map(s => `<span class="skill-tag-suggested" data-action="add-skill" data-skill="${escapeForAttr(s)}"><span class="plus-icon">+</span>${escapeForAttr(s)}</span>`).join('');
+  container.innerHTML = `<div class="ats-panel">
+    <h3 style="font-family:'Space Grotesk',sans-serif; margin:0 0 6px;">Skills</h3>
+    <p style="font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); margin:0 0 12px;">Only what you've told us is genuinely yours - anything below is a suggestion from your actual entries, never added automatically. Click a suggestion to confirm it, or an existing skill to remove it.</p>
+    ${skillTags ? `<div style="margin-bottom:10px;">${skillTags}</div>` : `<p style="font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); margin:0 0 10px;">No explicit skills on your profile yet.</p>`}
+    ${suggestedTags ? `<div>${suggestedTags}</div>` : ''}
+  </div>`;
+
+  container.querySelectorAll('[data-action="add-skill"]').forEach(tag => {
+    tag.addEventListener('click', () => {
+      const skill = tag.dataset.skill;
+      addSuggestedSkillToProfile(skill);
+      const updatedProfile = getProfile();
+      renderSkillsPanel(updatedProfile, skill);
+      renderAtsPanel(updatedProfile);  // coverage depends on profile.skills too - both need to reflect the new skill
+      setTimeout(() => { if(document.getElementById('skillsPanelContainer')) renderSkillsPanel(getProfile()); }, 2200);
+    });
+  });
+  container.querySelectorAll('[data-action="remove-skill"]').forEach(tag => {
+    tag.addEventListener('click', () => {
+      removeSkillFromProfile(tag.dataset.skill);
+      const updatedProfile = getProfile();
+      renderSkillsPanel(updatedProfile);
+      renderAtsPanel(updatedProfile);  // coverage depends on profile.skills too - both need to reflect the removal
+    });
+  });
+}
+
+function renderResumeWorkshop(){
+  // Each panel renders on its own: one broken piece of saved data (a malformed document, say)
+  // must never take the rest of the Resume section - or the studio - down with it.
+  const safely = (fn) => { try{ fn(); }catch(e){ console.error('[Resume]', e); } };
+  safely(renderResumeEntries);
+  const profile = getProfile() || {};
+  safely(() => renderResumeResult(getResumeDocument()));
+  safely(() => renderAtsPanel(profile));
+  safely(() => renderSkillsPanel(profile));
+  // Resume Studio: vital signs + the 12 analysis/improvement tools on top of the builder.
+  if(window.RESUME_STUDIO){ try{ RESUME_STUDIO.mount(); }catch(e){ console.error('[Resume Studio]', e); } }
+}
+
+document.getElementById('resumeAddEntryBtn').addEventListener('click', () => {
+  const title = document.getElementById('resumeEntryTitle').value.trim();
+  const desc = document.getElementById('resumeEntryDesc').value.trim();
+  if(!title || !desc) return;
+  addResumeEntry({
+    entry_type: document.getElementById('resumeEntryType').value,
+    title,
+    org: document.getElementById('resumeEntryOrg').value.trim() || null,
+    start_date: document.getElementById('resumeEntryStart').value.trim() || null,
+    end_date: document.getElementById('resumeEntryEnd').value.trim() || null,
+    raw_description: desc,
+  });
+  document.getElementById('resumeEntryTitle').value = '';
+  document.getElementById('resumeEntryOrg').value = '';
+  document.getElementById('resumeEntryStart').value = '';
+  document.getElementById('resumeEntryEnd').value = '';
+  document.getElementById('resumeEntryDesc').value = '';
+  renderResumeWorkshop();
+});
+
+document.getElementById('resumeGenerateBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('resumeGenerateBtn');
+  const status = document.getElementById('resumeGenerateStatus');
+  btn.disabled = true;
+  status.textContent = 'Generating - strengthening your phrasing, not inventing anything new...';
+  const profile = getProfile() || {};
+  const result = await generateResume(profile);
+  btn.disabled = false;
+  if(result.error){
+    status.textContent = result.error;
+    return;
+  }
+  renderResumeWorkshop();   // result, ATS + skills panels AND the studio's vital signs
+  status.textContent = `${getResumeEntries().length} real entries ready. Generate again anytime after editing.`;
+  document.getElementById('resumeDownloadBtn').style.display = 'inline-block';
+});
+
+document.getElementById('resumeDownloadBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('resumeDownloadBtn');
+  const status = document.getElementById('resumeGenerateStatus');
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Preparing your file...';
+  try{
+    const result = await downloadResumeDocx();
+    if(result.error){
+      status.textContent = result.error;
+    }
+  }catch(err){
+    console.error('Resume download failed:', err);
+    status.textContent = "Couldn't generate the file just now - try again in a moment.";
+  }finally{
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+});
+
+if(getResumeDocument()){
+  document.getElementById('resumeDownloadBtn').style.display = 'inline-block';
+}
+
+/* ---------------- Engage ---------------- */
+function renderEngageList(){
+  const list = document.getElementById('engageList');
+  const suggestions = getEngagementSuggestions();
+  if(suggestions.length === 0){
+    list.innerHTML = `<div class="empty-state"><div class="glyph">&#128172;</div>No suggestions drafted yet.<div class="sub">Paste in a real post above to get started.</div></div>`;
+    return;
+  }
+  list.innerHTML = suggestions.map(s => {
+    const statusLabel = { drafted: 'Drafted', emailed: 'Emailed - awaiting your review', accepted: 'Accepted', declined: 'Declined' }[s.status] || s.status;
+    const decisionMakerNote = s.is_smaller_decision_maker
+      ? `<span class="ats-keyword-tag matched">Smaller, more accessible poster</span>`
+      : `<span style="font-size:12px; color:var(--text-faint);">Likely a larger organization</span>`;
+    const actionButtons = (s.status === 'drafted' || s.status === 'emailed') ? `
+      <div class="resume-entry-actions">
+        ${s.status === 'drafted' ? `<button class="btn ghost" data-action="engage-send" data-id="${s.id}">Email me this suggestion</button>` : ''}
+        <button class="btn ghost" data-action="engage-accept" data-id="${s.id}">Mark ready to post</button>
+        <button class="btn ghost" data-action="engage-decline" data-id="${s.id}">Decline</button>
+      </div>` : '';
+    const logHtml = (s.communication_log || []).length ? `
+      <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--line-soft);">
+        <p style="font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-faint); margin-bottom:6px;">What happened after</p>
+        ${s.communication_log.map(entry => `<p class="insight-neutral-note" style="margin-bottom:4px;">${escapeForAttr(entry.note)}</p>`).join('')}
+      </div>` : '';
+    const logInputHtml = (s.status === 'accepted') ? `
+      <div class="resume-form-row" style="margin-top:10px;">
+        <input class="editable-field" data-log-input="${s.id}" placeholder="Add a real update - got a reply, they asked a follow-up...">
+        <button class="btn ghost" data-action="engage-log" data-id="${s.id}">Add</button>
+      </div>` : '';
+    return `<div class="resume-entry-card">
+      <div class="resume-entry-top">
+        <div>
+          <p class="resume-entry-title">${escapeForAttr(s.drafted_question)}</p>
+          <p class="resume-entry-meta">${statusLabel}</p>
+        </div>
+        ${decisionMakerNote}
+      </div>
+      <p class="resume-entry-desc">${escapeForAttr(s.reasoning)}</p>
+      <p class="resume-entry-meta" style="margin-top:8px;">On the real post: "${escapeForAttr(s.post_content.slice(0,140))}${s.post_content.length > 140 ? '...' : ''}"</p>
+      ${actionButtons}
+      ${logHtml}
+      ${logInputHtml}
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-action="engage-send"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.textContent = 'Sending...';
+      await sendEngagementSuggestionEmail(btn.dataset.id);
+      renderEngageList();
+    });
+  });
+  list.querySelectorAll('[data-action="engage-accept"]').forEach(btn => {
+    btn.addEventListener('click', () => { acceptEngagementSuggestion(btn.dataset.id); renderEngageList(); });
+  });
+  list.querySelectorAll('[data-action="engage-decline"]').forEach(btn => {
+    btn.addEventListener('click', () => { declineEngagementSuggestion(btn.dataset.id); renderEngageList(); });
+  });
+  list.querySelectorAll('[data-action="engage-log"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = list.querySelector(`[data-log-input="${btn.dataset.id}"]`);
+      const result = addEngagementCommunicationLog(btn.dataset.id, input.value);
+      if(result.status === 'ok') renderEngageList();
+    });
+  });
+}
+
+document.getElementById('engageDraftBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('engageDraftBtn');
+  const status = document.getElementById('engageDraftStatus');
+  const postContent = document.getElementById('engagePostContent').value;
+  const posterContext = document.getElementById('engagePosterContext').value;
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Drafting a genuinely thoughtful reply...';
+  status.textContent = '';
+  const result = await draftAndSaveEngagementSuggestion(postContent, posterContext);
+  btn.disabled = false;
+  btn.textContent = originalText;
+  if(result.error){
+    status.textContent = result.error;
+    return;
+  }
+  document.getElementById('engagePostContent').value = '';
+  document.getElementById('engagePosterContext').value = '';
+  renderEngageList();
+});
+
+renderEngageList();
+</script>
+<script>
+/* ============================================================
+   CAREER STUDIO tools - all self-contained, deterministic or simple
+   CRUD over the user's REAL data (profile, resume, applications) plus
+   locally-stored study aids. No fabricated content; everything is
+   guarded so a single tool can never break the workshop.
+   ============================================================ */
+(function(){
+  try{
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ var d=document.createElement('div'); d.textContent=String(s==null?'':s); return d.innerHTML; }
+  function readArr(k){ try{ var v=JSON.parse(localStorage.getItem(k)); return Array.isArray(v)?v:[]; }catch(e){ return []; } }
+  function writeArr(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  function readObj(k){ try{ var v=JSON.parse(localStorage.getItem(k)); return (v&&typeof v==='object'&&!Array.isArray(v))?v:{}; }catch(e){ return {}; } }
+  function writeObj(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  function uid(){ return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+  var K_STAR='kaidostar_star_stories', K_REF='kaidostar_references', K_NET='kaidostar_contacts', K_PITCH='kaidostar_pitch', K_PORT='kaidostar_portfolio', K_BRAG='kaidostar_achievements', K_TARGET='kaidostar_targets';
+  var KIND_TO_KEY={ star_story:K_STAR, reference:K_REF, contact:K_NET, portfolio:K_PORT, achievement:K_BRAG, target_role:K_TARGET };
+  function loggedUserId(){ try{ var s=(typeof getSession==='function') && getSession(); return s && s.user_id; }catch(e){ return null; } }
+
+  // Local-first, best-effort backend sync. apiFetch never rejects (it catches
+  // network failure and returns {ok:false}), so these fire-and-forget calls can
+  // never throw or block the UI; the local write is what the user sees instantly.
+  function syncAdd(kind, key, item){ var arr=readArr(key); arr.unshift(item); writeArr(key,arr); var u=loggedUserId(); if(u && typeof apiCreateWorkshopItem==='function'){ apiCreateWorkshopItem(u, kind, item.id, item); } }
+  function syncUpdate(kind, key, item){ var arr=readArr(key); var i=-1; for(var j=0;j<arr.length;j++){ if(arr[j].id===item.id){ i=j; break; } } if(i>-1){ arr[i]=item; writeArr(key,arr); } var u=loggedUserId(); if(u && typeof apiCreateWorkshopItem==='function'){ apiCreateWorkshopItem(u, kind, item.id, item); } }
+  function syncRemove(kind, key, id){ writeArr(key, readArr(key).filter(function(x){return x.id!==id;})); var u=loggedUserId(); if(u && typeof apiDeleteWorkshopItem==='function'){ apiDeleteWorkshopItem(u, id, kind); } }
+
+  function setCount(id,n){ var el=$(id); if(el) el.textContent=n; }
+  function refreshCounts(){
+    try{
+      setCount('railStarCount', readArr(K_STAR).length);
+      setCount('railRefCount', readArr(K_REF).length);
+      setCount('railNetCount', readArr(K_NET).length);
+      setCount('railPortCount', readArr(K_PORT).length);
+      setCount('railBragCount', readArr(K_BRAG).length);
+      setCount('railTargetCount', readArr(K_TARGET).length);
+      var apps=(typeof getApplications==='function' && getApplications())||[];
+      setCount('railAppCount', apps.filter(function(a){return a.status!=='undone';}).length);
+    }catch(e){}
+  }
+  // On load (signed in), pull the real workshop items and rebuild local stores.
+  // Server is source of truth when reachable; a failed fetch returns null and
+  // leaves the local cache untouched, so an outage never wipes anything.
+  function studioHydrate(){
+    var u=loggedUserId(); if(!u || typeof apiListWorkshopItems!=='function') return;
+    apiListWorkshopItems(u).then(function(items){
+      if(!Array.isArray(items)) return;
+      var byKind={}; items.forEach(function(it){ (byKind[it.kind]=byKind[it.kind]||[]).push(Object.assign({}, it.data||{}, {id: it.id})); });
+      Object.keys(KIND_TO_KEY).forEach(function(kind){ if(byKind[kind]) writeArr(KIND_TO_KEY[kind], byKind[kind]); });
+      var pitch=items.filter(function(it){return it.kind==='pitch';}); if(pitch.length) writeObj(K_PITCH, pitch[0].data||{});
+      refreshCounts();
+      try{
+        if(typeof renderStar==='function') renderStar();
+        if(typeof renderReferences==='function') renderReferences();
+        if(typeof renderNetwork==='function') renderNetwork();
+        if(typeof renderPortfolio==='function') renderPortfolio();
+        if(typeof renderBrag==='function') renderBrag();
+        if(typeof renderTargets==='function') renderTargets();
+        if(typeof renderStudioHome==='function') renderStudioHome();
+      }catch(e){}
+    }).catch(function(){});
+  }
+
+  /* ---------------- Studio Home ---------------- */
+  window.renderStudioHome=function(){
+    try{
+      var profile=(typeof getProfile==='function' && getProfile())||{};
+      var entries=(typeof getResumeEntries==='function' && getResumeEntries())||[];
+      var doc=(typeof getResumeDocument==='function' && getResumeDocument())||null;
+      var apps=((typeof getApplications==='function' && getApplications())||[]).filter(function(a){return a.status!=='undone';});
+      var outreach=(typeof getOutreachDrafts==='function' && getOutreachDrafts())||[];
+      var stars=readArr(K_STAR), refs=readArr(K_REF), nets=readArr(K_NET);
+      var hasProfile=!!(profile && (profile.northstar||profile.skills));
+      var checks=[
+        { label:'Profile set up', done:hasProfile, url:'survey.html' },
+        { label:'Resume entries added', done:entries.length>0, tool:'resume' },
+        { label:'Resume generated', done:!!doc, tool:'resume' },
+        { label:'At least one application', done:apps.length>0, tool:'applications' },
+        { label:'A STAR interview story', done:stars.length>0, tool:'star' },
+        { label:'References on file', done:refs.length>0, tool:'references' }
+      ];
+      var doneCount=checks.filter(function(c){return c.done;}).length;
+      var pct=Math.round(doneCount/checks.length*100);
+      var ring=$('readinessRing');
+      if(ring){
+        ring.style.cssText='width:88px;height:88px;border-radius:50%;background:conic-gradient(var(--gold) '+pct+'%, var(--line-soft) 0);display:flex;align-items:center;justify-content:center;';
+        ring.innerHTML='<div style="width:64px;height:64px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font-family:\'Space Grotesk\',sans-serif;font-weight:800;font-size:17px;color:var(--gold);">'+pct+'%</div>';
+      }
+      if($('readinessPct')) $('readinessPct').textContent=pct+'%';
+      if($('readinessSub')) $('readinessSub').textContent = pct===100 ? "Everything's in place - you're ready to apply with confidence." : "Knock out the unchecked items to get application-ready; each links straight to the right tool.";
+      if($('readinessChecks')){
+        $('readinessChecks').innerHTML=checks.map(function(c){
+          var go=c.done?'':'<span class="rc-go" data-go-tool="'+(c.tool||'')+'" data-go-url="'+(c.url||'')+'">Do it &rarr;</span>';
+          return '<div class="readiness-check '+(c.done?'done':'todo')+'"><span class="rc-mark">'+(c.done?'&#10003;':'&#9675;')+'</span><span class="rc-text">'+esc(c.label)+'</span>'+go+'</div>';
+        }).join('');
+      }
+      var tiles=[
+        {n:entries.length,label:'Resume entries',icon:'&#9636;',tool:'resume'},
+        {n:apps.length,label:'Applications',icon:'&#9998;',tool:'applications'},
+        {n:outreach.length,label:'Outreach drafts',icon:'&#9993;',tool:'outreach'},
+        {n:stars.length,label:'STAR stories',icon:'&#9733;',tool:'star'},
+        {n:refs.length,label:'References',icon:'&#10063;',tool:'references'},
+        {n:nets.length,label:'Contacts',icon:'&#10682;',tool:'network'}
+      ];
+      if($('homeTiles')) $('homeTiles').innerHTML=tiles.map(function(t){ return '<div class="home-tile" data-go-tool="'+t.tool+'"><div class="home-tile-icon">'+t.icon+'</div><div class="home-tile-num">'+t.n+'</div><div class="home-tile-label">'+esc(t.label)+'</div></div>'; }).join('');
+      document.querySelectorAll('#studioHomeSection [data-go-tool]').forEach(function(el){
+        el.addEventListener('click', function(e){
+          e.stopPropagation();
+          var tool=el.getAttribute('data-go-tool'), url=el.getAttribute('data-go-url');
+          if(url){ window.location.href=url; return; }
+          if(tool && typeof switchWorkshopSection==='function') switchWorkshopSection(tool);
+        });
+      });
+      refreshCounts();
+    }catch(e){}
+  };
+
+  /* ---------------- Pipeline board ---------------- */
+  window.renderPipeline=function(){
+    try{
+      var board=$('pipelineBoard'); if(!board) return;
+      var apps=((typeof getApplications==='function' && getApplications())||[]).filter(function(a){return a.status!=='undone';});
+      var cols=[
+        {title:'Needs review', cls:'c-review', m:function(a){return (a.status==='pending_review'||a.status==='drafted') && !a.outcome_status;}},
+        {title:'Approved / ready', cls:'c-approved', m:function(a){return (a.status==='approved'||a.status==='ready_to_submit') && !a.outcome_status;}},
+        {title:'Sent', cls:'c-sent', m:function(a){return a.status==='sent' && !a.outcome_status;}},
+        {title:'Interviewing', cls:'c-interview', m:function(a){return a.outcome_status==='interview';}},
+        {title:'Offer', cls:'c-offer', m:function(a){return a.outcome_status==='offer';}},
+        {title:'Closed', cls:'c-closed', m:function(a){return a.outcome_status==='rejected'||a.outcome_status==='ghosted';}}
+      ];
+      board.innerHTML=cols.map(function(col){
+        var items=apps.filter(col.m);
+        var cards=items.length?items.map(function(a){ return '<div class="pipe-card" data-app-jump="1"><p class="pipe-card-title">'+esc(a.listing_title||'Untitled')+'</p><div class="pipe-card-org">'+esc(a.listing_org||'')+'</div></div>'; }).join(''):'<div class="pipe-empty">Nothing here yet.</div>';
+        return '<div class="pipe-col '+col.cls+'"><div class="pipe-col-head"><span class="pipe-col-title">'+col.title+'</span><span class="pipe-col-count">'+items.length+'</span></div>'+cards+'</div>';
+      }).join('');
+      board.querySelectorAll('[data-app-jump]').forEach(function(c){ c.addEventListener('click', function(){ if(typeof switchWorkshopSection==='function') switchWorkshopSection('applications'); }); });
+    }catch(e){}
+  };
+
+  /* ---------------- Bullet strengthener (deterministic) ---------------- */
+  var STRONG_VERBS=['Led','Built','Launched','Drove','Designed','Delivered','Increased','Reduced','Streamlined','Automated','Owned','Shipped','Negotiated','Analyzed','Coordinated','Resolved','Improved','Created','Scaled','Optimized','Mentored','Spearheaded','Implemented','Cut','Grew'];
+  var WEAK_OPENERS=['responsible for','helped to','helped','worked on','tasked with','duties included','assisted with','involved in','participated in','was in charge of','in charge of'];
+  var FILLER=['very','really','just','basically','actually','various','stuff','things','a lot of','several','some'];
+  function analyzeBullet(text){
+    var t=(text||'').trim(); if(!t) return null;
+    var lower=t.toLowerCase(); var findings=[]; var score=100;
+    var weak=null; for(var i=0;i<WEAK_OPENERS.length;i++){ if(lower.indexOf(WEAK_OPENERS[i])===0){ weak=WEAK_OPENERS[i]; break; } }
+    if(weak){ findings.push({t:'bad',txt:'Weak opener: <b>"'+esc(weak)+'"</b>. Lead with a strong action verb so your contribution comes first.'}); score-=25; }
+    if(/\b(was|were|been|being|is|are)\b\s+\w+ed\b/.test(lower)){ findings.push({t:'warn',txt:'Reads as passive. Rephrase so <b>you</b> are doing the action.'}); score-=15; }
+    if(!/\d/.test(t)){ findings.push({t:'warn',txt:'No numbers. Even a rough figure (%, count, hours saved) makes the impact concrete.'}); score-=20; }
+    else findings.push({t:'good',txt:'Includes a number - concrete and credible.'});
+    var found=FILLER.filter(function(f){ return new RegExp('\\b'+f.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(lower); });
+    if(found.length){ findings.push({t:'warn',txt:'Filler dilutes it: <b>'+esc(found.join(', '))+'</b>. Cut these.'}); score-=Math.min(20,found.length*7); }
+    var words=t.split(/\s+/).filter(Boolean).length;
+    if(words>32){ findings.push({t:'warn',txt:'Long ('+words+' words). Tighten toward one crisp line under ~25 words.'}); score-=10; }
+    else if(words<4){ findings.push({t:'warn',txt:'Very short - add what you did and the result.'}); score-=10; }
+    var fw=(t.split(/\s+/)[0]||'').replace(/[^A-Za-z]/g,'');
+    if(STRONG_VERBS.some(function(v){return v.toLowerCase()===fw.toLowerCase();})) findings.push({t:'good',txt:'Opens with a strong action verb - nice.'});
+    score=Math.max(0,Math.min(100,score));
+    return {score:score,findings:findings};
+  }
+  function renderBulletResult(){
+    var res=analyzeBullet($('bulletInput')?$('bulletInput').value:'');
+    var box=$('bulletResult'); if(!box) return;
+    if(!res){ box.innerHTML='<p class="tc-sub" style="padding:0 2px;">Paste a bullet above and hit Analyze.</p>'; return; }
+    var cls=res.score>=75?'as-strong':res.score>=50?'as-mid':'as-weak';
+    box.innerHTML='<div class="tool-card"><div class="analyzer-score"><span class="as-num '+cls+'">'+res.score+'</span><span class="as-out">/ 100 strength</span></div>'+
+      res.findings.map(function(f){ var icon=f.t==='good'?'&#10003;':f.t==='bad'?'&#10007;':'&#9888;'; return '<div class="finding '+f.t+'"><span class="f-icon">'+icon+'</span><span class="f-text">'+f.txt+'</span></div>'; }).join('')+
+      '<div style="margin-top:16px;"><div class="rail-group-label" style="padding:0;">Strong verbs to consider</div><div style="margin-top:8px;">'+STRONG_VERBS.slice(0,16).map(function(v){return '<span class="verb-chip" data-verb="'+v+'">'+v+'</span>';}).join('')+'</div></div></div>';
+    box.querySelectorAll('[data-verb]').forEach(function(chip){ chip.addEventListener('click', function(){ try{ navigator.clipboard.writeText(chip.getAttribute('data-verb')); chip.textContent=chip.getAttribute('data-verb')+' \u2713'; setTimeout(function(){ chip.textContent=chip.getAttribute('data-verb'); },1200); }catch(e){} }); });
+  }
+  if($('bulletAnalyzeBtn')) $('bulletAnalyzeBtn').addEventListener('click', renderBulletResult);
+
+  /* ---------------- ATS keyword scanner (deterministic) ---------------- */
+  var STOP={the:1,and:1,for:1,you:1,with:1,are:1,our:1,will:1,that:1,this:1,have:1,your:1,from:1,who:1,all:1,not:1,but:1,can:1,has:1,its:1,job:1,role:1,work:1,team:1,help:1,using:1,use:1,into:1,about:1,they:1,them:1,their:1,what:1,when:1,where:1,which:1,while:1,per:1,etc:1,including:1,include:1,ability:1,strong:1,excellent:1,years:1,year:1,plus:1,must:1,should:1,would:1,across:1,within:1,also:1,well:1,new:1,other:1,more:1,most:1,such:1,any:1,may:1,each:1,one:1,two:1,three:1};
+  function keyify(text){
+    var out={}; (String(text||'').toLowerCase().match(/[a-z][a-z+.#-]{2,}/g)||[]).forEach(function(w){ w=w.replace(/[.]+$/,''); if(w.length<3||STOP[w]) return; out[w]=(out[w]||0)+1; });
+    return out;
+  }
+  function resumeCorpus(){
+    var parts=[];
+    try{
+      var profile=(typeof getProfile==='function' && getProfile())||{};
+      if(profile.skills) parts.push(profile.skills);
+      if(profile.northstar) parts.push(profile.northstar);
+      ((typeof getResumeEntries==='function' && getResumeEntries())||[]).forEach(function(e){ parts.push([e.title,e.org,e.raw_description].filter(Boolean).join(' ')); });
+      var doc=(typeof getResumeDocument==='function' && getResumeDocument())||null;
+      if(doc){ if(doc.summary_line) parts.push(doc.summary_line); (doc.entries||[]).forEach(function(e){ (e.bullets||[]).forEach(function(b){ parts.push(b); }); }); }
+    }catch(e){}
+    return parts.join(' ').toLowerCase();
+  }
+  function renderAtsScan(){
+    var box=$('atsScanResult'); if(!box) return;
+    var jd=$('atsJdInput')?$('atsJdInput').value:'';
+    if(!jd.trim()){ box.innerHTML='<p class="tc-sub" style="padding:0 2px;">Paste a job description above and scan.</p>'; return; }
+    var freq=keyify(jd); var kws=Object.keys(freq).sort(function(a,b){return freq[b]-freq[a];}).slice(0,24);
+    if(!kws.length){ box.innerHTML='<div class="tool-card"><p class="tc-sub" style="margin:0;">Couldn\'t pull keywords from that text - try a fuller description.</p></div>'; return; }
+    var corpus=resumeCorpus();
+    var matched=[], missing=[];
+    kws.forEach(function(k){ (corpus.indexOf(k)>-1?matched:missing).push(k); });
+    var pct=Math.round(matched.length/kws.length*100);
+    box.innerHTML='<div class="tool-card"><h3>Coverage: '+pct+'%</h3><p class="tc-sub">'+matched.length+' of '+kws.length+' key terms from this description already appear in your resume &amp; skills.'+(corpus.trim()?'':' (Add resume entries or generate your resume for a real read.)')+'</p>'+
+      '<div class="ats-coverage-bar-track"><div class="ats-coverage-bar-fill" style="width:'+pct+'%;"></div></div>'+
+      (matched.length?'<div style="margin:6px 0 10px;"><div class="rail-group-label" style="padding:0 0 6px;">Covered</div>'+matched.map(function(k){return '<span class="ats-keyword-tag matched">'+esc(k)+'</span>';}).join('')+'</div>':'')+
+      (missing.length?'<div><div class="rail-group-label" style="padding:0 0 6px;">Missing - weave in the true ones</div>'+missing.map(function(k){return '<span class="ats-keyword-tag missing">'+esc(k)+'</span>';}).join('')+'</div>':'')+
+      '<p class="tc-sub" style="margin:14px 0 0;">Only add a keyword if it\'s genuinely true of you - matching words you can\'t back up gets caught in the interview.</p></div>';
+  }
+  if($('atsScanBtn')) $('atsScanBtn').addEventListener('click', renderAtsScan);
+
+  /* ---------------- Elevator pitch (template composer) ---------------- */
+  window.renderPitch=function(){
+    var box=$('pitchResult'); if(!box) return;
+    var profile=(typeof getProfile==='function' && getProfile())||{};
+    var goal=(profile.northstar||profile.finalidea||profile.final_idea||'').trim();
+    var skills=(profile.skills||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+    var top=skills.slice(0,3).join(', ');
+    if(!goal && !skills.length){
+      box.innerHTML='<div class="tool-card"><p class="tc-sub" style="margin:0;">Add your goal and skills in the <a href="survey.html" style="color:var(--gold);">survey</a> first - your pitch is built from those, never invented.</p></div>';
+      return;
+    }
+    var saved=readObj(K_PITCH);
+    var d_short = goal ? ('I\'m working toward '+goal+(top?', with a background in '+top+'.':'.')) : ('My background is in '+top+'.');
+    var d_med = (goal?'I\'m focused on '+goal+'. ':'')+(top?'My strengths are '+top+'. ':'')+'I\'m looking for a role where I can put those to work and keep growing.';
+    var d_written = (goal?'I\'m working toward '+goal+'. ':'')+(top?'Over time I\'ve built real strength in '+top+', and ':'I\'ve ')+'I\'m now looking for a place where that has genuine impact. What draws me here specifically is [name something concrete about them].';
+    var variants=[
+      {key:'short',label:'10-second (one breath)',val:saved.short!=null?saved.short:d_short},
+      {key:'medium',label:'30-second',val:saved.medium!=null?saved.medium:d_med},
+      {key:'written',label:'Written intro (email / LinkedIn)',val:saved.written!=null?saved.written:d_written}
+    ];
+    box.innerHTML='<div class="tool-card">'+variants.map(function(v){
+      return '<div class="pitch-variant"><label>'+v.label+'</label><textarea class="editable-field" data-pitch="'+v.key+'" style="min-height:70px;">'+esc(v.val)+'</textarea><button class="btn ghost" data-pitch-copy="'+v.key+'" style="margin-top:8px; padding:6px 13px; font-size:12px;">Copy</button></div>';
+    }).join('')+'<div style="margin-top:10px;"><button class="ai-btn" id="pitchAiBtn">Draft a fresh pitch with AI</button></div><div id="pitchAiResult"></div><p class="tc-sub" style="margin:10px 0 0;">Edits save automatically. Replace anything in [brackets] with something real and specific.</p></div>';
+    var pitchSaveT;
+    box.querySelectorAll('[data-pitch]').forEach(function(ta){
+      ta.addEventListener('input', function(){
+        var s=readObj(K_PITCH); s[ta.getAttribute('data-pitch')]=ta.value; writeObj(K_PITCH,s);
+        var u=loggedUserId();
+        if(u && typeof apiSetWorkshopSingleton==='function'){ clearTimeout(pitchSaveT); pitchSaveT=setTimeout(function(){ apiSetWorkshopSingleton(u,'pitch','pitch',readObj(K_PITCH)); }, 800); }
+      });
+    });
+    box.querySelectorAll('[data-pitch-copy]').forEach(function(btn){
+      btn.addEventListener('click', function(){ var ta=box.querySelector('[data-pitch="'+btn.getAttribute('data-pitch-copy')+'"]'); if(ta){ try{ navigator.clipboard.writeText(ta.value); btn.textContent='Copied'; setTimeout(function(){btn.textContent='Copy';},1200);}catch(e){} } });
+    });
+    var pab=$('pitchAiBtn'); if(pab) pab.addEventListener('click', function(){ aiAssistInto('pitch', {length:'30-second', background:resumeBackground()}, $('pitchAiResult')); });
+  };
+
+  /* ---------------- STAR story bank (CRUD) ---------------- */
+  window.renderStar=function(){
+    var list=$('starList'); if(!list) return;
+    var items=readArr(K_STAR);
+    if(!items.length){ list.innerHTML='<div class="empty-state"><div class="glyph">&#9733;</div>No stories yet.<div class="sub">Add one above - a strong behavioral answer you can reuse in any interview.</div></div>'; refreshCounts(); return; }
+    list.innerHTML=items.map(function(s){
+      return '<div class="crud-item" data-id="'+s.id+'"><div class="crud-item-top"><div><p class="crud-item-title">'+esc(s.title||'Untitled story')+'</p></div></div>'+
+        '<div class="crud-item-body"><b>S:</b> '+esc(s.s||'')+'\n<b>T:</b> '+esc(s.t||'')+'\n<b>A:</b> '+esc(s.a||'')+'\n<b>R:</b> '+esc(s.r||'')+'</div>'+
+        '<div class="crud-actions"><button class="btn ghost" data-star-copy="'+s.id+'">Copy as paragraph</button><button class="ai-btn" data-star-ai="'+s.id+'">Polish with AI</button><button class="btn ghost" data-star-del="'+s.id+'">Delete</button></div><div class="ai-inline-box" id="starai-'+s.id+'"></div></div>';
+    }).join('');
+    list.querySelectorAll('[data-star-ai]').forEach(function(b){ b.addEventListener('click', function(){ var id=b.getAttribute('data-star-ai'); var s=readArr(K_STAR).find(function(x){return x.id===id;}); if(s) aiAssistInto('star_polish', {title:s.title, s:s.s, t:s.t, a:s.a, r:s.r}, document.getElementById('starai-'+id)); }); });
+    list.querySelectorAll('[data-star-del]').forEach(function(b){ b.addEventListener('click', function(){ syncRemove('star_story', K_STAR, b.getAttribute('data-star-del')); window.renderStar(); }); });
+    list.querySelectorAll('[data-star-copy]').forEach(function(b){ b.addEventListener('click', function(){ var s=readArr(K_STAR).find(function(x){return x.id===b.getAttribute('data-star-copy');}); if(s){ var p=[s.s,s.t,s.a,s.r].filter(Boolean).join(' '); try{ navigator.clipboard.writeText(p); b.textContent='Copied'; setTimeout(function(){b.textContent='Copy as paragraph';},1200);}catch(e){} } }); });
+    refreshCounts();
+  };
+  if($('starAddBtn')) $('starAddBtn').addEventListener('click', function(){
+    var title=$('starTitle').value.trim(), s=$('starS').value.trim(), t=$('starT').value.trim(), a=$('starA').value.trim(), r=$('starR').value.trim();
+    if(!title && !s && !a) return;
+    syncAdd('star_story', K_STAR, {id:uid(),title:title,s:s,t:t,a:a,r:r,created_at:new Date().toISOString()});
+    ['starTitle','starS','starT','starA','starR'].forEach(function(id){ if($(id)) $(id).value=''; });
+    window.renderStar();
+  });
+
+  /* ---------------- Reference sheet (CRUD) ---------------- */
+  window.renderReferences=function(){
+    var list=$('refList'); if(!list) return;
+    var items=readArr(K_REF);
+    var bar=$('refToolbar'); if(bar) bar.style.display=items.length?'block':'none';
+    if(!items.length){ list.innerHTML='<div class="empty-state"><div class="glyph">&#10063;</div>No references yet.<div class="sub">Add the people who can vouch for you, ready to hand over the moment an employer asks.</div></div>'; refreshCounts(); return; }
+    list.innerHTML=items.map(function(r){
+      return '<div class="crud-item" data-id="'+r.id+'"><div class="crud-item-top"><div><p class="crud-item-title">'+esc(r.name||'')+'</p><div class="crud-item-meta">'+esc([r.rel,r.title].filter(Boolean).join(' \u00b7 '))+'</div></div></div>'+
+        (r.contact?'<div class="crud-item-body">'+esc(r.contact)+'</div>':'')+(r.note?'<div class="crud-item-body" style="font-style:italic;">'+esc(r.note)+'</div>':'')+
+        '<div class="crud-actions"><button class="btn ghost" data-ref-del="'+r.id+'">Delete</button></div></div>';
+    }).join('');
+    list.querySelectorAll('[data-ref-del]').forEach(function(b){ b.addEventListener('click', function(){ syncRemove('reference', K_REF, b.getAttribute('data-ref-del')); window.renderReferences(); }); });
+    refreshCounts();
+  };
+  if($('refAddBtn')) $('refAddBtn').addEventListener('click', function(){
+    var name=$('refName').value.trim(); if(!name) { $('refName').focus(); return; }
+    syncAdd('reference', K_REF, {id:uid(),name:name,rel:$('refRel').value.trim(),title:$('refTitle').value.trim(),contact:$('refContact').value.trim(),note:$('refNote').value.trim()});
+    ['refName','refRel','refTitle','refContact','refNote'].forEach(function(id){ if($(id)) $(id).value=''; });
+    window.renderReferences();
+  });
+  if($('refCopyBtn')) $('refCopyBtn').addEventListener('click', function(){
+    var items=readArr(K_REF); if(!items.length) return;
+    var profile=(typeof getProfile==='function' && getProfile())||{};
+    var head='References'+(profile.name?' - '+profile.name:'')+'\n\n';
+    var body=items.map(function(r){ return [r.name, [r.rel,r.title].filter(Boolean).join(' | '), r.contact, r.note?('Note: '+r.note):''].filter(Boolean).join('\n'); }).join('\n\n');
+    try{ navigator.clipboard.writeText(head+body); var c=$('refCopyConfirm'); if(c){ c.textContent='Copied to clipboard'; setTimeout(function(){c.textContent='';},1600);} }catch(e){}
+  });
+
+  /* ---------------- Networking tracker (CRUD) ---------------- */
+  function daysUntil(dateStr){ if(!dateStr) return null; var d=new Date(dateStr+'T00:00:00'); if(isNaN(d.getTime())) return null; return Math.round((d - new Date(new Date().toDateString()))/86400000); }
+  window.renderNetwork=function(){
+    var list=$('netList'); if(!list) return;
+    var items=readArr(K_NET);
+    if(!items.length){ list.innerHTML='<div class="empty-state"><div class="glyph">&#10682;</div>No contacts yet.<div class="sub">Track the people worth staying in touch with and when to reach out next.</div></div>'; refreshCounts(); return; }
+    items=items.slice().sort(function(a,b){ var da=daysUntil(a.followup), db=daysUntil(b.followup); if(da==null) return 1; if(db==null) return -1; return da-db; });
+    list.innerHTML=items.map(function(c){
+      var du=daysUntil(c.followup);
+      var fu = c.followup ? (du<0?('<span class="net-overdue">Overdue by '+Math.abs(du)+'d</span>'):(du===0?'<span class="net-soon">Follow up today</span>':(du<=7?'<span class="net-soon">In '+du+'d</span>':('In '+du+'d')))) : 'No date set';
+      return '<div class="crud-item" data-id="'+c.id+'"><div class="crud-item-top"><div><p class="crud-item-title">'+esc(c.name||'')+'</p><div class="crud-item-meta">'+esc(c.company||'')+(c.how?' \u00b7 '+esc(c.how):'')+'</div></div><div style="font-family:\'JetBrains Mono\',monospace; font-size:11px;">'+fu+'</div></div>'+
+        '<div class="crud-actions"><button class="btn ghost" data-net-done="'+c.id+'">Log follow-up (＋7d)</button><button class="btn ghost" data-net-del="'+c.id+'">Delete</button></div></div>';
+    }).join('');
+    list.querySelectorAll('[data-net-del]').forEach(function(b){ b.addEventListener('click', function(){ syncRemove('contact', K_NET, b.getAttribute('data-net-del')); window.renderNetwork(); }); });
+    list.querySelectorAll('[data-net-done]').forEach(function(b){ b.addEventListener('click', function(){ var arr=readArr(K_NET); var c=arr.find(function(x){return x.id===b.getAttribute('data-net-done');}); if(c){ var next=new Date(); next.setDate(next.getDate()+7); c.followup=next.toISOString().slice(0,10); c.last_contacted=new Date().toISOString().slice(0,10); syncUpdate('contact', K_NET, c); } window.renderNetwork(); }); });
+    refreshCounts();
+  };
+  if($('netAddBtn')) $('netAddBtn').addEventListener('click', function(){
+    var name=$('netName').value.trim(); if(!name){ $('netName').focus(); return; }
+    syncAdd('contact', K_NET, {id:uid(),name:name,company:$('netCompany').value.trim(),how:$('netHow').value.trim(),followup:$('netFollowup').value||null,created_at:new Date().toISOString()});
+    ['netName','netCompany','netHow','netFollowup'].forEach(function(id){ if($(id)) $(id).value=''; });
+    window.renderNetwork();
+  });
+
+  /* ---------------- Portfolio & links (CRUD) ---------------- */
+  window.renderPortfolio=function(){
+    var list=$('portList'); if(!list) return; var items=readArr(K_PORT);
+    if(!items.length){ list.innerHTML='<div class="empty-state"><div class="glyph">&#9741;</div>No portfolio items yet.<div class="sub">Add the work you\'d actually show an employer - a project, a repo, a site, some writing.</div></div>'; refreshCounts(); return; }
+    list.innerHTML=items.map(function(p){
+      var link=p.url?'<a href="'+(typeof safeHref==='function'?safeHref(p.url):esc(p.url))+'" target="_blank" rel="noopener" class="leadership-source-link">'+esc(p.url)+'</a>':'';
+      return '<div class="crud-item" data-id="'+p.id+'"><div class="crud-item-top"><div><p class="crud-item-title">'+esc(p.title||'Untitled')+'</p>'+(link?'<div class="crud-item-meta">'+link+'</div>':'')+'</div></div>'+(p.note?'<div class="crud-item-body">'+esc(p.note)+'</div>':'')+'<div class="crud-actions"><button class="btn ghost" data-port-del="'+p.id+'">Delete</button></div></div>';
+    }).join('');
+    list.querySelectorAll('[data-port-del]').forEach(function(b){ b.addEventListener('click', function(){ syncRemove('portfolio', K_PORT, b.getAttribute('data-port-del')); window.renderPortfolio(); }); });
+    refreshCounts();
+  };
+  if($('portAddBtn')) $('portAddBtn').addEventListener('click', function(){
+    var title=$('portTitle').value.trim(); if(!title){ $('portTitle').focus(); return; }
+    syncAdd('portfolio', K_PORT, {id:uid(),title:title,url:$('portUrl').value.trim(),note:$('portNote').value.trim()});
+    ['portTitle','portUrl','portNote'].forEach(function(id){ if($(id)) $(id).value=''; });
+    window.renderPortfolio();
+  });
+
+  /* ---------------- Achievements / brag sheet (CRUD) ---------------- */
+  window.renderBrag=function(){
+    var list=$('bragList'); if(!list) return; var items=readArr(K_BRAG);
+    if(!items.length){ list.innerHTML='<div class="empty-state"><div class="glyph">&#9873;</div>No achievements banked yet.<div class="sub">Add your real wins - you\'ll reuse them in bullets, interviews, and raise conversations.</div></div>'; refreshCounts(); return; }
+    list.innerHTML=items.map(function(a){
+      var meta=[a.metric,a.date].filter(Boolean).join(' · ');
+      return '<div class="crud-item" data-id="'+a.id+'"><div class="crud-item-top"><div><p class="crud-item-title">'+esc(a.text||'')+'</p>'+(meta?'<div class="crud-item-meta">'+esc(meta)+'</div>':'')+'</div></div><div class="crud-actions"><button class="btn ghost" data-brag-copy="'+a.id+'">Copy</button><button class="ai-btn" data-brag-ai="'+a.id+'">Polish with AI</button><button class="btn ghost" data-brag-del="'+a.id+'">Delete</button></div><div class="ai-inline-box" id="bragai-'+a.id+'"></div></div>';
+    }).join('');
+    list.querySelectorAll('[data-brag-ai]').forEach(function(b){ b.addEventListener('click', function(){ var id=b.getAttribute('data-brag-ai'); var a=readArr(K_BRAG).find(function(x){return x.id===id;}); if(a) aiAssistInto('achievement_polish', {text:a.text, metric:a.metric}, document.getElementById('bragai-'+id)); }); });
+    list.querySelectorAll('[data-brag-del]').forEach(function(b){ b.addEventListener('click', function(){ syncRemove('achievement', K_BRAG, b.getAttribute('data-brag-del')); window.renderBrag(); }); });
+    list.querySelectorAll('[data-brag-copy]').forEach(function(b){ b.addEventListener('click', function(){ var a=readArr(K_BRAG).find(function(x){return x.id===b.getAttribute('data-brag-copy');}); if(a){ var txt=a.text+(a.metric?(' ('+a.metric+')'):''); try{ navigator.clipboard.writeText(txt); b.textContent='Copied'; setTimeout(function(){b.textContent='Copy';},1200);}catch(e){} } }); });
+    refreshCounts();
+  };
+  if($('bragAddBtn')) $('bragAddBtn').addEventListener('click', function(){
+    var text=$('bragText').value.trim(); if(!text){ $('bragText').focus(); return; }
+    syncAdd('achievement', K_BRAG, {id:uid(),text:text,metric:$('bragMetric').value.trim(),date:$('bragDate').value.trim()});
+    ['bragText','bragMetric','bragDate'].forEach(function(id){ if($(id)) $(id).value=''; });
+    window.renderBrag();
+  });
+
+  /* ---------------- Target roles (CRUD) ---------------- */
+  var TARGET_STATUS={researching:'Researching',preparing:'Preparing',applied:'Applied',networking:'Networking in'};
+  window.renderTargets=function(){
+    var list=$('targetList'); if(!list) return; var items=readArr(K_TARGET);
+    if(!items.length){ list.innerHTML='<div class="empty-state"><div class="glyph">&#9678;</div>No target roles yet.<div class="sub">Add the roles you\'re aiming at and track where each one stands.</div></div>'; refreshCounts(); return; }
+    list.innerHTML=items.map(function(t){
+      return '<div class="crud-item" data-id="'+t.id+'"><div class="crud-item-top"><div><p class="crud-item-title">'+esc(t.role||'')+(t.company?' <span style="color:var(--text-faint); font-weight:400;">at '+esc(t.company)+'</span>':'')+'</p></div><span class="ats-keyword-tag matched">'+esc(TARGET_STATUS[t.status]||t.status||'')+'</span></div>'+(t.note?'<div class="crud-item-body">'+esc(t.note)+'</div>':'')+'<div class="crud-actions"><button class="btn ghost" data-target-del="'+t.id+'">Delete</button></div></div>';
+    }).join('');
+    list.querySelectorAll('[data-target-del]').forEach(function(b){ b.addEventListener('click', function(){ syncRemove('target_role', K_TARGET, b.getAttribute('data-target-del')); window.renderTargets(); }); });
+    refreshCounts();
+  };
+  if($('targetAddBtn')) $('targetAddBtn').addEventListener('click', function(){
+    var role=$('targetRole').value.trim(); if(!role){ $('targetRole').focus(); return; }
+    syncAdd('target_role', K_TARGET, {id:uid(),role:role,company:$('targetCompany').value.trim(),status:$('targetStatus').value,note:$('targetNote').value.trim()});
+    ['targetRole','targetCompany','targetNote'].forEach(function(id){ if($(id)) $(id).value=''; });
+    if($('targetStatus')) $('targetStatus').value='researching';
+    window.renderTargets();
+  });
+
+  /* ---------------- Thank-you & follow-up notes (composer) ---------------- */
+  var thanksType='interview';
+  function composeThanks(){
+    var name=($('thanksName')&&$('thanksName').value.trim())||'there';
+    var role=($('thanksRole')&&$('thanksRole').value.trim())||'the role';
+    var detail=($('thanksDetail')&&$('thanksDetail').value.trim())||'';
+    var dl=detail?(' I especially appreciated '+detail+'.'):'';
+    var t=thanksType, body='';
+    if(t==='interview') body='Hi '+name+',\n\nThank you for taking the time to talk with me about '+role+'.'+dl+' Our conversation left me even more excited about the opportunity, and I\'d welcome the chance to contribute. Please let me know if there\'s anything else I can share.\n\nBest,\n[Your name]';
+    else if(t==='followup') body='Hi '+name+',\n\nI wanted to follow up on '+role+' and reiterate my interest. I know these decisions take time - I\'m happy to share anything else that would help. Thanks again for your consideration.\n\nBest,\n[Your name]';
+    else if(t==='offer') body='Hi '+name+',\n\nThank you so much for the offer for '+role+' - I\'m delighted to accept.'+dl+' I\'m looking forward to getting started and working with the team. Please let me know the next steps.\n\nWith thanks,\n[Your name]';
+    else if(t==='decline') body='Hi '+name+',\n\nThank you for the offer for '+role+', and for the time everyone invested in me. After careful thought, I\'ve decided to pursue a different path that\'s a closer fit right now. I\'m grateful for the opportunity and hope our paths cross again.\n\nWarm regards,\n[Your name]';
+    else body='Hi '+name+',\n\nThank you for taking the time to chat.'+dl+' I really valued your perspective on '+role+', and it gave me a lot to think about. I\'d love to stay in touch - and please let me know if there\'s ever a way I can be helpful to you.\n\nBest,\n[Your name]';
+    var box=$('thanksResult'); if(!box) return;
+    box.innerHTML='<div class="tool-card"><div style="white-space:pre-wrap; font-family:\'Manrope\',sans-serif; font-size:13.5px; line-height:1.6; color:var(--text);">'+esc(body)+'</div><button class="btn ghost" id="thanksCopyBtn" style="margin-top:12px;">Copy note</button></div>';
+    var cb=$('thanksCopyBtn'); if(cb) cb.addEventListener('click', function(){ try{ navigator.clipboard.writeText(body); cb.textContent='Copied'; setTimeout(function(){cb.textContent='Copy note';},1200);}catch(e){} });
+  }
+  (function(){ var row=$('thanksTypeRow'); if(row){ row.querySelectorAll('[data-thanks]').forEach(function(c){ c.addEventListener('click', function(){ row.querySelectorAll('.chip').forEach(function(x){x.classList.remove('active');}); c.classList.add('active'); thanksType=c.getAttribute('data-thanks'); }); }); } })();
+  if($('thanksGenBtn')) $('thanksGenBtn').addEventListener('click', composeThanks);
+
+  /* ---------------- AI writer (backed by POST /ai/assist) ---------------- */
+  function resumeBackground(){
+    try{
+      var parts=[]; var prof=(typeof getProfile==='function' && getProfile())||{};
+      if(prof.northstar) parts.push('Goal: '+prof.northstar);
+      if(prof.skills) parts.push('Skills: '+prof.skills);
+      ((typeof getResumeEntries==='function' && getResumeEntries())||[]).forEach(function(e){ parts.push('- '+[e.title,e.org].filter(Boolean).join(' at ')+(e.raw_description?(': '+e.raw_description):'')); });
+      return parts.join('\n').slice(0,4000);
+    }catch(e){ return ''; }
+  }
+  function aiAssistInto(task, inputs, box){
+    if(!box) return;
+    var u=loggedUserId();
+    if(!u || typeof apiAiAssist!=='function'){ box.innerHTML='<div class="ai-out ai-muted">Sign in to generate this with the AI writer.</div>'; return; }
+    box.innerHTML='<div class="ai-out ai-muted">Writing with AI…</div>';
+    apiAiAssist(u, task, inputs).then(function(text){
+      if(!text){ box.innerHTML='<div class="ai-out ai-muted">Couldn\'t reach the AI just now — try again in a moment.</div>'; return; }
+      box.innerHTML='<div class="ai-out"><div class="ai-badge">AI draft — review before using</div><div class="ai-text"></div><button class="btn ghost" data-ai-copy="1" style="margin-top:10px;">Copy</button></div>';
+      box.querySelector('.ai-text').textContent=text;   // textContent: model output rendered as text, never HTML
+      var cp=box.querySelector('[data-ai-copy]'); if(cp) cp.addEventListener('click', function(){ try{ navigator.clipboard.writeText(text); cp.textContent='Copied'; setTimeout(function(){cp.textContent='Copy';},1200);}catch(e){} });
+    }).catch(function(){ box.innerHTML='<div class="ai-out ai-muted">Couldn\'t reach the AI just now — try again.</div>'; });
+  }
+  // AI on existing writing tools
+  if($('bulletAiBtn')) $('bulletAiBtn').addEventListener('click', function(){ var t=$('bulletInput').value.trim(); if(!t){ $('bulletInput').focus(); return; } aiAssistInto('bullet_rewrite', {bullet:t}, $('bulletAiResult')); });
+  if($('thanksAiBtn')) $('thanksAiBtn').addEventListener('click', function(){ aiAssistInto('thank_you', {kind:thanksType, name:($('thanksName')&&$('thanksName').value.trim()), role:($('thanksRole')&&$('thanksRole').value.trim()), detail:($('thanksDetail')&&$('thanksDetail').value.trim())}, $('thanksAiResult')); });
+  // New AI-only tools
+  if($('clGenBtn')) $('clGenBtn').addEventListener('click', function(){ var role=$('clRole').value.trim(); if(!role){ $('clRole').focus(); return; } aiAssistInto('cover_letter', {role:role, company:$('clCompany').value.trim(), jd:$('clJd').value.trim(), background:resumeBackground()}, $('clResult')); });
+  if($('liHeadBtn')) $('liHeadBtn').addEventListener('click', function(){ aiAssistInto('linkedin_headline', {background:resumeBackground()}, $('liResult')); });
+  if($('liAboutBtn')) $('liAboutBtn').addEventListener('click', function(){ aiAssistInto('linkedin_about', {background:resumeBackground()}, $('liResult')); });
+  if($('gapBtn')) $('gapBtn').addEventListener('click', function(){ var r=$('gapRole').value.trim(); if(!r){ $('gapRole').focus(); return; } aiAssistInto('skills_gap', {target_role:r, background:resumeBackground()}, $('gapResult')); });
+  if($('jdBtn')) $('jdBtn').addEventListener('click', function(){ var jd=$('jdText').value.trim(); if(!jd){ $('jdText').focus(); return; } aiAssistInto('jd_tailor', {jd:jd, background:resumeBackground()}, $('jdResult')); });
+
+  // ---- Jobright-style per-job resume tailoring (rewrites the real resume to the job) ----
+  function tailorRelevanceBadge(rel){
+    var map = { high:['High match','var(--aurora)','var(--aurora-dim)'], medium:['Some match','var(--violet)','rgba(155,135,245,0.14)'], low:['Low match','var(--text-faint)','var(--line-soft)'] };
+    var m = map[rel] || map.medium;
+    return '<span class="resume-entry-type-pill" style="color:'+m[1]+'; background:'+m[2]+'; border-color:'+m[1]+';">'+m[0]+'</span>';
+  }
+  function renderTailoredResume(result){
+    var box = $('tailorResumeResult'); if(!box) return;
+    var entries = (result && result.entries) || [];
+    if(!entries.length){ box.innerHTML=''; return; }
+    var aiNote = result.tailored_by === 'deterministic'
+      ? '<div class="resume-review-note">Reordered and keyword-matched from your real entries. Sign in for the full AI rewrite that rephrases each bullet to the job.</div>'
+      : '';
+    var anyFlag = entries.some(function(e){ return (e.flagged_numbers||[]).length; }) || (result.summary_flagged_numbers||[]).length;
+    var flagNote = anyFlag ? '<div class="resume-review-note">&#9888; A number below wasn\'t in your original wording - double-check anything marked before you use it.</div>' : '';
+    var summaryHtml = result.summary ? '<div class="resume-summary-line">'+esc(result.summary)+'</div>' : '';
+    var entriesHtml = entries.map(function(e){
+      var bullets = (e.bullets||[]).map(function(b){
+        var flagged = (e.flagged_numbers||[]).some(function(n){ return b.indexOf(n) !== -1; });
+        return '<li class="'+(flagged?'resume-bullet-flagged':'')+'">'+esc(b)+(flagged?' &#9888;':'')+'</li>';
+      }).join('');
+      return '<div class="resume-entry-card">'
+        + '<div class="resume-entry-top"><div><p class="resume-entry-title">'+esc(e.title)+(e.org?' <span style="color:var(--text-faint); font-weight:400;">at '+esc(e.org)+'</span>':'')+'</p><div class="resume-entry-meta">'+esc(e.dates||'')+'</div></div>'+tailorRelevanceBadge(e.relevance)+'</div>'
+        + '<ul class="resume-bullet-list">'+bullets+'</ul>'
+        + (e.note?'<div class="resume-flag-note" style="color:var(--text-faint);">'+esc(e.note)+'</div>':'')
+        + '</div>';
+    }).join('');
+    var fg = (result.foreground_skills||[]);
+    var gaps = (result.gaps||[]);
+    var skillsHtml = fg.length ? '<h3 style="font-family:\'Space Grotesk\',sans-serif; margin:22px 0 8px;">Skills to feature</h3><div>'+fg.map(function(s){return '<span class="ats-keyword-tag matched">'+esc(s)+'</span>';}).join('')+'</div>' : '';
+    var gapsHtml = gaps.length ? '<h3 style="font-family:\'Space Grotesk\',sans-serif; margin:18px 0 8px;">Honest gaps for this job</h3><div>'+gaps.map(function(s){return '<span class="ats-keyword-tag missing">'+esc(s)+'</span>';}).join('')+'</div>' : '';
+    var matchHtml = result.match_note ? '<p style="font-family:\'Manrope\',sans-serif; font-size:13px; color:var(--text-dim); margin:14px 0 0;">'+esc(result.match_note)+'</p>' : '';
+    box.innerHTML = '<h3 style="font-family:\'Space Grotesk\',sans-serif; margin:26px 0 12px;">Your resume, tailored to this job</h3>'
+      + aiNote + flagNote + summaryHtml + entriesHtml + skillsHtml + gapsHtml + matchHtml
+      + '<div style="margin-top:18px; display:flex; gap:8px; flex-wrap:wrap;"><button class="btn" id="tailorDownloadBtn">Download tailored .docx</button><button class="btn ghost" id="tailorSaveVersionBtn">Save as a resume version</button></div>'
+      + '<p id="tailorDlStatus" style="font-family:\'Manrope\',sans-serif; font-size:12px; color:var(--text-faint); margin-top:8px;"></p>';
+    var dl = $('tailorDownloadBtn'); if(dl) dl.addEventListener('click', function(){ downloadTailored(result); });
+    // Tailor -> Resume Studio Versions: keep each job's tailored resume, then tag where it was
+    // sent so Callbacks can show which version actually gets interviews.
+    var sv = $('tailorSaveVersionBtn');
+    if(sv) sv.addEventListener('click', function(){
+      if(!window.RESUME_STUDIO) return;
+      var v = RESUME_STUDIO.saveTailoredVersion(result, ($('jdText') && $('jdText').value) || '');
+      var st2 = $('tailorDlStatus'); if(st2) st2.textContent = 'Saved “' + v.name + '” to Resume Studio → Versions. Tag it there when you apply to track callbacks.';
+    });
+  }
+  async function downloadTailored(result){
+    var st = $('tailorDlStatus');
+    var session = (typeof getSession==='function') && getSession(); var uid = session && session.user_id;
+    if(!uid || typeof apiDownloadTailoredToJd!=='function'){ if(st) st.textContent='Sign in to download the tailored .docx.'; return; }
+    if(st) st.textContent='Preparing your .docx…';
+    var payload = { summary: result.summary||'', skills: (result.foreground_skills||[]).join(', '),
+      entries: (result.entries||[]).map(function(e){ return { title:e.title, org:e.org, dates:e.dates, bullets:e.bullets, entry_type:e.entry_type||'work' }; }) };
+    var res = await apiDownloadTailoredToJd(uid, payload);
+    if(!res.ok){ if(st) st.textContent = res.error || 'Could not prepare the download.'; return; }
+    try{
+      var url = URL.createObjectURL(res.blob);
+      var a = document.createElement('a'); a.href=url; a.download='tailored_resume.docx'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(e){} }, 1500);
+      if(st) st.textContent='Downloaded.';
+    }catch(e){ if(st) st.textContent='Could not start the download.'; }
+  }
+  if($('tailorResumeBtn')) $('tailorResumeBtn').addEventListener('click', async function(){
+    var jd = $('jdText').value.trim(); var st = $('tailorStatus');
+    if(!jd){ $('jdText').focus(); if(st) st.textContent='Paste the job description first.'; return; }
+    var entries = (typeof getResumeEntries==='function') ? getResumeEntries() : [];
+    if(!entries.length){
+      if(st){ st.innerHTML='Add or import your resume first - open the <a href="#" id="toResumeBuilder" style="color:var(--violet);">Resume builder</a>, or import one on the survey.'; var lnk=$('toResumeBuilder'); if(lnk) lnk.addEventListener('click', function(ev){ ev.preventDefault(); if(typeof switchWorkshopSection==='function') switchWorkshopSection('resume'); }); }
+      return;
+    }
+    var profile = (typeof getProfile==='function' && getProfile()) || {};
+    var btn = $('tailorResumeBtn'); btn.disabled=true; var orig=btn.textContent; btn.textContent='Tailoring…';
+    if(st) st.textContent='Rewriting your resume to suit this job…';
+    try{
+      var session = (typeof getSession==='function') && getSession(); var uid = session && session.user_id;
+      var result = null;
+      if(uid && typeof apiTailorResumeToJd==='function'){
+        var r = await apiTailorResumeToJd(uid, jd, entries);
+        if(r && r.ok && r.entries){ result = r; }
+      }
+      if(!result){ result = tailorResumeLocally(entries, jd, profile); }
+      renderTailoredResume(result);
+      if(st) st.textContent = (result.tailored_by === 'ai') ? 'Tailored with AI - review before you use it.' : '';
+    }catch(e){
+      try{ renderTailoredResume(tailorResumeLocally(entries, jd, profile)); if(st) st.textContent=''; }
+      catch(_){ if(st) st.textContent='Could not tailor just now - try again.'; }
+    }
+    btn.disabled=false; btn.textContent=orig;
+  });
+
+  // Initial paint: counts + default to Studio Home (for Pro users; harmless when the page is gated for Free), then hydrate from the backend.
+  refreshCounts();
+  if(typeof switchWorkshopSection==='function') switchWorkshopSection('home');
+  studioHydrate();
+  }catch(e){ /* studio is an enhancement layer - never break the workshop */ }
+})();
+</script>
+<script>
+// Visible tier switcher (preview - no payment) so plan differences are testable everywhere.
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+</body>
+</html>
