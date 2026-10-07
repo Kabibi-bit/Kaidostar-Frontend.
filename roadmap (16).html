@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap · Kaidostar</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ---------- shared bits ---------- */
+  .rm-k{ font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint); }
+  .rm-sub{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); }
+  .rm-dim{ color:var(--text-dim); }
+  .rm-faint{ color:var(--text-faint); }
+  .btn.sm{ padding:8px 14px; font-size:12.5px; border-radius:10px; }
+  .rm-linkbtn{ background:none; border:none; padding:0; color:var(--violet); font:inherit; cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
+  .rm-linkbtn:hover{ color:var(--text); }
+  .rm-chip{ display:inline-flex; align-items:center; gap:5px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.02em; padding:3px 9px; border-radius:999px; border:1px solid var(--line); color:var(--text-dim); white-space:nowrap; }
+  .rm-chip.gain{ color:var(--aurora); border-color:rgba(95,224,184,0.45); background:var(--aurora-dim); }
+  .rm-chip.reach{ color:var(--gold); border-color:rgba(240,178,78,0.45); background:var(--gold-dim); }
+  .rm-chip.violet{ color:var(--violet); border-color:rgba(155,135,245,0.45); background:var(--violet-dim); }
+  .rm-chip.warn{ color:var(--danger); border-color:rgba(242,122,107,0.45); background:var(--danger-dim); }
+  .rm-hidden{ display:none !important; }
+
+  /* ---------- control bar ---------- */
+  .rm-bar{ display:flex; flex-wrap:wrap; gap:16px 26px; align-items:flex-end; background:linear-gradient(180deg, rgba(30,33,64,0.55), rgba(23,25,51,0.72)); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; margin-bottom:14px; }
+  .rm-ctrl{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .rm-dest{ position:relative; }
+  .rm-dest-btn{ display:inline-flex; align-items:center; gap:10px; background:var(--void); border:1px solid var(--line); border-radius:12px; padding:9px 13px; color:var(--text); font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; cursor:pointer; max-width:100%; }
+  .rm-dest-btn:hover{ border-color:var(--gold); }
+  .rm-dest-btn .n{ font-family:'JetBrains Mono',monospace; font-weight:500; font-size:10.5px; color:var(--text-faint); }
+  .rm-dest-btn .caret{ color:var(--text-faint); font-size:11px; }
+  .rm-pop{ position:absolute; top:calc(100% + 8px); left:0; z-index:60; width:min(380px, 88vw); background:var(--nightsky); border:1px solid var(--line); border-radius:14px; box-shadow:0 18px 44px -10px rgba(0,0,0,0.85); padding:12px; }
+  .rm-pop input{ width:100%; box-sizing:border-box; background:var(--void); border:1px solid var(--line); border-radius:10px; color:var(--text); font-family:'Manrope',sans-serif; font-size:13.5px; padding:9px 11px; }
+  .rm-pop input:focus{ outline:none; border-color:var(--gold); }
+  .rm-pop-list{ max-height:300px; overflow-y:auto; margin-top:8px; }
+  .rm-pop-h{ font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint); margin:10px 4px 4px; }
+  .rm-pop-item{ display:flex; justify-content:space-between; gap:10px; width:100%; text-align:left; background:none; border:none; border-radius:8px; padding:8px 9px; color:var(--text-dim); font-family:'Manrope',sans-serif; font-size:13px; cursor:pointer; }
+  .rm-pop-item:hover, .rm-pop-item:focus{ background:var(--panel-2); color:var(--text); outline:none; }
+  .rm-pop-item.on{ color:var(--gold); }
+  .rm-pop-item .n{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-faint); }
+  .rm-stepper{ display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:12px; background:var(--void); overflow:hidden; }
+  .rm-stepper button{ background:none; border:none; color:var(--text-dim); font-size:16px; width:34px; height:38px; cursor:pointer; }
+  .rm-stepper button:hover{ color:var(--gold); background:var(--panel-2); }
+  .rm-stepper input{ width:46px; height:38px; border:none; background:transparent; color:var(--text); text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; -moz-appearance:textfield; }
+  .rm-stepper input::-webkit-outer-spin-button, .rm-stepper input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  /* controls that are off (while jobs load, or on demo jobs when signed in) look it */
+  .rm-stepper button:disabled, .rm-stepper input:disabled, .rm-date:disabled, .rm-dest-btn:disabled, .rm-linkbtn:disabled{ opacity:0.45; cursor:not-allowed; }
+  .rm-stepper button:disabled:hover{ color:var(--text-dim); background:none; }
+  .rm-date{ background:var(--void); border:1px solid var(--line); border-radius:12px; color:var(--text); font-family:'Manrope',sans-serif; font-size:13px; padding:9px 11px; color-scheme:dark; }
+  .rm-src{ margin-left:auto; align-items:flex-end; }
+  .rm-pill{ display:inline-flex; align-items:center; gap:7px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-dim); border:1px solid var(--line); border-radius:999px; padding:5px 11px; }
+  .rm-pill .dot{ width:7px; height:7px; border-radius:50%; background:var(--gold); }
+  .rm-pill.live .dot{ background:var(--aurora); box-shadow:0 0 8px rgba(95,224,184,0.7); }
+
+  .rm-notes{ display:flex; flex-direction:column; gap:6px; margin:0 0 18px; }
+  .rm-note{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); line-height:1.5; padding-left:16px; position:relative; }
+  .rm-note::before{ content:''; position:absolute; left:2px; top:7px; width:6px; height:6px; border-radius:50%; background:var(--line); }
+  .rm-note.warn::before{ background:var(--gold); }
+
+  /* ---------- loading ---------- */
+  .rm-loading{ border:1px solid var(--line-soft); border-radius:var(--radius); padding:34px 26px; text-align:center; }
+  .rm-loading .rm-spin{ width:26px; height:26px; margin:0 auto 14px; border-radius:50%; border:2px solid var(--line); border-top-color:var(--gold); animation:rmspin 0.9s linear infinite; }
+  @keyframes rmspin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .rm-loading .rm-spin{ animation:none; } }
+  .rm-loading p{ font-family:'Manrope',sans-serif; color:var(--text-dim); font-size:13.5px; margin:0; }
+  .rm-loading .rm-sub{ display:block; margin-top:8px; }
+
+  /* ---------- destination readiness ---------- */
+  .rm-hero{ display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:26px; }
+  .rm-big{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin:6px 0 14px; }
+  .rm-big b{ font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:56px; line-height:0.95; letter-spacing:-0.03em; color:var(--text); }
+  .rm-big span{ font-family:'Manrope',sans-serif; font-size:15px; color:var(--text-dim); }
+  .rm-seg{ display:flex; height:14px; border-radius:999px; overflow:hidden; background:var(--line-soft); box-shadow:inset 0 1px 3px rgba(0,0,0,0.4); }
+  .rm-seg i{ display:block; height:100%; }
+  .rm-seg i.s{ background:linear-gradient(90deg, var(--aurora), #8FD9C2); }
+  .rm-seg i.t{ background:linear-gradient(90deg, var(--gold-d), var(--gold-l)); }
+  .rm-legend{ display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:10px; font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); }
+  .rm-legend span{ display:inline-flex; align-items:center; gap:7px; }
+  .rm-legend i{ width:9px; height:9px; border-radius:3px; display:inline-block; }
+  .rm-ready{ display:inline-flex; align-items:center; gap:8px; margin-top:16px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px; border-radius:12px; padding:9px 14px; border:1px solid var(--line); }
+  .rm-ready.ok{ color:var(--aurora); border-color:rgba(95,224,184,0.5); background:var(--aurora-dim); }
+  .rm-ready.wait{ color:var(--gold); border-color:rgba(240,178,78,0.5); background:var(--gold-dim); }
+  .rm-ready.no{ color:var(--text-dim); }
+  .rm-stats{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
+  .rm-stat{ background:var(--void); border:1px solid var(--line); border-radius:12px; padding:12px 12px 10px; min-width:0; }
+  .rm-stat .v{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rm-stat .k{ margin-top:3px; }
+  .rm-trend{ margin-top:12px; background:var(--void); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+  .rm-trend svg{ display:block; width:100%; height:46px; }
+  .rm-sub-h{ margin:20px 0 10px; }
+  .rm-brow{ display:grid; grid-template-columns:minmax(0,1fr) 120px 34px; gap:10px; align-items:center; margin:7px 0; font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); }
+  .rm-brow .t{ height:7px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
+  .rm-brow .t i{ display:block; height:100%; background:var(--comet); border-radius:999px; }
+  .rm-brow .c{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text); text-align:right; }
+  .rm-brow small{ color:var(--gold); font-size:11px; }
+  .rm-skills{ display:flex; flex-wrap:wrap; gap:7px; }
+  .rm-skill{ display:inline-flex; align-items:center; gap:6px; font-family:'Manrope',sans-serif; font-size:12px; padding:5px 10px; border-radius:999px; border:1px solid var(--line); color:var(--text-dim); }
+  .rm-skill .p{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-faint); }
+  .rm-skill.proven{ border-color:rgba(95,224,184,0.45); color:var(--aurora); }
+  .rm-skill.stated{ border-color:rgba(240,178,78,0.45); color:var(--gold); }
+  .rm-skill.adjacent, .rm-skill.related{ border-color:rgba(155,135,245,0.4); color:var(--violet); }
+
+  /* ---------- sections ---------- */
+  .rm-section{ margin-top:34px; }
+  .rm-h{ display:flex; justify-content:space-between; align-items:flex-end; gap:10px 20px; flex-wrap:wrap; margin-bottom:14px; }
+  .rm-h h2{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:21px; letter-spacing:-0.01em; margin:0; color:var(--text); }
+  .rm-h p{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-dim); margin:4px 0 0; max-width:640px; line-height:1.55; }
+
+  /* ---------- routes ---------- */
+  .rm-routes{ display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:14px; }
+  .rm-route{ position:relative; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:17px 18px 16px; display:flex; flex-direction:column; gap:9px; transition:border-color .15s ease, transform .15s ease; }
+  .rm-route:hover{ transform:translateY(-1px); }
+  .rm-route.chosen{ border-color:var(--gold); box-shadow:0 0 0 1px var(--gold), 0 14px 30px -18px rgba(240,178,78,0.6); }
+  .rm-route .tags{ display:flex; gap:6px; flex-wrap:wrap; min-height:20px; }
+  .rm-route h3{ font-family:'Space Grotesk',sans-serif; font-size:17px; margin:0; color:var(--text); }
+  .rm-route .meta{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-faint); }
+  .rm-mini{ display:grid; grid-template-columns:54px minmax(0,1fr) 54px; gap:8px; align-items:center; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-faint); }
+  .rm-mini .bar{ height:8px; border-radius:999px; background:var(--line-soft); overflow:hidden; display:flex; }
+  .rm-mini .bar i{ display:block; height:100%; }
+  .rm-mini .bar i.s{ background:var(--aurora); } .rm-mini .bar i.t{ background:var(--gold); }
+  .rm-mini b{ color:var(--text); font-weight:600; text-align:right; }
+  .rm-route .kv{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); line-height:1.5; }
+  .rm-route .kv b{ color:var(--text); }
+  .rm-route .go{ margin-top:auto; padding-top:4px; }
+  .rm-why{ margin-top:14px; border:1px solid rgba(240,178,78,0.35); border-radius:14px; padding:14px 16px; background:linear-gradient(135deg, rgba(240,178,78,0.08), rgba(155,135,245,0.05) 60%, transparent); }
+  .rm-why ul{ margin:8px 0 0; padding:0; list-style:none; }
+  .rm-why li{ position:relative; padding-left:16px; margin:5px 0; font-family:'Manrope',sans-serif; font-size:13.5px; color:var(--text-dim); line-height:1.55; }
+  .rm-why li::before{ content:''; position:absolute; left:2px; top:8px; width:6px; height:6px; border-radius:50%; background:var(--gold); }
+
+  /* ---------- plan ---------- */
+  .rm-prog{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:14px; }
+  .rm-prog .rm-stat .v small{ font-size:12px; color:var(--text-faint); font-weight:500; }
+  .rm-prog .rm-stat .d{ font-family:'Manrope',sans-serif; font-size:11.5px; color:var(--text-dim); margin-top:4px; line-height:1.4; }
+  .rm-chart{ background:var(--void); border:1px solid var(--line); border-radius:var(--radius); padding:14px 14px 10px; overflow-x:auto; }
+  .rm-chart svg{ display:block; min-width:640px; width:100%; height:auto; }
+  .rm-chart text{ font-family:'JetBrains Mono',monospace; font-size:10px; fill:var(--text-faint); }
+  .rm-chart .lbl{ font-family:'Manrope',sans-serif; font-size:11px; fill:var(--text-dim); }
+  .rm-chart-legend{ display:flex; flex-wrap:wrap; gap:6px 16px; margin:8px 2px 0; font-family:'Manrope',sans-serif; font-size:11.5px; color:var(--text-faint); }
+  .rm-chart-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .rm-chart-legend i{ width:14px; height:3px; border-radius:2px; display:inline-block; }
+  .rm-week{ display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:12px; margin-top:16px; }
+  .rm-wcard{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--gold); border-radius:14px; padding:13px 14px; display:flex; flex-direction:column; gap:7px; }
+  .rm-wcard h4{ font-family:'Space Grotesk',sans-serif; font-size:14px; margin:0; color:var(--text); }
+  .rm-wcard p{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); margin:0; line-height:1.5; }
+  .rm-wcard .rm-actions{ margin-top:auto; }
+  .rm-group-h{ display:flex; align-items:center; gap:10px; margin:22px 0 10px; }
+  .rm-group-h::after{ content:''; flex:1; height:1px; background:var(--line-soft); }
+  .rm-step{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px; }
+  .rm-step.st-doing{ border-left-color:var(--gold); }
+  .rm-step.st-done{ border-left-color:var(--violet); }
+  .rm-step.st-verified{ border-left-color:var(--aurora); }
+  .rm-step.st-skipped{ opacity:0.6; }
+  .rm-step.blocked{ opacity:0.75; }
+  .rm-step-head{ display:flex; gap:12px; align-items:flex-start; }
+  .rm-num{ flex:0 0 26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:600; color:var(--gold); background:var(--gold-dim); }
+  .rm-step.st-verified .rm-num{ color:var(--aurora); background:var(--aurora-dim); }
+  .rm-step-t{ flex:1; min-width:0; }
+  .rm-step-t h3{ font-family:'Space Grotesk',sans-serif; font-size:15px; margin:2px 0 7px; color:var(--text); line-height:1.3; }
+  .rm-meta{ display:flex; flex-wrap:wrap; gap:6px; }
+  .rm-status{ font-family:'JetBrains Mono',monospace; font-size:10px; padding:3px 9px; border-radius:999px; border:1px solid var(--line); color:var(--text-dim); white-space:nowrap; }
+  .rm-status.doing{ color:var(--gold); border-color:rgba(240,178,78,0.5); }
+  .rm-status.done{ color:var(--violet); border-color:rgba(155,135,245,0.5); }
+  .rm-status.verified{ color:var(--aurora); border-color:rgba(95,224,184,0.55); background:var(--aurora-dim); }
+  .rm-status.late{ color:var(--danger); border-color:rgba(242,122,107,0.5); }
+  .rm-step-why{ font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-dim); line-height:1.6; margin:10px 0 0 38px; }
+  .rm-step-body{ margin:12px 0 0 38px; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:9px; }
+  .rm-block{ border:1px solid var(--line); border-left:3px solid var(--comet); border-radius:10px; padding:9px 11px; background:var(--void); }
+  .rm-block.action{ border-left-color:var(--gold); } .rm-block.success{ border-left-color:var(--aurora); } .rm-block.risk{ border-left-color:var(--danger); } .rm-block.resource{ border-left-color:var(--violet); }
+  .rm-block.wide{ grid-column:1 / -1; }
+  .rm-block p{ margin:3px 0 0; font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); line-height:1.5; }
+  .rm-block ul{ margin:5px 0 0; padding-left:16px; font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); line-height:1.5; }
+  .rm-block a{ color:var(--text); text-decoration:underline; text-underline-offset:2px; }
+  .rm-hours{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:5px; font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); }
+  .rm-hours input{ width:64px; background:var(--panel); border:1px solid var(--line); border-radius:8px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:12px; padding:5px 7px; }
+  .rm-actions{ display:flex; flex-wrap:wrap; gap:7px; margin:12px 0 0 38px; }
+  .rm-wcard .rm-actions{ margin-left:0; }
+  .rm-act{ background:none; border:1px solid var(--line); border-radius:999px; color:var(--text-dim); font-family:'Manrope',sans-serif; font-weight:600; font-size:12px; padding:6px 12px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+  .rm-act:hover{ border-color:var(--gold); color:var(--gold); }
+  .rm-act.pri{ color:#241704; background:linear-gradient(135deg, var(--gold-l), var(--gold-d)); border-color:transparent; }
+  .rm-act.pri:hover{ filter:brightness(1.06); color:#241704; }
+  .rm-act:disabled{ opacity:0.45; cursor:default; }
+  .rm-help-out{ grid-column:1 / -1; }
+  .rm-offered{ border:1px dashed var(--line); border-radius:14px; padding:14px 16px; margin-top:12px; }
+  .rm-offered .row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:8px 0; border-top:1px solid var(--line-soft); font-family:'Manrope',sans-serif; font-size:13px; color:var(--text-dim); }
+  .rm-offered .row:first-of-type{ border-top:none; }
+
+  /* ---------- jobs ---------- */
+  .rm-jobs{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:10px; }
+  .rm-job{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px; display:flex; flex-direction:column; gap:5px; }
+  .rm-job h4{ font-family:'Space Grotesk',sans-serif; font-size:14px; margin:0; color:var(--text); line-height:1.3; }
+  .rm-job .o{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); }
+  .rm-job .w{ font-family:'Manrope',sans-serif; font-size:11.5px; color:var(--text-faint); line-height:1.45; }
+  .rm-job .r{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:4px; }
+  .rm-fit{ font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; }
+
+  /* ---------- method ---------- */
+  .rm-method details{ border:1px solid var(--line); border-radius:14px; padding:4px 16px; background:var(--panel); }
+  .rm-method summary{ cursor:pointer; padding:12px 0; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; color:var(--text); }
+  .rm-method .cols{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:18px; padding:4px 0 16px; }
+  .rm-method h4{ font-family:'Space Grotesk',sans-serif; font-size:13px; margin:0 0 6px; color:var(--text); }
+  .rm-method p, .rm-method li{ font-family:'Manrope',sans-serif; font-size:12.5px; color:var(--text-dim); line-height:1.6; }
+  .rm-method ul{ margin:0; padding-left:18px; }
+  .rm-method a{ color:var(--text); text-decoration:underline; text-underline-offset:2px; }
+
+  /* ---------- goal picker (no destination yet) ---------- */
+  .rm-goalgrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px; margin-top:16px; }
+  .rm-goalbtn{ text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 14px; color:var(--text); font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; cursor:pointer; }
+  .rm-goalbtn:hover{ border-color:var(--gold); }
+  .rm-goalbtn span{ display:block; font-family:'JetBrains Mono',monospace; font-weight:500; font-size:10.5px; color:var(--text-faint); margin-top:4px; }
+
+  @media (max-width:860px){
+    .rm-hero{ grid-template-columns:1fr; }
+    .rm-step-body{ grid-template-columns:1fr; margin-left:0; }
+    .rm-step-why, .rm-actions{ margin-left:0; }
+    .rm-method .cols{ grid-template-columns:1fr; }
+    .rm-src{ margin-left:0; }
+  }
+  @media (max-width:520px){
+    .rm-big b{ font-size:44px; }
+    .rm-stats{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .rm-brow{ grid-template-columns:minmax(0,1fr) 70px 30px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div id="nav-root"></div>
+
+<div class="wrap">
+  <div class="page">
+    <div class="page-head">
+      <div class="eyebrow">Roadmap · Proof Plan</div>
+      <h1 id="rmTitle">Your route to the job you want</h1>
+      <p id="rmLede">Built from the live jobs where you’d work, and re-checked every time you open it. Every count below is a re-score of real postings - nothing is guessed except effort hours, which are labelled.</p>
+    </div>
+
+    <div id="rmNoProfile" class="empty-state rm-hidden">
+      <div class="glyph">&#10022;</div>
+      Tell Kaidostar where you’re headed first.
+      <div class="sub">The Roadmap is built from your goal, your skills and your resume - take the short survey and it will build your route from the jobs live where you’d work.</div>
+      <a class="btn" href="survey.html">Go to the survey &rarr;</a>
+    </div>
+
+    <div id="rmApp">
+      <div class="rm-bar" id="rmBar"></div>
+      <div class="rm-notes" id="rmNotes"></div>
+      <div class="rm-loading" id="rmLoading">
+        <div class="rm-spin" aria-hidden="true"></div>
+        <p id="rmLoadingMsg">Loading the jobs where you’d work…</p>
+        <span class="rm-sub" id="rmLoadingSub"></span>
+      </div>
+      <div id="rmNeedGoal" class="rm-hidden"></div>
+      <section id="rmHero" class="panel rm-hidden" aria-label="Where you stand"></section>
+      <section id="rmRoutes" class="rm-section rm-hidden" aria-label="Routes"></section>
+      <section id="rmPlan" class="rm-section rm-hidden" aria-label="Your plan"></section>
+      <section id="rmJobs" class="rm-section rm-hidden" aria-label="Jobs within reach"></section>
+      <section id="rmMethod" class="rm-section rm-method rm-hidden" aria-label="How this plan is built"></section>
+    </div>
+  </div>
+  <footer>Every count on this page is the Job Search engine’s own score of live postings, re-run whenever the page loads. Effort hours are estimates - change them, and your own pace replaces them as you finish steps.</footer>
+</div>
+
+<div class="app-toast" id="rmToast" role="status" aria-live="polite"></div>
+
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script src="job-engine.js?v=2.1.0"></script>
+<script src="job-data.js"></script>
+<script src="roadmap-engine.js?v=1.1.0"></script>
+<script>
+window.addEventListener("error", function(e){
+  showDiagBanner("Script error: " + e.message + " (in " + (e.filename ? e.filename.split("/").pop() : "unknown file") + ", line " + e.lineno + ")");
+});
+function showDiagBanner(msg){
+  if(document.getElementById("diagBanner")) return;
+  var b = document.createElement("div"); b.id = "diagBanner";
+  b.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#B91C1C;color:#fff;padding:14px 20px;font-family:monospace;font-size:13px;text-align:center;";
+  b.textContent = "Kaidostar failed to load correctly - " + msg + " - check that all files (especially state.js, job-engine.js, roadmap-engine.js and styles.css) are uploaded with these EXACT lowercase names to the same folder.";
+  document.body.prepend(b);
+}
+setTimeout(function(){
+  if(typeof renderNav === "undefined" || typeof kaidostarMark === "undefined"){
+    showDiagBanner("state.js did not load (its functions are undefined). Check the file exists, is named exactly state.js, and sits in the same folder as this page.");
+  } else if(typeof JobEngine === "undefined" || typeof RoadmapEngine === "undefined"){
+    showDiagBanner("job-engine.js or roadmap-engine.js did not load. Check both files sit in the same folder as this page.");
+  }
+}, 800);
+</script>
+<script>
+initStarfield();
+renderNav('roadmap');
+_safeSetItem('kaidostar_role', 'candidate');
+
+/* ============================================================================
+   ROADMAP - the Proof Plan page.
+   The engine (roadmap-engine.js) does every count; this page loads your data,
+   shows the plan, and saves what you change. Nothing here estimates anything.
+   ============================================================================ */
+(function(){
+  'use strict';
+  var E = window.JobEngine, R = window.RoadmapEngine;
+  if(!E || !R) return;
+  var DAY = 86400000, WEEK = 7 * DAY;
+  var esc = (typeof escapeForHtml === 'function') ? escapeForHtml : function(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); };
+  var href = (typeof safeHref === 'function') ? safeHref : function(u){ u = String(u || '').trim(); return /^https?:\/\//i.test(u) ? u.replace(/"/g, '%22').replace(/</g, '%3C').replace(/>/g, '%3E') : '#'; };
+  function $(id){ return document.getElementById(id); }
+  function show(id, on){ var el = $(id); if(el) el.classList.toggle('rm-hidden', !on); }
+  function lsGet(k, d){ try{ var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }catch(e){ return d; } }
+  function plural(n, one, many){ return n + ' ' + (n === 1 ? one : (many || one + 's')); }
+  function arr(v){ return Array.isArray(v) ? v : []; }
+  function num(v){ return typeof v === 'number' && isFinite(v); }
+  function fmtDate(ms){ try{ return new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: new Date(ms).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined }); }catch(e){ return ''; } }
+  function fmtK(v){ return v >= 1000 ? '$' + Math.round(v / 1000) + 'k' : '$' + Math.round(v); }
+  function weekDate(w){ return S.model && S.model.plan ? fmtDate(S.model.plan.startAt + w * WEEK) : ''; }
+  // a calendar day as the date box shows it - local, like the noon-local time it's read back as
+  function localDay(ms){ var d = new Date(ms), z = function(n){ return (n < 10 ? '0' : '') + n; }; return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); }
+  function ago(ms){ var m = Math.round((Date.now() - ms) / 60000); return m < 1 ? 'just now' : (m < 60 ? m + ' min ago' : (m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago')); }
+
+  var K = { PLAN: 'kaidostar_roadmap_plan', JOB_PREFS: 'kaidostar_job_prefs', JOB_APPLIED: 'kaidostar_job_applied', JOB_OWNER: 'kaidostar_job_owner',
+    CONTACTS: 'kaidostar_contacts', SESS: 'kaidostar_interview_sessions', TARGET: 'kaidostar_interview_target', SEARCH: 'kaidostar_dashboard_search_prefill' };
+  var S = {
+    uid: '', profile: null, entries: [], prefs: null, listings: [], source: 'demo', sourceNote: '', poolAt: 0,
+    parsed: {}, parsedKeys: {}, dismissed: [], applied: [], apps: [], contacts: [], sessions: [],
+    // what your account sent on this load (kept when local copies are re-read, so nothing the server knows is lost)
+    server: { entries: null, applied: [], dismissed: [], apps: [], contacts: [], sessions: [], prefs: null },
+    plan: null, cache: {}, model: null, loading: true, saveTimer: null, saving: false, saveAgain: false,
+    savedSig: '', compatSig: '', serverOk: true, base: null, poolRole: null, staleKeys: {},
+    ui: { open: {}, pop: false, popQ: '', help: {}, budget: 'free' },
+  };
+
+  /* ------------------------------------------------------------ storage */
+  function sessUid(){ try{ var s = (typeof getSession === 'function') && getSession(); return s && s.user_id ? String(s.user_id) : ''; }catch(e){ return ''; } }
+  function jobOwnerOk(){ var o = lsGet(K.JOB_OWNER, ''); return (typeof o === 'string' ? o : '') === S.uid; }
+  function localPlan(){ var v = lsGet(K.PLAN, null); return (v && typeof v === 'object' && (v.owner || '') === S.uid && v.plan && typeof v.plan === 'object') ? R.normPlan(v.plan) : null; }
+  function writeLocalPlan(p){ _safeSetItem(K.PLAN, JSON.stringify({ owner: S.uid, plan: p })); }
+  function byId(list){ var o = {}; arr(list).forEach(function(x){ if(x && x.id != null) o[String(x.id)] = x; }); return o; }
+  // the first list's copy of an item wins; items only in the second are kept too
+  function mergeById(a, b){ var o = byId(a); arr(b).forEach(function(x){ if(x && x.id != null && !o[String(x.id)]) o[String(x.id)] = x; }); return Object.keys(o).map(function(k){ return o[k]; }); }
+  function union(a, b){ return Array.from(new Set(arr(a).concat(arr(b)).map(String))); }
+  function localLists(){
+    return {
+      entries: (typeof getResumeEntries === 'function' && getResumeEntries()) || [],
+      prefs: jobOwnerOk() ? lsGet(K.JOB_PREFS, null) : null,
+      applied: jobOwnerOk() ? arr(lsGet(K.JOB_APPLIED, [])).map(String) : [],
+      dismissed: (typeof getDismissedIds === 'function') ? Array.from(getDismissedIds()).map(String) : [],
+      apps: (typeof getApplications === 'function' && getApplications()) || [],
+      contacts: arr(lsGet(K.CONTACTS, [])).filter(function(c){ return c && typeof c === 'object'; }),
+      sessions: arr(lsGet(K.SESS, [])).filter(function(c){ return c && typeof c === 'object'; }),
+    };
+  }
+  // this browser's copies joined with what your account sent (this browser's copy of the same item wins - it's newer);
+  // the resume is your account's when it sent one (as in Job Search), unless this browser's copy just changed
+  function applyLists(L, localResume){
+    var sv = S.server, svE = sv.entries && sv.entries.length ? sv.entries : null;
+    S.entries = localResume ? (L.entries.length ? L.entries : (svE || [])) : (svE || L.entries);
+    S.prefs = L.prefs || sv.prefs || null;
+    S.applied = union(L.applied, sv.applied);
+    S.dismissed = union(L.dismissed, sv.dismissed);
+    S.apps = mergeById(L.apps, sv.apps);
+    S.contacts = mergeById(L.contacts, sv.contacts);
+    S.sessions = mergeById(L.sessions, sv.sessions);
+  }
+  function loadLocal(){
+    S.uid = sessUid();
+    S.profile = (typeof getProfile === 'function' && getProfile()) || null;
+    applyLists(localLists());
+    S.plan = localPlan() || R.normPlan(null);
+  }
+
+  /* ------------------------------------------------------------ the jobs */
+  function parsedFor(l){
+    var id = String(l.id);
+    var key = [l.title, String(l.description || '').length, l.posted_at || l.postedAt || '', l.last_seen_at || l.lastSeenAt || '', l.location || l.loc || '', l.deadline || ''].join('|');
+    if(S.parsed[id] && S.parsedKeys[id] === key) return S.parsed[id];
+    var j = E.parseJob(l); S.parsed[id] = j; S.parsedKeys[id] = key;
+    return j;
+  }
+  function parsedCache(){ var pc = {}; S.listings.forEach(function(l){ if(l && l.id != null) pc[String(l.id)] = parsedFor(l); }); return pc; }
+  // the destination the plan names, before any jobs arrive (to ask the server for the right ones)
+  function quickGoal(){
+    try{ var m = R.analyze({ engine: E, now: Date.now(), listings: [], profile: S.profile, entries: S.entries, prefs: S.prefs, plan: S.plan }); return m.goal ? m.goal.id : null; }catch(e){ return null; }
+  }
+  function demoPool(){ return (window.KAIDO_JOB_CORPUS || []).slice(); }
+
+  // two copies of the plan (this browser's and your account's, or two tabs): the one you changed last wins, and the
+  // daily readiness snapshots from both are kept
+  function mergePlans(a, b){
+    if(!b) return a;
+    if(!a) return b;
+    var base = (b.changedAt || 0) >= (a.changedAt || 0) ? b : a, other = base === b ? a : b;
+    var byDay = {};
+    arr(other.history).concat(arr(base.history)).forEach(function(h){ byDay[Math.floor(h.at / DAY) + '|' + h.role] = h; });
+    return R.normPlan(Object.assign({}, base, { history: Object.keys(byDay).map(function(k){ return byDay[k]; }).sort(function(x, y){ return x.at - y.at; }).slice(-60) }));
+  }
+  function adoptServerPlan(sp){
+    if(!sp || !sp.plan) return;
+    var server = R.normPlan(sp.plan);
+    S.plan = mergePlans(S.plan, server);
+    S.base = server.changedAt || null;
+    S.savedSig = sigOf(server);
+  }
+  async function fetchPool(goal){
+    var loc = S.prefs && typeof S.prefs.locations === 'string' && S.prefs.locations.trim() ? S.prefs.locations : ((S.profile && S.profile.loc) || '');
+    var params = { roles: goal ? [goal] : [], loc: String(loc || '').slice(0, 200) };
+    var pool = null; try{ pool = typeof apiGetJobPool === 'function' ? await apiGetJobPool(S.uid, params) : null; }catch(e){ pool = null; }
+    if(sessUid() !== S.uid){ location.reload(); return false; }
+    if(pool && pool.ok && pool.data && Array.isArray(pool.data.listings)){
+      var d = pool.data, sv = S.server;
+      S.listings = d.listings; S.source = 'live'; S.poolAt = Date.now(); S.poolRole = goal || null;
+      S.sourceNote = d.listings.length ? '' : 'No live listings yet - new postings are pulled in on a schedule.';
+      if(Array.isArray(d.entries) && d.entries.length) sv.entries = d.entries;
+      if(Array.isArray(d.dismissed_ids)) sv.dismissed = d.dismissed_ids.map(String);
+      sv.applied = Array.isArray(d.applied_ids) ? d.applied_ids.map(String) : [];
+      if(d.state && typeof d.state === 'object'){
+        if(d.state.prefs && typeof d.state.prefs === 'object') sv.prefs = d.state.prefs;
+        if(Array.isArray(d.state.applied)) sv.applied = union(sv.applied, d.state.applied);
+      }
+      // your account's resume is the one scored, as in Job Search (an edit made in another tab later is picked up when
+      // you come back to this one)
+      if(sv.entries && sv.entries.length) S.entries = sv.entries;
+      S.applied = union(S.applied, sv.applied); S.dismissed = union(S.dismissed, sv.dismissed);
+      if(!S.prefs && sv.prefs) S.prefs = sv.prefs;
+      return true;
+    }
+    // a refresh that fails keeps the live jobs already here for this destination (they're still real, just older)
+    if(!(pool && pool.status === 401) && S.source === 'live' && S.listings.length && S.poolRole === (goal || null)){
+      S.sourceNote = 'Couldn’t refresh your live jobs just now - still showing the ones loaded ' + ago(S.poolAt) + '.';
+      return true;
+    }
+    S.listings = demoPool(); S.source = 'demo'; S.poolAt = Date.now(); S.poolRole = null;
+    S.sourceNote = pool && pool.status === 401 ? 'Your sign-in has expired - sign in again to plan against live jobs. Showing the demo jobs meanwhile.' :
+      (pool && pool.status === 429 ? 'Your listings are busy loading elsewhere (or today’s limit is reached) - showing the demo jobs; press Re-check in a moment.' : 'Couldn’t reach your live jobs just now - showing the demo jobs.');
+    return false;
+  }
+  async function loadLive(){
+    var slow = setTimeout(function(){ var el = $('rmLoadingSub'); if(el) el.textContent = 'Still waking the server up - free hosting sleeps when it’s idle, so the first load can take up to a minute.'; }, 7000);
+    var side = Promise.all([
+      (typeof apiListApplications === 'function' ? apiListApplications(S.uid) : Promise.resolve(null)).catch(function(){ return null; }),
+      (typeof apiListWorkshopItems === 'function' ? apiListWorkshopItems(S.uid, 'contact') : Promise.resolve(null)).catch(function(){ return null; }),
+      (typeof apiListWorkshopItems === 'function' ? apiListWorkshopItems(S.uid, 'interview_session') : Promise.resolve(null)).catch(function(){ return null; }),
+    ]);
+    // your account's plan first, so the jobs are fetched for the destination it names
+    var sp = null; try{ sp = typeof apiGetRoadmapPlan === 'function' ? await apiGetRoadmapPlan(S.uid) : null; }catch(e){ sp = null; }
+    if(sessUid() !== S.uid){ location.reload(); return; }
+    adoptServerPlan(sp);
+    S.planFetched = !!sp;   // null means the fetch failed: saving still works - the server refuses a stale copy
+    S.syncedAt = Date.now();
+    var g1 = quickGoal();
+    await fetchPool(g1);
+    if(sessUid() !== S.uid) return;
+    // your account's search settings (just loaded) can name another destination: then its jobs are the ones to fetch
+    var g2 = quickGoal();
+    if(S.source === 'live' && g2 !== g1) await fetchPool(g2);
+    var res = await side;
+    clearTimeout(slow);
+    if(sessUid() !== S.uid){ location.reload(); return; }
+    var sv = S.server;
+    if(Array.isArray(res[0])) sv.apps = res[0];
+    if(Array.isArray(res[1])) sv.contacts = res[1].map(function(x){ return Object.assign({ id: x.id }, x.data || {}); });
+    if(Array.isArray(res[2])) sv.sessions = res[2].map(function(x){ return Object.assign({ id: x.id }, x.data || {}); });
+    S.apps = mergeById(S.apps, sv.apps); S.contacts = mergeById(S.contacts, sv.contacts); S.sessions = mergeById(S.sessions, sv.sessions);
+  }
+
+  /* ------------------------------------------------------------ analysis */
+  function signals(){ return { appliedIds: S.applied, applications: S.apps, contacts: S.contacts, sessions: S.sessions }; }
+  function analyze(){
+    var t0 = Date.now();
+    followGoal(t0);
+    S.model = R.analyze({ engine: E, now: Date.now(), listings: S.listings, profile: S.profile, entries: S.entries, prefs: S.prefs, plan: S.plan,
+      signals: signals(), parsedCache: parsedCache(), dismissedIds: S.dismissed, cache: S.cache });
+    S.ms = Date.now() - t0;
+    return S.model;
+  }
+  // whenever the jobs, your record or your search settings change, the market side is rebuilt
+  function resetMarket(){ S.cache = {}; }
+
+  /* ------------------------------------------------------------ saving */
+  // what a save would change, in a fixed order (two copies with the same content but keys in another order are the same)
+  function itemsSig(items){ return arr(items).map(function(i){ return [i.id, i.kind, i.skillId, i.haveAtStart, i.status, i.startedAt, i.doneAt, i.dueAt, i.verifiedAt, i.hours]; }); }
+  function sigOf(p){
+    if(!p) return '';
+    var h = arr(p.history).map(function(x){ return [Math.floor(x.at / DAY), x.role, x.n, x.strong, x.reach]; });
+    var a = p.archive || {}, arch = Object.keys(a).sort().map(function(k){ var e = a[k] || {}; return [k, e.route, e.forRoute, e.startAt, e.baselineReadyAt, e.savedAt, itemsSig(e.items)]; });
+    return JSON.stringify([p.role, p.forRole, p.route, p.forRoute, p.hoursPerWeek, p.targetAt, p.startAt, itemsSig(p.items), p.baselineReadyAt, p.readySince, arch, p.changedAt, h]);
+  }
+  // Nothing is saved from demo jobs once you're signed in (your account's plan stays as it was), nothing from jobs
+  // fetched for another destination, and nothing at all from an empty pool - so a failed, partial or empty load can
+  // never overwrite a real plan.
+  function canSave(){
+    if(!(S.model && S.model.plan && S.listings.length)) return false;
+    if(!S.uid) return true;
+    return S.source === 'live' && (!S.model.goal || S.model.goal.id === S.poolRole);
+  }
+  // Signed in, the plan can be changed only while it's built from your live jobs for this destination - a step taken
+  // from the demo jobs must never end up in your account's plan. (Choosing a destination, which fetches its jobs, and
+  // Re-check always work.)
+  function editable(){ return !S.loading && !!S.model && S.listings.length > 0 && (!S.uid || (S.source === 'live' && (!S.model.goal || S.model.goal.id === S.poolRole))); }
+  function persist(opts){
+    if(!canSave()) return;
+    S.plan = R.planState(S.model, S.plan, Date.now(), opts);
+    writeLocalPlan(S.plan);
+    // the milestones every other page reads (overview, Mission Control, Waypoint, chat) - only from live jobs
+    if(S.source === 'live'){
+      var compat = { version: (typeof ROADMAP_VERSION !== 'undefined' ? ROADMAP_VERSION : 3), summary: S.model.summary, milestones: S.model.milestones, source: 'proof-plan', builtAt: S.plan.builtAt };
+      var cs = JSON.stringify([compat.summary, compat.milestones]);
+      if(cs !== S.compatSig && typeof saveRoadmap === 'function'){ saveRoadmap(compat); S.compatSig = cs; }
+    }
+    if(!S.uid || typeof apiSaveRoadmapPlan !== 'function') return;
+    if(sigOf(S.plan) === S.savedSig){ clearTimeout(S.saveTimer); S.saveTimer = null; return; }
+    clearTimeout(S.saveTimer);
+    S.saveTimer = setTimeout(pushPlan, 1200);
+  }
+  async function pushPlan(){
+    S.saveTimer = null;
+    // never mid-load (a destination switch or re-check in progress re-saves when it finishes), never a plan that
+    // can't be saved, never across a sign-in or sign-out made in another tab
+    if(S.loading || !canSave() || sessUid() !== S.uid) return;
+    if(S.saving){ S.saveAgain = true; return; }
+    var plan = S.plan, sent = sigOf(plan), ms = S.model ? S.model.milestones : [], summary = S.model ? S.model.summary : '';
+    if(sent === S.savedSig) return;
+    S.saving = true;
+    var r = null; try{ r = await apiSaveRoadmapPlan(S.uid, plan, ms, summary, S.base); }catch(e){ r = null; }
+    S.saving = false;
+    if(r && r.ok){
+      S.savedSig = sent; S.base = plan.changedAt || null;
+      if(!S.serverOk){ S.serverOk = true; renderBar(); }
+    } else if(r && r.status === 409){
+      // another device changed the plan since this page loaded: take its copy (or keep yours if you changed it later)
+      var sp = null; try{ sp = await apiGetRoadmapPlan(S.uid); }catch(e){ sp = null; }
+      if(sp && sp.plan){
+        var before = S.plan.changedAt || 0;
+        adoptServerPlan(sp);
+        // a load in progress plans (and saves) with it when it finishes; a copy that names another destination needs
+        // that destination's jobs first
+        if(!S.loading && S.uid && quickGoal() !== S.poolRole){ recheck(true); }
+        else if(!S.loading){
+          var fk = focusKey();
+          analyze(); persist(); render(); restoreFocus(fk);
+          toast((S.plan.changedAt || 0) > before ? 'Your plan changed on another device - showing the newer version.' : 'Merged with the copy from your other device.');
+        }
+      } else { S.serverOk = false; renderBar(); }
+    } else { S.serverOk = false; renderBar(); }
+    if(S.saveAgain){ S.saveAgain = false; if(sigOf(S.plan) !== S.savedSig) pushPlan(); }
+  }
+  window.addEventListener('beforeunload', function(){ if(S.saveTimer && S.uid && sigOf(S.plan) !== S.savedSig){ try{ clearTimeout(S.saveTimer); pushPlan(); }catch(e){} } });
+
+  /* ------------------------------------------------------------ actions */
+  // keyboard focus survives a re-render: the same control (or its step) gets it back
+  var FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])';
+  function focusKey(){
+    var a = document.activeElement; if(!a || a === document.body || !a.getAttribute) return null;
+    var host = a.parentElement && a.parentElement.closest ? a.parentElement.closest('[id]') : null;
+    return { elId: a.id || '', act: a.getAttribute('data-act'), id: a.getAttribute('data-id'), st: a.getAttribute('data-st'), d: a.getAttribute('data-d'), hours: a.getAttribute('data-hours'),
+      href: a.tagName === 'A' ? a.getAttribute('href') : null, hostId: host ? host.id : '', idx: host ? Array.prototype.indexOf.call(host.querySelectorAll(FOCUSABLE), a) : -1 };
+  }
+  function restoreFocus(k){
+    if(!k) return;
+    var q = function(sel, root){ try{ return (root || document).querySelector(sel); }catch(e){ return null; } };
+    var el = null, ce = (window.CSS && CSS.escape) ? CSS.escape : function(x){ return String(x).replace(/["\\]/g, '\\$&'); };
+    var host = k.hostId ? $(k.hostId) : null;
+    if(k.elId) el = $(k.elId);
+    else if(k.hours) el = q('[data-hours="' + ce(k.hours) + '"]');
+    else if(k.act) el = q('[data-act="' + ce(k.act) + '"]' + (k.id ? '[data-id="' + ce(k.id) + '"]' : '') + (k.st != null ? '[data-st="' + ce(k.st) + '"]' : '') + (k.d ? '[data-d="' + ce(k.d) + '"]' : ''), host);
+    else if(k.href && host) el = q('a[href="' + ce(k.href) + '"]', host);
+    // the same control is gone (a step that changed state): the control now in its place in the same block
+    if(!el && host && k.idx >= 0){ var all = host.querySelectorAll(FOCUSABLE); if(all.length) el = all[Math.min(k.idx, all.length - 1)]; }
+    if(!el && k.id) el = q('[data-act="toggle"][data-id="' + ce(k.id) + '"]');
+    if(el && el.focus){ try{ el.focus({ preventScroll: true }); }catch(e){ el.focus(); } }
+  }
+  function change(fn, opts){
+    if(!editable()) return;   // nothing changes while jobs load, or on demo jobs when signed in (the controls are off too)
+    // another tab of this browser changed the plan since: start from its copy if it's newer
+    var stored = localPlan(); if(stored && (stored.changedAt || 0) > (S.plan.changedAt || 0)) S.plan = mergePlans(S.plan, stored);
+    var fk = focusKey();
+    if(fn(S.plan) === false) return false;   // nothing to change after all
+    S.plan.changedAt = Date.now();
+    S.plan = R.normPlan(S.plan);
+    analyze();
+    persist(opts);
+    render();
+    restoreFocus(fk);
+    return true;
+  }
+  function itemOf(id){ return arr(S.plan.items).filter(function(i){ return i.id === id; })[0] || null; }
+  function setStatus(id, status){
+    var ok = change(function(p){
+      var it = itemOf(id); if(!it) return false;
+      var now = Date.now();
+      if(status === 'doing'){ it.status = 'doing'; if(!num(it.startedAt)) it.startedAt = now; delete it.doneAt; }
+      else if(status === 'done'){ it.status = 'done'; it.doneAt = now; }
+      else if(status === 'skip'){ it.status = 'skip'; }
+      else { delete it.status; delete it.doneAt; }
+    });
+    if(!ok) return;
+    var cred = (stepById(id) || {}).kind === 'credential';
+    toast(status === 'done' ? (cred ? 'Marked decided.' : 'Marked done - it’s shown as yours. Add the resume line and it becomes verified.') : (status === 'doing' ? 'Started - your pace on it will tune the dates.' : (status === 'skip' ? 'Skipped - the plan re-checks without it.' : 'Back in the plan.')));
+  }
+  function setHours(id, h){
+    h = h == null || String(h).trim() === '' ? NaN : Math.round(Number(h));
+    change(function(){
+      var it = itemOf(id); if(!it) return false;
+      var v = num(h) && h >= 1 ? Math.min(2000, h) : null;
+      if((it.hours == null ? null : it.hours) === v){ var fk = focusKey(); renderPlan(); restoreFocus(fk); return false; }
+      if(v == null) delete it.hours; else it.hours = v;
+    }, { rebaseline: true });
+  }
+  function moveStep(id, dir){
+    change(function(p){
+      var items = p.items, i = items.findIndex(function(x){ return x.id === id; });
+      if(i < 0) return false;
+      // within the group it's shown in: skill steps among skill steps, decisions among decisions
+      var group = function(x){ return x.kind === 'credential' ? 'c' : (x.kind === 'skill' || x.kind === 'prove' ? 's' : ''); }, g = group(items[i]);
+      if(!g) return false;
+      var j = i + dir;
+      while(j >= 0 && j < items.length && group(items[j]) !== g) j += dir;
+      if(j < 0 || j >= items.length) return false;
+      var t = items[i]; items[i] = items[j]; items[j] = t;
+    }, { rebaseline: true });
+  }
+  function skillishItem(x){ return x.kind === 'skill' || x.kind === 'prove' || x.kind === 'credential'; }
+  // your plan's last skill step stays (Skip it instead): a plan with none left is rebuilt from today's jobs, which
+  // would reset the rest of it
+  function lastSkillStep(id){ var sk = arr(S.plan.items).filter(skillishItem); return sk.length <= 1 && (!sk.length || sk[0].id === id); }
+  function removeStep(id){
+    if(lastSkillStep(id)){ toast('This is your plan’s last skill step - use Skip instead (removing it would rebuild the whole plan).'); return; }
+    // keyboard focus goes to the next step (or the one before)
+    var order = S.model && S.model.plan ? S.model.plan.steps.map(function(s){ return s.id; }) : [], i = order.indexOf(id);
+    var next = i >= 0 ? (order[i + 1] || order[i - 1]) : null;
+    if(change(function(p){ if(!itemOf(id)) return false; p.items = p.items.filter(function(x){ return x.id !== id; }); }, { rebaseline: true })){
+      toast('Removed from your plan. It may show up again under “New in today’s jobs”.');
+      if(next){ var ce = (window.CSS && CSS.escape) ? CSS.escape : function(x){ return String(x).replace(/["\\]/g, '\\$&'); }; var nb = document.querySelector('[data-act="toggle"][data-id="' + ce(next) + '"]'); if(nb){ try{ nb.focus({ preventScroll: true }); }catch(e){ nb.focus(); } } }
+    }
+  }
+  function addOffered(id){
+    var o = arr(S.model && S.model.plan && S.model.plan.offered).filter(function(x){ return x.id === id; })[0];
+    if(!o) return;
+    var ok = change(function(p){
+      if(itemOf(o.id)) return false;
+      var idx = p.items.findIndex(function(x){ return x.kind === 'network' || x.kind === 'apply' || x.kind === 'interview'; });
+      var it = { id: o.id, kind: o.kind, skillId: o.skillId, haveAtStart: o.have || 'missing' };
+      if(idx < 0) p.items.push(it); else p.items.splice(idx, 0, it);
+    }, { rebaseline: true });
+    if(ok) toast('Added - the plan re-scored with it.');
+  }
+  // A new destination: the plan you had for this one is put aside (and comes back if you switch back); the jobs are
+  // fetched for the new role before anything is planned or saved.
+  // Moving the plan to another destination (a copy - the caller decides when it becomes the plan): this destination's
+  // steps are put aside under its name, and the new one's come back if they were put aside before. Returns whether
+  // they did. Used when you pick a destination here, and when it changes because your Job Search target changed.
+  function planFor(plan, rid, now){
+    var p = R.normPlan(JSON.parse(JSON.stringify(plan)));
+    p.archive = Object.assign({}, p.archive || {});
+    if(p.forRole && p.forRole !== rid && p.items.length) p.archive[p.forRole] = { route: p.route, forRoute: p.forRoute, startAt: p.startAt, baselineReadyAt: p.baselineReadyAt, savedAt: now, items: p.items };
+    var back = p.archive[rid] || null;
+    if(back){
+      p.route = back.route; p.forRoute = back.forRoute; p.startAt = back.startAt; p.baselineReadyAt = back.baselineReadyAt; p.items = back.items; p.forRole = rid;
+      delete p.archive[rid];
+    } else if(p.forRole !== rid){ p.route = null; }   // the old steps stay only to carry statuses where a step is the same
+    p.readySince = null;
+    return { plan: R.normPlan(p), back: !!back };
+  }
+  // the destination this plan is for changed without you picking it here (your Job Search target changed): its steps
+  // are put aside the same way, so switching back finds them as you left them
+  function followGoal(now){
+    if(S.loading || (S.uid && S.source !== 'live') || !S.plan || !S.plan.forRole || S.plan.role) return false;   // only on the plan you can change
+    var g = quickGoal();
+    if(!g || g === S.plan.forRole) return false;
+    var r = planFor(S.plan, g, now);
+    S.plan = r.plan;
+    return true;
+  }
+  async function setGoal(rid){
+    S.ui.pop = false;
+    if(S.loading){ renderBar(); return; }
+    if(sessUid() !== S.uid){ location.reload(); return; }
+    if(S.model && S.model.goal && S.model.goal.id === rid){ renderBar(); return; }
+    // a change waiting to be saved goes up first, as it was (before anything here moves)
+    if(S.saveTimer){ clearTimeout(S.saveTimer); S.saveTimer = null; pushPlan(); }
+    var stored = localPlan(); if(stored && (stored.changedAt || 0) > (S.plan.changedAt || 0)) S.plan = mergePlans(S.plan, stored);
+    var now = Date.now(), r = planFor(S.plan, rid, now), back = r.back;
+    r.plan.role = rid; r.plan.changedAt = now;
+    S.plan = R.normPlan(r.plan);
+    // signed in: the jobs for this destination are fetched before anything is planned or saved
+    if(S.uid){
+      S.loading = true; render();
+      await fetchPool(rid);
+      var lm = $('rmLoadingMsg'); if(lm) lm.textContent = 'Scoring ' + plural(S.listings.length, 'listing') + ' against your record…';
+      await new Promise(function(r2){ setTimeout(r2, 30); });
+      S.loading = false;
+      // a change another tab made while the jobs loaded (the one made last wins)
+      var st2 = localPlan(); if(st2 && (st2.changedAt || 0) > (S.plan.changedAt || 0)) S.plan = mergePlans(S.plan, st2);
+    }
+    resetMarket(); analyze(); persist({ rebaseline: !back }); render();
+    var gname = S.model && S.model.goal ? S.model.goal.name : 'this destination';
+    toast(S.uid && !canSave() ? 'Planned for ' + gname + (S.source !== 'live' ? ' on the demo jobs' : '') + ' - not saved. Press Re-check to load your live jobs.' :
+      (back ? 'Back to your ' + gname + ' plan, as you left it.' : 'Planned for ' + gname + '. Your previous plan is kept if you switch back.'));
+    var db = document.querySelector('.rm-dest-btn'); if(db){ try{ db.focus({ preventScroll: true }); }catch(e){ db.focus(); } }
+  }
+  function setRoute(id){
+    if(change(function(p){ if(p.route === id && p.forRoute === id) return false; p.route = id; }, { rebaseline: true }))
+      toast('Route set - your steps are rebuilt for it (statuses carry over where a step is the same).');
+  }
+  function setHpw(v){
+    var h = String(v == null ? '' : v).trim() === '' ? NaN : Math.round(Number(v));
+    var fk = focusKey();
+    if(!num(h)){ renderBar(); restoreFocus(fk); return; }   // an empty or unreadable box goes back to your hours
+    h = Math.max(2, Math.min(60, h));
+    if(S.loading){ renderBar(); restoreFocus(fk); return; }
+    if(S.plan.hoursPerWeek === h){ renderBar(); restoreFocus(fk); return; }
+    change(function(p){ p.hoursPerWeek = h; }, { rebaseline: true });
+  }
+  function setTarget(v){
+    var t = v ? Date.parse(v + 'T12:00:00') : NaN, fk;
+    // an unreadable or past date isn't taken: the box goes back to the date you have
+    if(v && !(num(t) && t > Date.now())){ fk = focusKey(); renderBar(); restoreFocus(fk); toast('Pick a date after today.'); return; }
+    var nt = v ? t : null;
+    var ok = change(function(p){ if((p.targetAt || null) === nt) return false; p.targetAt = nt; }, { rebaseline: true });
+    if(!ok){ fk = focusKey(); renderBar(); restoreFocus(fk); }
+  }
+  async function recheck(quiet){
+    if(S.loading) return;
+    if(sessUid() !== S.uid){ location.reload(); return; }   // signed in or out elsewhere: this page belongs to the old session
+    var fk = focusKey(), mine = S.plan;
+    // re-read this browser's copies; a change you made here that wasn't saved yet (demo jobs) is kept - it's the newest
+    loadLocal(); S.plan = mergePlans(S.plan, mine);
+    if(!S.profile){ render(); return; }
+    if(!S.uid){ S.listings = demoPool(); S.source = 'demo'; S.poolAt = Date.now(); resetMarket(); analyze(); persist(); render(); restoreFocus(fk); if(!quiet) toast('Re-checked against the demo jobs.'); return; }
+    S.loading = true; render();
+    await loadLive();
+    var lm = $('rmLoadingMsg'); if(lm) lm.textContent = 'Scoring ' + plural(S.listings.length, 'listing') + ' against your record…';
+    await new Promise(function(r){ setTimeout(r, 30); });
+    resetMarket(); S.loading = false;
+    // a change another tab made while this one loaded (the one made last wins)
+    var stored = localPlan(); if(stored && (stored.changedAt || 0) > (S.plan.changedAt || 0)) S.plan = mergePlans(S.plan, stored);
+    analyze(); persist(); render(); restoreFocus(fk);
+    if(!quiet) toast(S.source === 'live' ? (S.sourceNote ? S.sourceNote : 'Re-checked against ' + plural(S.listings.length, 'live listing') + '.') : 'Couldn’t reach your live jobs - still on the demo set.');
+  }
+  function openJobSearch(){
+    var g = S.model && S.model.routes ? S.model.routes.filter(function(r){ return r.chosen; })[0] : null;
+    var q = g ? g.roleName + (g.type === 'internship' ? ' internships' : ' jobs') + (S.model.where ? ' in ' + S.model.where : '') : '';
+    if(q) _safeSetItem(K.SEARCH, q.slice(0, 200));
+    location.href = 'dashboard.html';
+  }
+  function openInterview(roleName){
+    try{ var t = lsGet(K.TARGET, {}); if(!t || typeof t !== 'object') t = {}; if(!t.role && roleName){ t.role = roleName; _safeSetItem(K.TARGET, JSON.stringify(t)); } }catch(e){}
+    location.href = 'interview-prep.html';
+  }
+  async function findHelp(id){
+    var s = stepById(id); if(!s || S.loading || (S.ui.help[id] && S.ui.help[id].busy)) return;
+    var g = chosenRoute(); if(!g) return;
+    var fk = focusKey();
+    S.ui.help[id] = { busy: true }; renderPlan(); restoreFocus(fk);
+    var need = s.kind === 'credential' ? 'the ' + s.skillName + ' route (programs and requirements) for ' + g.roleName + ' jobs' : 'learning ' + s.skillName + ' to a working level, with a hands-on project, for ' + g.roleName + ' jobs';
+    var budget = S.ui.budget === 'free' ? 'free' : (S.ui.budget === 'low' ? 'up to $200' : 'flexible');
+    var out = null;
+    try{ out = typeof findAssistanceOptions === 'function' ? await findAssistanceOptions(need, budget, (S.model && S.model.where) || '') : null; }catch(e){ out = null; }
+    S.ui.help[id] = out ? { text: String(out.text || ''), sources: arr(out.sources) } : { error: true };
+    // the page may be loading (or showing another destination) by now - the answer shows with the next render then
+    if(S.loading || !S.model || !S.model.plan) return;
+    fk = focusKey(); renderPlan(); restoreFocus(fk);
+  }
+
+  /* ------------------------------------------------------------ toast */
+  var toastTimer = null;
+  function toast(msg){ var t = $('rmToast'); if(!t) return; t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3600); }
+
+  /* ============================================================ render */
+  function stepById(id){ return S.model && S.model.plan ? S.model.plan.steps.filter(function(s){ return s.id === id; })[0] : null; }
+  function chosenRoute(){ return S.model && S.model.routes ? S.model.routes.filter(function(r){ return r.chosen; })[0] : null; }
+
+  function render(){
+    if(!S.profile){ show('rmNoProfile', true); show('rmApp', false); return; }
+    show('rmLoading', S.loading);
+    renderBar();
+    if(S.loading){ ['rmHero', 'rmRoutes', 'rmPlan', 'rmJobs', 'rmMethod', 'rmNeedGoal'].forEach(function(id){ show(id, false); }); $('rmNotes').innerHTML = ''; return; }
+    var m = S.model;
+    renderNotes();
+    if(!m || m.needsGoal){ renderNeedGoal(); ['rmHero', 'rmRoutes', 'rmPlan', 'rmJobs'].forEach(function(id){ show(id, false); }); renderMethod(); return; }
+    show('rmNeedGoal', false);
+    $('rmTitle').textContent = 'Your route to ' + m.goal.name;
+    renderHero(); renderRoutes(); renderPlan(); renderJobs(); renderMethod();
+  }
+
+  /* ---- control bar ---- */
+  function renderBar(){
+    var m = S.model, bar = $('rmBar'); if(!bar) return;
+    var goal = m && m.goal ? m.goal : null, n = m && m.market ? m.market.n : null;
+    var hpw = (m && m.hoursPerWeek) || S.plan.hoursPerWeek || 6;
+    var tf = S.profile && S.profile.timeframe ? { now: 'now', '6-12mo': '6–12 months', '1-2yr': '1–2 years', '2yr+': '2+ years' }[S.profile.timeframe] : '';
+    var tgt = S.plan.targetAt ? localDay(S.plan.targetAt) : '';
+    var minDate = localDay(Date.now() + 7 * DAY);
+    var split = m && m.plan ? m.plan.buildHoursPerWeek + ' skills · ' + m.plan.reachHoursPerWeek + ' people & applications' : '';
+    var src = S.loading ? '<span class="rm-pill"><span class="dot"></span>Loading…</span>' :
+      (S.source === 'live' ? '<span class="rm-pill live" title="' + esc(plural(S.listings.length, 'listing')) + '"><span class="dot"></span>Live jobs · ' + esc(ago(S.poolAt)) + '</span>' : '<span class="rm-pill" title="' + (S.uid ? 'Your live jobs couldn’t be loaded - press Re-check' : 'Sign in to plan against live jobs where you’d work') + '"><span class="dot"></span>Demo jobs</span>');
+    // nothing can be changed while jobs load (a change then would be planned against no jobs at all), and signed in, the
+    // plan only changes on your live jobs; the destination can always be changed (it fetches its own jobs)
+    var off = S.loading || !m ? ' disabled' : '', offPlan = editable() ? '' : ' disabled';
+    var saveLine = !S.uid ? '<span class="rm-sub"><a href="login.html" style="text-decoration:underline">Sign in</a> for live jobs and to save across devices.</span>' :
+      (S.loading ? '' : (S.source !== 'live' ? '<span class="rm-sub" style="color:var(--gold)">Not saved while demo jobs are shown - your account keeps its plan.</span>' :
+      (!S.listings.length ? '<span class="rm-sub" style="color:var(--gold)">Not saved - no live jobs loaded yet, so there’s nothing to plan against. Your account keeps its plan.</span>' :
+      (goal && goal.id !== S.poolRole ? '<span class="rm-sub" style="color:var(--gold)">Not saved yet - press Re-check to load this destination’s jobs.</span>' :
+      (!S.serverOk ? '<span class="rm-sub" style="color:var(--danger)">Not saved to your account yet - kept in this browser.</span>' : '')))));
+    bar.innerHTML =
+      '<div class="rm-ctrl rm-dest"><span class="rm-k">Destination</span>' +
+        '<button class="rm-dest-btn" data-act="pop" aria-haspopup="listbox" aria-expanded="' + (S.ui.pop ? 'true' : 'false') + '"' + off + '>' + (goal ? esc(goal.name) : 'Choose a role') + (n != null ? ' <span class="n">' + esc(plural(n, 'live job')) + '</span>' : '') + ' <span class="caret">&#9662;</span></button>' +
+        (goal ? '<span class="rm-sub">' + esc(goal.from === 'you chose it' ? 'you chose it' : 'from ' + goal.from) + (m.where ? ' · ' + esc(m.where) : '') + '</span>' : '') +
+        (S.ui.pop && !off ? popHTML() : '') + '</div>' +
+      '<div class="rm-ctrl"><span class="rm-k" id="hpwLbl">Hours a week</span><div class="rm-stepper"><button data-act="hpw" data-d="-1" aria-label="Fewer hours a week"' + offPlan + '>&minus;</button><input type="number" id="rmHpw" min="2" max="60" value="' + esc(hpw) + '" aria-labelledby="hpwLbl"' + offPlan + '><button data-act="hpw" data-d="1" aria-label="More hours a week"' + offPlan + '>+</button></div><span class="rm-sub">' + esc(split) + '</span></div>' +
+      '<div class="rm-ctrl"><span class="rm-k" id="tgtLbl">Ready by</span><input class="rm-date" type="date" id="rmTarget" min="' + minDate + '" value="' + esc(tgt) + '" aria-labelledby="tgtLbl"' + offPlan + '><span class="rm-sub">' + (tgt ? (S.plan.targetAt <= Date.now() ? '<span style="color:var(--gold)">this date has passed - your timeframe is used</span> · <button class="rm-linkbtn" data-act="tgt-clear"' + offPlan + '>clear it</button>' : '<button class="rm-linkbtn" data-act="tgt-clear"' + offPlan + '>use your timeframe instead</button>') : esc(tf ? 'your timeframe: ' + tf : 'optional')) + '</span></div>' +
+      '<div class="rm-ctrl rm-src"><span class="rm-k">Jobs</span><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' + src + '<button class="btn ghost sm" data-act="recheck"' + (S.loading ? ' disabled' : '') + '>Re-check</button></div>' +
+        saveLine + '</div>';
+    if(S.ui.pop && !off){ var q = $('rmPopQ'); if(q){ q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
+  }
+  function popHTML(){
+    var m = S.model || {}, q = (S.ui.popQ || '').toLowerCase().trim(), cur = m.goal ? m.goal.id : '';
+    var counts = {}; arr(m.roleCounts).forEach(function(r){ counts[r.id] = r.n; });
+    function item(r){ return '<button class="rm-pop-item' + (r.id === cur ? ' on' : '') + '" role="option" data-act="goal" data-id="' + esc(r.id) + '"><span>' + esc(r.name) + '</span><span class="n">' + (counts[r.id] != null ? esc(plural(counts[r.id], 'job')) : '') + '</span></button>'; }
+    var html = '<div class="rm-pop" role="dialog" aria-label="Choose your destination"><input id="rmPopQ" type="text" placeholder="Search roles…" value="' + esc(S.ui.popQ || '') + '" autocomplete="off" aria-label="Search roles"><div class="rm-pop-list" role="listbox">';
+    if(!q){
+      if(arr(m.roleOptions).length) html += '<div class="rm-pop-h">From your goal and search</div>' + m.roleOptions.map(item).join('');
+      if(arr(m.roleCounts).length) html += '<div class="rm-pop-h">Most live jobs where you’d work</div>' + m.roleCounts.slice(0, 10).map(item).join('');
+      html += '<div class="rm-pop-h">Type to search all ' + arr(m.allRoles).length + ' roles</div>';
+    } else {
+      var hits = arr(m.allRoles).filter(function(r){ return r.name.toLowerCase().indexOf(q) !== -1 || r.id.indexOf(q.replace(/\s+/g, '_')) !== -1; }).slice(0, 30);
+      html += hits.length ? hits.map(item).join('') : '<div class="rm-pop-h">No role matches “' + esc(q) + '”</div>';
+    }
+    return html + '</div></div>';
+  }
+
+  /* ---- notes ---- */
+  function renderNotes(){
+    var m = S.model, notes = [];
+    if(S.sourceNote) notes.push({ t: S.sourceNote, w: true });
+    if(S.source === 'demo' && !S.uid) notes.push({ t: 'Showing demo jobs (fictional companies) - sign in to build this plan from the live jobs where you’d work.', w: true });
+    if(S.source === 'demo' && S.uid) notes.push({ t: 'Your plan can’t be changed or saved while demo jobs (fictional companies) are shown - your account keeps the plan it has. Press Re-check to load your live jobs.', w: true });
+    if(m) arr(m.notes).forEach(function(t){ notes.push({ t: t }); });
+    $('rmNotes').innerHTML = notes.map(function(n){ return '<div class="rm-note' + (n.w ? ' warn' : '') + '">' + esc(n.t) + '</div>'; }).join('');
+  }
+
+  /* ---- no destination yet ---- */
+  function renderNeedGoal(){
+    var m = S.model || {}, el = $('rmNeedGoal');
+    show('rmNeedGoal', true);
+    var list = arr(m.roleCounts).slice(0, 12);
+    el.innerHTML = '<div class="panel"><h2>Where are you headed?</h2><p class="sub">Your goal doesn’t name a role Kaidostar can plan against yet. Pick a destination - these have the most live jobs where you’d work - or search all roles from the Destination box above.</p>' +
+      '<div class="rm-goalgrid">' + list.map(function(r){ return '<button class="rm-goalbtn" data-act="goal" data-id="' + esc(r.id) + '">' + esc(r.name) + '<span>' + esc(plural(r.n, 'live job')) + '</span></button>'; }).join('') + '</div></div>';
+  }
+
+  /* ---- where you stand ---- */
+  function renderHero(){
+    var m = S.model, mk = m.market, el = $('rmHero'), r = chosenRoute();
+    show('rmHero', true);
+    var n = mk.n || 0, notYet = Math.max(0, n - mk.reach);
+    var pct = function(x){ return n ? (100 * x / n).toFixed(2) + '%' : '0%'; };
+    var plan = m.plan, T = m.threshold;
+    // this panel is the destination's own market, so its line is the direct route's - with your chosen route named if
+    // it's another one
+    var dr = arr(m.routes).filter(function(x){ return x.kind === 'direct'; })[0];
+    var other = r && r.kind !== 'direct' ? ' · you’re taking “' + esc(r.label) + '” - its plan is below' : '';
+    var ready;
+    if(mk.reach >= T) ready = '<div class="rm-ready ok">&#10003; Apply-ready now - ' + esc(plural(mk.reach, 'job')) + ' within reach (the bar is ' + T + ')' + other + '</div>';
+    else if(r && r.kind === 'direct' && plan && plan.applyFromWeek != null && plan.applyFromWeek <= plan.weekNow)
+      ready = '<div class="rm-ready wait">Apply-ready once your resume shows the steps you’ve marked done - add those lines and the count updates</div>';
+    else if(r && r.kind === 'direct' && plan && plan.applyFromWeek != null)
+      ready = '<div class="rm-ready wait">Apply-ready in ~' + esc(plural(plan.applyFromWeek - plan.weekNow, 'week')) + ' - around ' + esc(weekDate(plan.applyFromWeek)) + '</div>';
+    else if(r && r.kind === 'direct')
+      ready = '<div class="rm-ready no">Not apply-ready on your plan’s skill steps alone - see the routes below</div>';
+    else if(dr && dr.weeksToReady != null)
+      ready = '<div class="rm-ready wait">Straight to ' + esc(m.goal.name) + ': apply-ready in ~' + esc(plural(Math.max(1, dr.weeksToReady), 'week')) + ' at ' + esc(m.hoursPerWeek) + ' h a week' + other + '</div>';
+    else ready = '<div class="rm-ready no">Not apply-ready for ' + esc(m.goal.name) + ' on skill steps alone' + other + '</div>';
+    var yrs = mk.years || {};
+    var stats = '<div class="rm-stats">' +
+      stat(mk.medianFit != null ? mk.medianFit : '—', 'Median fit') +
+      stat(mk.salary && mk.salary.n ? fmtK(mk.salary.median) : '—', mk.salary && mk.salary.n ? 'Median pay listed (' + mk.salary.n + ')' : 'No pay listed') +
+      stat(n ? Math.round(100 * mk.remote / n) + '%' : '—', 'Remote') +
+      stat(n ? Math.round(100 * ((yrs.none || 0) + (yrs['0-1'] || 0)) / n) + '%' : '—', 'Ask 0–1 years') +
+      stat(n ? Math.round(100 * mk.degree / n) + '%' : '—', 'Ask a degree' + (mk.degreeEquivalentOk ? ' · ' + mk.degreeEquivalentOk + ' take experience instead' : '')) +
+      stat(m.you.proven + ' / ' + (m.you.proven + m.you.stated), 'Your skills shown in use') + '</div>';
+    var blockers = arr(mk.blockers).slice(0, 6), bmax = Math.max(1, blockers.reduce(function(a, b){ return Math.max(a, b.count); }, 0));
+    var bhtml = blockers.length ? blockers.map(function(b){ return '<div class="rm-brow"><span>' + esc(b.text) + (b.stretch ? ' <small>(' + b.stretch + ' only a stretch)</small>' : '') + '</span><span class="t"><i style="width:' + Math.round(100 * b.count / bmax) + '%"></i></span><span class="c">' + b.count + '</span></div>'; }).join('') : '<p class="hint" style="margin:0">Nothing - every job here is Strong for you.</p>';
+    var skills = arr(mk.topSkills).slice(0, 12).map(function(s){
+      var mark = { proven: '&#10003;', stated: '&#9680;', adjacent: '~', related: '~' }[s.have] || '&#9675;';
+      var tip = { proven: 'Shown in use in your resume', stated: 'You list it - no resume line shows it in use yet', adjacent: 'You know a close cousin', related: 'You know a skill it builds on' }[s.have] || 'Not in your record yet';
+      return '<span class="rm-skill ' + esc(s.have) + '" title="' + esc(tip) + '">' + mark + ' ' + esc(s.name) + ' <span class="p">' + s.pct + '%</span></span>';
+    }).join('');
+    el.innerHTML =
+      '<div class="rm-hero"><div>' +
+        '<div class="rm-k">Within reach today</div>' +
+        '<div class="rm-big"><b>' + mk.reach + '</b><span>of ' + esc(plural(n, 'live ' + m.goal.name + ' job')) + (m.where ? ' where you’d work' : '') + '</span></div>' +
+        '<div class="rm-seg" role="img" aria-label="' + esc(mk.strong + ' Strong, ' + mk.stretch + ' stretch, ' + notYet + ' not yet') + '"><i class="s" style="width:' + pct(mk.strong) + '"></i><i class="t" style="width:' + pct(mk.stretch) + '"></i></div>' +
+        '<div class="rm-legend"><span><i style="background:var(--aurora)"></i>' + mk.strong + ' Strong (fit 70+)</span><span><i style="background:var(--gold)"></i>' + mk.stretch + ' stretch - Strong except under 3 years’ (or one level’s) gap</span><span><i style="background:var(--line)"></i>' + notYet + ' not yet</span></div>' +
+        ready +
+        '<div class="rm-k rm-sub-h">What keeps the rest from Strong</div>' + bhtml +
+      '</div><div>' + stats + trendHTML() +
+        '<div class="rm-k rm-sub-h">What these jobs ask for most · how your record covers it</div><div class="rm-skills">' + (skills || '<span class="hint">No skills could be read from these postings.</span>') + '</div>' +
+      '</div></div>';
+  }
+  function stat(v, k){ return '<div class="rm-stat"><div class="v">' + esc(v) + '</div><div class="rm-k k">' + esc(k) + '</div></div>'; }
+  function trendHTML(){
+    var m = S.model, h = arr(S.plan.history).filter(function(x){ return x.role === m.goal.id; });
+    if(h.length < 2) return '<div class="rm-trend"><div class="rm-k">Your trend</div><p class="hint" style="margin:6px 0 0">Kaidostar keeps one snapshot a day of how many of these jobs are within reach - come back and your progress shows here.</p></div>';
+    var W = 300, H = 46, max = Math.max(1, h.reduce(function(a, x){ return Math.max(a, x.n, x.reach); }, 0));
+    var t0 = h[0].at, t1 = h[h.length - 1].at, span = Math.max(1, t1 - t0);
+    var pts = h.map(function(x){ return [4 + (W - 8) * (x.at - t0) / span, H - 4 - (H - 10) * x.reach / max]; });
+    var line = pts.map(function(p, i){ return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+    var first = h[0], last = h[h.length - 1];
+    return '<div class="rm-trend"><div class="rm-k">Within reach since ' + esc(fmtDate(first.at)) + ': ' + first.reach + ' &rarr; ' + last.reach + '</div><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="' + esc('Within reach went from ' + first.reach + ' to ' + last.reach) + '"><path d="' + line + '" fill="none" stroke="var(--aurora)" stroke-width="2"/>' + pts.map(function(p){ return '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="2.4" fill="var(--aurora)"/>'; }).join('') + '</svg></div>';
+  }
+
+  /* ---- routes ---- */
+  function renderRoutes(){
+    var m = S.model, el = $('rmRoutes');
+    show('rmRoutes', true);
+    var cards = m.routes.map(function(r){
+      var n = r.market.n || 0, w = function(x){ return n ? (100 * x / n).toFixed(1) + '%' : '0%'; };
+      var tags = (r.recommended ? '<span class="rm-chip reach">Recommended</span>' : '') + (r.chosen ? '<span class="rm-chip violet">Your route</span>' : '');
+      // every card is scored the same way (its suggested steps at the estimated hours); the route you're on also says
+      // what your own plan gives, when your hours, order or pace have moved it
+      var est = r.weeksToReady != null ? '~' + plural(r.weeksToReady, 'week') : null, ready;
+      if(r.reachNow >= r.threshold) ready = '<b>Apply-ready now</b>';
+      else if(r.chosen && m.plan){
+        var mine = m.plan.applyFromWeek == null ? null : Math.max(0, m.plan.applyFromWeek - m.plan.weekNow);
+        if(mine === 0) ready = '<b>Apply-ready</b> once your resume shows the steps you’ve marked done';
+        else if(mine != null && (r.weeksToReady == null || Math.abs(mine - r.weeksToReady) <= 1)) ready = 'Apply-ready in <b>~' + esc(plural(mine, 'week')) + '</b> at ' + m.hoursPerWeek + ' h a week';
+        else if(mine != null) ready = 'Apply-ready in <b>~' + esc(plural(mine, 'week')) + '</b> on your plan' + (est ? ' (' + esc(est) + ' with the suggested steps and hours)' : '');
+        else ready = '<b>Not apply-ready</b> on your plan’s skill steps' + (est ? ' (' + esc(est) + ' with the suggested steps)' : '');
+      } else ready = est ? 'Apply-ready in <b>' + esc(est) + '</b> at ' + m.hoursPerWeek + ' h a week' : '<b>Not apply-ready</b> on skill steps alone';
+      var extra = '';
+      if(r.kind === 'bridge'){
+        extra = '<div class="kv">Asks for ' + Math.round(r.bridge.overlap * 100) + '% of the skills ' + esc(m.goal.name) + ' jobs ask for.' + (r.then ? ' A year in, with the ' + esc(m.goal.name) + ' steps done too: within reach of <b>' + r.then.reach + '</b> of today’s ' + m.market.n + ' ' + esc(m.goal.name) + ' jobs.' : '') + '</div>';
+      } else if(r.kind === 'internship'){
+        extra = '<div class="kv">' + (r.deadlinesSoon ? esc(plural(r.deadlinesSoon, 'deadline')) + ' in the next four months.' : 'No deadlines listed in the next four months.') + '</div>';
+      }
+      var creds = arr(r.credentials).filter(function(c){ return c.share >= 25; }).map(function(c){ return '<span class="rm-chip warn" title="' + esc(c.note) + '">' + esc(c.skillName) + ' asked in ' + c.share + '%</span>'; }).join(' ');
+      return '<article class="rm-route' + (r.chosen ? ' chosen' : '') + '">' +
+        '<div class="tags">' + tags + '</div><h3>' + esc(r.label) + '</h3>' +
+        '<div class="meta">' + esc(plural(n, 'live ' + (r.type === 'internship' ? 'internship' : 'job'))) + ' · ' + esc(plural(r.moves.length, 'skill step')) + (r.hours ? ' · ~' + Math.round(r.hours) + ' h' : '') + '</div>' +
+        '<div class="rm-mini"><span>today</span><span class="bar"><i class="s" style="width:' + w(r.strongNow) + '"></i><i class="t" style="width:' + w(r.reachNow - r.strongNow) + '"></i></span><b>' + r.reachNow + '/' + n + '</b></div>' +
+        '<div class="rm-mini"><span>after</span><span class="bar"><i class="s" style="width:' + w(r.strongAfter) + '"></i><i class="t" style="width:' + w(r.reachAfter - r.strongAfter) + '"></i></span><b>' + r.reachAfter + '/' + n + '</b></div>' +
+        '<div class="kv">' + ready + '</div>' + extra + (creds ? '<div>' + creds + '</div>' : '') +
+        '<div class="go">' + (r.chosen ? '<span class="rm-sub">Your plan below follows this route.</span>' : (editable() ? '<button class="rm-act" data-act="route" data-id="' + esc(r.id) + '">Use this route</button>' : '<span class="rm-sub">Can be chosen once your live jobs load.</span>')) + '</div>' +
+      '</article>';
+    }).join('');
+    var rec = m.routes.filter(function(r){ return r.recommended; })[0];
+    if(m.routes.length === 1){
+      var student = m.you && (m.you.stage === 'student');
+      cards += '<div class="rm-route" style="border-style:dashed;background:transparent"><div class="tags"></div><h3 style="color:var(--text-dim)">No other route qualifies today</h3><div class="kv">A stepping-stone role needs 5+ live jobs where you’d work, asking for at least 30% of the skills ' + esc(m.goal.name) + ' jobs ask for, and has to be closer to you than ' + esc(m.goal.name) + ' is.' + (student ? ' An internship route needs 3+ open internships in this role where you’d work.' : '') + ' This re-checks every time the jobs change.</div></div>';
+    }
+    el.innerHTML = '<div class="rm-h"><div><h2>Routes</h2><p>Each route is scored the same way: today’s jobs in that role where you’d work, re-scored after each of its steps. “Within reach” is Strong plus the stretches.</p></div></div>' +
+      '<div class="rm-routes">' + cards + '</div>' +
+      (rec && m.recommendedWhy.length ? '<div class="rm-why"><div class="rm-k">Why “' + esc(rec.label) + '” is recommended</div><ul>' + m.recommendedWhy.map(function(t){ return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>' : '');
+  }
+
+  /* ---- the plan ---- */
+  var KIND_ICON = { skill: '&#9672;', prove: '&#10003;', credential: '&#9878;', network: '&#9737;', apply: '&#10148;', interview: '&#9654;' };
+  function renderPlan(){
+    var m = S.model, el = $('rmPlan'), p = m.plan, r = chosenRoute();
+    show('rmPlan', !!p);
+    if(!p){ el.innerHTML = ''; return; }
+    var skillSteps = p.steps.filter(function(s){ return s.kind === 'skill' || s.kind === 'prove'; });
+    var head = '<div class="rm-h"><div><h2>Your plan</h2><p>' + esc(m.summary) + '</p></div>' +
+      '<div class="rm-sub">' + (p.fresh ? 'Built today' : 'Started ' + esc(fmtDate(p.startAt)) + ' · week ' + (p.weekNow + 1)) + '</div></div>';
+    // progress
+    // apply-ready "now" only because of steps you've marked done (the resume lines aren't there yet)
+    var byMarked = p.applyFromWeek != null && p.applyFromWeek <= p.weekNow && p.curve[0].reach < p.threshold;
+    var byDate = m.budgetFrom === 'your target date', whenTxt = byDate ? 'your date' : 'your timeframe';
+    var need = ({
+      never: ['—', 'Your plan’s skill steps alone don’t reach the bar'],
+      now: ['Now', byMarked ? 'Once your resume shows the steps you’ve marked done' : 'You’re already apply-ready'],
+      late: ['—', (p.budgetEndAt <= Date.now() ? (byDate ? 'Your date' : 'Your timeframe') + ' has passed' : 'Under a week left before ' + fmtDate(p.budgetEndAt) + ' (' + whenTxt + ')') + ' - set a later “Ready by” date above'],
+      over: ['60+ h<small>/week</small>', 'More than 60 h a week to be apply-ready by ' + fmtDate(p.budgetEndAt) + ' (' + whenTxt + ') - a later date, or fewer steps, would fit'],
+      ok: [p.readyHoursNeeded + ' h<small>/week</small>', 'To be apply-ready by ' + fmtDate(p.budgetEndAt) + ' (' + whenTxt + '). You’ve set ' + p.hoursPerWeek + ' h.'],
+    })[p.readyHoursWhy] || ['—', ''];
+    var prog = '<div class="rm-prog">' +
+      progStat(p.done + '<small> / ' + p.total + '</small>', 'Steps done', p.verified ? plural(p.verified, 'verified from your records', 'verified from your records') : 'None verified yet') +
+      progStat(p.applyFromWeek == null ? '—' : (p.applyFromWeek <= p.weekNow ? 'Now' : esc(weekDate(p.applyFromWeek))), 'Apply-ready', p.applyFromWeek == null ? 'Your plan’s skill steps alone don’t get there' : (p.applyFromWeek <= p.weekNow ? (byMarked ? 'Once your resume shows the steps you’ve marked done' : 'Enough jobs within reach today') : 'Week ' + (p.applyFromWeek + 1) + ' of this plan')) +
+      progStat(p.drift == null ? '—' : (p.drift === 0 ? 'On track' : (p.drift > 0 ? '+' + p.drift + ' wk' : p.drift + ' wk')), 'Against your start', p.drift == null ? 'Shows once there’s a date to compare' : (p.drift > 0 ? 'Later than the plan you started with' : (p.drift < 0 ? 'Earlier than the plan you started with' : 'Same date you started with')) + (p.overdue ? ' · ' + plural(p.overdue, 'step') + ' past its date' : '')) +
+      progStat(p.pace ? p.pace + '×' : 'Estimates', 'Pace', p.pace ? 'Your finished steps took ' + p.pace + '× the estimate - later dates use it' : 'Your own pace replaces the estimates once you start and finish steps') +
+      progStat(need[0], 'Needed to be ready in time', need[1]) +
+      (p.realized ? progStat('+' + Math.max(0, p.realized.reachNow - p.realized.reachBefore), 'Jobs your proof added', 'Within reach: ' + p.realized.reachBefore + ' before your verified steps, ' + p.realized.reachNow + ' now') : '') +
+    '</div>';
+    var chart = '<div class="rm-chart">' + chartSVG(m, Math.max(640, Math.min(1180, (el.clientWidth || 790) - 30))) + '</div>' + chartLegend(m);
+    // this week
+    var wk = p.thisWeek.map(stepById).filter(Boolean);
+    var week = wk.length ? '<div class="rm-k rm-sub-h">This week</div><div class="rm-week">' + wk.map(function(s){
+      return '<div class="rm-wcard"><div class="rm-k">' + esc(kindWord(s)) + '</div><h4>' + esc(s.title) + '</h4><p>' + esc(s.first_action || '') + '</p><div class="rm-actions">' + primaryActions(s, true) + '</div></div>';
+    }).join('') + '</div>' : '';
+    // steps, grouped
+    var groups = [
+      ['Decide first', p.steps.filter(function(s){ return s.kind === 'credential'; })],
+      ['Gets you apply-ready', skillSteps.filter(function(s){ return s.phase !== 'strengthen'; })],
+      ['Strengthens you while you apply', skillSteps.filter(function(s){ return s.phase === 'strengthen'; })],
+      ['People, applications and interviews - alongside', p.steps.filter(function(s){ return s.kind === 'network' || s.kind === 'apply' || s.kind === 'interview'; })],
+    ];
+    var i = 0;
+    var steps = groups.map(function(g){
+      if(!g[1].length) return '';
+      return '<div class="rm-group-h"><span class="rm-k">' + esc(g[0]) + '</span></div>' + g[1].map(function(s){ i++; return stepHTML(s, i); }).join('');
+    }).join('');
+    var off = arr(p.offered).length ? '<div class="rm-offered"><div class="rm-k">New in today’s jobs - not in your plan</div>' + p.offered.map(function(o){
+      return '<div class="row"><span><b style="color:var(--text)">' + esc(o.skillName) + '</b> · asked in ' + o.jobs + ' of ' + r.market.n + (o.delta && (o.delta.strong || o.delta.reach) ? ' · ' + (o.delta.strong ? '+' + o.delta.strong + ' Strong' : '+' + o.delta.reach + ' within reach') + ' in the route’s own order' : '') + '</span>' + (editable() ? '<button class="rm-act" data-act="add" data-id="' + esc(o.id) + '">Add to plan</button>' : '') + '</div>';
+    }).join('') + '</div>' : '';
+    el.innerHTML = head + prog + chart + week + steps + off;
+  }
+  function progStat(v, k, d){ return '<div class="rm-stat"><div class="v">' + v + '</div><div class="rm-k k">' + esc(k) + '</div><div class="d">' + esc(d) + '</div></div>'; }
+  function kindWord(s){ return { skill: 'Skill', prove: 'Proof', credential: 'Decision', network: 'People', apply: 'Applications', interview: 'Interviews' }[s.kind] || 'Step'; }
+  function statusChip(s){
+    if(s.status === 'verified') return '<span class="rm-status verified">&#10003; Verified' + (s.verify && s.verify.how === 'records' ? ' from your records' : (s.verify && s.verify.how === 'listed' ? ' - you hold it' : ' from your resume')) + '</span>';
+    if(s.status === 'done') return '<span class="rm-status done">' + (s.kind === 'credential' ? 'Decided' : 'Done (marked by you)') + '</span>';
+    if(s.status === 'doing') return '<span class="rm-status doing">In progress</span>';
+    if(s.status === 'skipped') return '<span class="rm-status">Skipped</span>';
+    if(s.blocked) return '<span class="rm-status">Waits on the decision above</span>';
+    return s.overdue ? '<span class="rm-status late">Past its first date</span>' : '<span class="rm-status">To do</span>';
+  }
+  function firstWeek(s){ return s.startWeek != null ? s.startWeek : (s.endWeek != null ? s.endWeek : null); }
+  function weeksTxt(s){ var a = firstWeek(s); if(a == null) return ''; var b = s.endWeek != null ? Math.max(s.endWeek, a) : a; return b !== a ? 'weeks ' + (a + 1) + '–' + (b + 1) : 'week ' + (a + 1); }
+  function stepHTML(s, n){
+    var m = S.model, r = chosenRoute(), open = !!S.ui.open[s.id];
+    var meta = [statusChip(s)];
+    if(s.delta && s.delta.strong) meta.push('<span class="rm-chip gain">+' + s.delta.strong + ' Strong</span>');
+    if(s.delta && s.delta.reach > (s.delta.strong || 0)) meta.push('<span class="rm-chip reach">+' + (s.delta.reach - (s.delta.strong || 0)) + ' within reach</span>');
+    if(s.kind === 'network' || s.kind === 'apply' || s.kind === 'interview') meta.push('<span class="rm-chip">' + s.have + ' of ' + s.target + ' done</span>');
+    var wt = weeksTxt(s); if(wt && s.status !== 'verified') meta.push('<span class="rm-chip">' + esc(wt) + ' · ' + esc(weekDate(firstWeek(s))) + '</span>');
+    if((s.kind === 'skill' || s.kind === 'prove') && s.status !== 'verified') meta.push('<span class="rm-chip">~' + esc(s.plannedHours != null ? s.plannedHours : Math.round((s.estLo + s.estHi) / 2)) + ' h' + (s.hours != null ? ' (yours)' : ' (estimate ' + s.estLo + '–' + s.estHi + ')') + '</span>');
+    if(s.stale) meta.push('<span class="rm-chip">Not a gap in today’s jobs</span>');
+    var cls = 'rm-step st-' + esc(s.status) + (s.blocked ? ' blocked' : '');
+    var body = '';
+    if(open){
+      var blocks = [];
+      if(s.status === 'verified' && s.verify && s.verify.evidence) blocks.push(block('success wide', 'The proof Kaidostar found', '“' + s.verify.evidence + '”' + (s.verify.source ? ' - ' + s.verify.source : '')));
+      if(s.done_when) blocks.push(block('success', 'Done when', s.done_when));
+      if(s.first_action) blocks.push(block('action', 'First action', s.first_action));
+      if(s.resource) blocks.push(block('resource', 'Use', s.resource));
+      if(s.risk) blocks.push(block('risk', 'Watch out for', s.risk));
+      if(s.if_it_works) blocks.push(block('', 'If it works', s.if_it_works));
+      if(s.if_it_stalls) blocks.push(block('', 'If it stalls', s.if_it_stalls));
+      var jobs = arr(s.unlockIds).concat(arr(s.reachIds)).map(function(id){ return m.jobs[id]; }).filter(Boolean).slice(0, 6);
+      if(jobs.length) blocks.push('<div class="rm-block success wide"><div class="rm-k">Jobs this step moves (today’s postings)</div><ul>' + jobs.map(function(j){ return '<li>' + (j.applyUrl ? '<a href="' + href(j.applyUrl) + '" target="_blank" rel="noopener noreferrer">' + esc(j.title) + '</a>' : esc(j.title)) + (j.org ? ' · ' + esc(j.org) : '') + (j.location ? ' · ' + esc(j.location) : '') + '</li>'; }).join('') + '</ul></div>');
+      if(s.kind === 'credential' && (s.withNow || s.withPlan)) blocks.push(block('wide', 'What holding it would change', 'With ' + s.skillName + ' alone, ' + (s.withNow ? s.withNow.reach : '?') + ' of today’s ' + r.market.n + ' jobs would be within reach; with it and the other steps, ' + (s.withPlan ? s.withPlan.reach : '?') + '. ' + (s.note || '')));
+      if((s.kind === 'skill' || s.kind === 'prove') && s.status !== 'verified' && editable()){
+        blocks.push('<div class="rm-block wide"><div class="rm-k">Your hours for this step</div><div class="rm-hours"><input type="number" min="1" max="2000" data-hours="' + esc(s.id) + '" value="' + esc(s.hours != null ? s.hours : '') + '" placeholder="' + esc(Math.round((s.estLo + s.estHi) / 2)) + '" aria-label="Your hours for ' + esc(s.skillName) + '"><span>h total' + (s.hours == null ? ' - the estimate is ' + s.estLo + '–' + s.estHi + ' h to a working level' + (arr(s.includes).length ? ' (including ' + esc(s.includes.join(', ')) + ')' : '') : ' - <button class="rm-linkbtn" data-act="hours-clear" data-id="' + esc(s.id) + '">use the estimate</button>') + '</span></div></div>');
+      }
+      if(s.kind === 'skill' || s.kind === 'credential'){
+        var h = S.ui.help[s.id];
+        var budget = '<select data-act="budget" aria-label="Budget for help" style="background:var(--void);border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:12px;padding:5px 7px;">' + [['free', 'Free only'], ['low', 'Up to $200'], ['any', 'Open budget']].map(function(o){ return '<option value="' + o[0] + '"' + (S.ui.budget === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>';
+        var hb = '<div class="rm-block resource wide rm-help-out"><div class="rm-k">Real help for this step</div><div class="rm-hours">' + budget + '<button class="rm-act" data-act="help" data-id="' + esc(s.id) + '"' + (h && h.busy ? ' disabled' : '') + '>' + (h && h.busy ? 'Searching…' : (s.kind === 'credential' ? 'Find real programs' : 'Find real courses and tutors')) + '</button></div>';
+        if(h && h.text) hb += '<p style="white-space:pre-wrap">' + esc(h.text) + '</p>' + (arr(h.sources).length ? '<ul>' + h.sources.slice(0, 5).map(function(x){ var u = typeof x === 'string' ? x : (x && x.url); var t = typeof x === 'string' ? x : (x && (x.title || x.url)); return u ? '<li><a href="' + href(u) + '" target="_blank" rel="noopener noreferrer">' + esc(t) + '</a></li>' : ''; }).join('') + '</ul>' : '') + '<p class="rm-faint">A web search, not part of the counts above - check each option yourself.</p>';
+        else if(h && h.error) hb += '<p style="color:var(--danger)">Couldn’t search just now - try again in a moment.</p>';
+        blocks.push(hb + '</div>');
+      }
+      body = '<div class="rm-step-body">' + blocks.join('') + '</div>';
+    }
+    return '<article class="' + cls + '" id="step-' + esc(s.id.replace(/[^a-z0-9_-]/gi, '-')) + '">' +
+      '<div class="rm-step-head"><span class="rm-num" aria-hidden="true">' + (s.status === 'verified' ? '&#10003;' : n) + '</span><div class="rm-step-t"><h3>' + esc(s.title) + '</h3><div class="rm-meta">' + meta.join('') + '</div></div></div>' +
+      '<p class="rm-step-why">' + esc(s.why || '') + '</p>' + body +
+      '<div class="rm-actions">' + primaryActions(s, false) +
+        '<button class="rm-act" data-act="toggle" data-id="' + esc(s.id) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' + (open ? 'Hide details' : 'Details') + '</button>' +
+        ((s.kind === 'skill' || s.kind === 'prove' || s.kind === 'credential') && editable() ? '<button class="rm-act" data-act="up" data-id="' + esc(s.id) + '" aria-label="Move ' + esc(s.skillName || 'this step') + ' earlier">&uarr;</button><button class="rm-act" data-act="down" data-id="' + esc(s.id) + '" aria-label="Move ' + esc(s.skillName || 'this step') + ' later">&darr;</button>' + (lastSkillStep(s.id) ? '' : '<button class="rm-act" data-act="remove" data-id="' + esc(s.id) + '">Remove</button>') : '') +
+      '</div></article>';
+  }
+  function block(cls, label, text){ return '<div class="rm-block ' + cls + '"><div class="rm-k">' + esc(label) + '</div><p>' + esc(text) + '</p></div>'; }
+  function primaryActions(s, compact){
+    var out = [], r = chosenRoute();
+    if(s.status === 'verified') return compact ? '' : '';
+    if(s.kind === 'skill' || s.kind === 'prove') out.push('<a class="rm-act' + (compact ? ' pri' : '') + '" href="workshop.html#tool=resume">' + (s.kind === 'prove' ? 'Add the resume line' : 'Add the resume line when done') + '</a>');
+    if(s.kind === 'network') out.push('<a class="rm-act' + (compact ? ' pri' : '') + '" href="workshop.html#tool=network">Open networking tracker</a>');
+    if(s.kind === 'apply' && !s.blocked){ out.push('<button class="rm-act' + (compact ? ' pri' : '') + '" data-act="jobs">See jobs within reach</button>'); out.push('<button class="rm-act" data-act="jobsearch">Open Job Search</button>'); }
+    if(s.kind === 'interview' && !s.blocked) out.push('<button class="rm-act' + (compact ? ' pri' : '') + '" data-act="interview" data-role="' + esc(r ? r.roleName : '') + '">Practise in Interview Prep</button>');
+    if(s.kind === 'credential' && compact) out.push('<button class="rm-act pri" data-act="toggle-to" data-id="' + esc(s.id) + '">See what it would change</button>');
+    if(!compact && !s.blocked && editable()){
+      if(s.status === 'todo' && s.kind !== 'credential') out.push('<button class="rm-act" data-act="status" data-st="doing" data-id="' + esc(s.id) + '">Start</button>');
+      if(s.status === 'todo' || s.status === 'doing') out.push('<button class="rm-act" data-act="status" data-st="done" data-id="' + esc(s.id) + '">' + (s.kind === 'credential' ? 'Mark decided' : 'Mark done') + '</button>');
+      if(s.status === 'todo' || s.status === 'doing') out.push('<button class="rm-act" data-act="status" data-st="skip" data-id="' + esc(s.id) + '">Skip</button>');
+      if(s.status === 'done' || s.status === 'skipped' || s.status === 'doing') out.push('<button class="rm-act" data-act="status" data-st="" data-id="' + esc(s.id) + '">' + (s.status === 'doing' ? 'Not started' : 'Undo') + '</button>');
+    }
+    return out.join('');
+  }
+
+  /* ---- the chart: jobs within reach as the plan runs, with every step on the same weeks ---- */
+  function chartSVG(m, W){
+    var p = m.plan, r = chosenRoute(), n = Math.max(1, r.market.n), T = p.threshold;
+    // every step with weeks on it: planned ones, and the ones you've done (on the weeks you did them)
+    var lanes = p.steps.filter(function(s){ return (s.startWeek != null || s.endWeek != null) && s.status !== 'skipped' && s.kind !== 'credential'; });
+    var maxW = Math.max(p.weekNow + 4, p.buildEndWeek + 1);
+    lanes.forEach(function(s){ if(s.endWeek != null) maxW = Math.max(maxW, s.endWeek + 1); });
+    p.steps.forEach(function(s){ if(s.effectWeek != null) maxW = Math.max(maxW, s.effectWeek + 1); });
+    var budgetW = Math.round((p.budgetEndAt - p.startAt) / WEEK);
+    var showBudget = budgetW > 0 && budgetW <= maxW * 1.6;
+    if(showBudget) maxW = Math.max(maxW, budgetW + 1);
+    maxW = Math.min(maxW, 160);
+    W = W || 760;
+    var L = 44, Rt = 14, top = 14, CH = 150, rowH = 18, gap = 26;
+    var rows = lanes.length, H = top + CH + gap + rows * rowH + 22;
+    var x = function(w){ return L + (W - L - Rt) * Math.min(w, maxW) / maxW; };
+    var y = function(v){ return top + CH - CH * Math.min(v, n) / n; };
+    var out = [];
+    // grid + axis
+    [0, 0.5, 1].forEach(function(f){ var v = Math.round(n * f); out.push('<line x1="' + L + '" x2="' + (W - Rt) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="var(--line-soft)" stroke-width="1"/><text x="' + (L - 8) + '" y="' + (y(v) + 3) + '" text-anchor="end">' + v + '</text>'); });
+    var tickEvery = maxW > 60 ? 10 : (maxW > 24 ? 4 : 2);
+    for(var w = 0; w <= maxW; w += tickEvery) out.push('<text x="' + x(w) + '" y="' + (top + CH + 14) + '" text-anchor="middle">w' + (w + 1) + '</text>');
+    // threshold
+    out.push('<line x1="' + L + '" x2="' + (W - Rt) + '" y1="' + y(T) + '" y2="' + y(T) + '" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.85"/><text class="lbl" x="' + (W - Rt) + '" y="' + (y(T) - 5) + '" text-anchor="end" style="fill:var(--gold)">the bar to apply: ' + T + ' within reach</text>');
+    // the projection: today, then the week each step's effect lands (an open step when it ends; one you've marked done
+    // now, since only its resume line is left) - always moving forward
+    var pts = [[p.weekNow, p.curve[0]]], lastW = p.weekNow;
+    p.steps.forEach(function(s){
+      if((s.kind === 'skill' || s.kind === 'prove') && s.projected && s.effectWeek != null){ lastW = Math.max(lastW, s.effectWeek); pts.push([lastW, s.projected]); }
+    });
+    function stepPath(key){
+      var d = 'M' + x(pts[0][0]) + ' ' + y(pts[0][1][key]);
+      for(var i = 1; i < pts.length; i++){ d += ' H' + x(pts[i][0]) + ' V' + y(pts[i][1][key]); }
+      return d + ' H' + x(maxW);
+    }
+    var area = stepPath('reach') + ' V' + y(0) + ' H' + x(pts[0][0]) + ' Z';
+    out.push('<path d="' + area + '" fill="var(--violet)" opacity="0.13"/>');
+    out.push('<path d="' + stepPath('reach') + '" fill="none" stroke="var(--violet)" stroke-width="2"/>');
+    out.push('<path d="' + stepPath('strong') + '" fill="none" stroke="var(--aurora)" stroke-width="2"/>');
+    // what actually happened (direct route: your daily snapshots of this market)
+    if(r.kind === 'direct'){
+      arr(S.plan.history).filter(function(h){ return h.role === m.goal.id && h.at >= p.startAt; }).forEach(function(h){
+        var hw = (h.at - p.startAt) / WEEK; if(hw > maxW) return;
+        out.push('<circle cx="' + x(hw) + '" cy="' + y(h.reach) + '" r="3" fill="var(--text)" opacity="0.85"><title>' + esc(fmtDate(h.at) + ': ' + h.reach + ' within reach') + '</title></circle>');
+      });
+    }
+    // markers
+    function vline(w, color, label, dash, anchor){ var X = x(w); out.push('<line x1="' + X + '" x2="' + X + '" y1="' + top + '" y2="' + (H - 18) + '" stroke="' + color + '" stroke-width="1.2"' + (dash ? ' stroke-dasharray="3 3"' : '') + '/><text class="lbl" x="' + (X + (anchor === 'end' ? -4 : 4)) + '" y="' + (top + 10) + '" text-anchor="' + (anchor || 'start') + '" style="fill:' + color + '">' + label + '</text>'); }
+    vline(p.weekNow, 'var(--text-dim)', 'today', false);
+    if(p.applyFromWeek != null && p.applyFromWeek > p.weekNow) vline(p.applyFromWeek, 'var(--gold)', 'start applying', true);
+    if(showBudget) vline(budgetW, 'var(--danger)', m.budgetFrom === 'your target date' ? 'your date' : 'timeframe ends', true, 'end');
+    // the steps on the same weeks
+    var y0 = top + CH + gap;
+    lanes.forEach(function(s, i){
+      var sw = s.startWeek != null ? s.startWeek : s.endWeek, ew = s.endWeek != null ? Math.max(s.endWeek, sw) : sw;
+      var yy = y0 + i * rowH, x1 = x(sw), x2 = x(ew + 1);
+      var col = s.kind === 'network' || s.kind === 'interview' ? 'var(--comet)' : (s.kind === 'apply' ? 'var(--gold)' : (s.status === 'verified' ? 'var(--aurora)' : (s.status === 'done' ? 'var(--violet)' : 'var(--violet)')));
+      var op = s.status === 'verified' || s.status === 'done' ? 0.45 : 0.85;
+      var label = (s.skillName || kindWord(s)) + (s.kind === 'prove' ? ' (proof)' : '');
+      out.push('<rect x="' + x1 + '" y="' + (yy + 3) + '" width="' + Math.max(4, x2 - x1 - 2) + '" height="' + (rowH - 6) + '" rx="4" fill="' + col + '" opacity="' + op + '"><title>' + esc(s.title + ' - ' + weeksTxt(s)) + '</title></rect>');
+      var tx = x2 + 6 > W - 120 ? x1 - 6 : x2 + 4, anchor = x2 + 6 > W - 120 ? 'end' : 'start';
+      out.push('<text class="lbl" x="' + tx + '" y="' + (yy + rowH - 6) + '" text-anchor="' + anchor + '">' + esc(label) + '</text>');
+    });
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc('Projected jobs within reach by week: ' + p.curve[0].reach + ' today, ' + p.curve[p.curve.length - 1].reach + ' after the skill steps, out of ' + r.market.n) + '">' + out.join('') + '</svg>';
+  }
+  function chartLegend(m){
+    var p = m.plan;
+    return '<div class="rm-chart-legend"><span><i style="background:var(--violet)"></i>Within reach (projected)</span><span><i style="background:var(--aurora)"></i>Strong (projected)</span>' +
+      (chosenRoute().kind === 'direct' && arr(S.plan.history).length ? '<span><i style="background:var(--text);height:6px;width:6px;border-radius:50%"></i>Actual, from your daily snapshots</span>' : '') +
+      '<span>Each jump is today’s jobs re-scored with that step proven - after ' + esc(plural(p.buildHoursPerWeek, 'hour')) + ' a week of skill work.</span></div>';
+  }
+
+  /* ---- jobs within reach ---- */
+  function renderJobs(){
+    var m = S.model, el = $('rmJobs'), r = chosenRoute();
+    var ids = arr(r && r.market.withinIds).slice(0, 12), jobs = ids.map(function(id){ return m.jobs && m.jobs[id]; }).filter(Boolean);
+    show('rmJobs', true);
+    if(!jobs.length){ el.innerHTML = '<div class="rm-h"><div><h2>Jobs within reach</h2><p>None yet in this market - the plan above shows the week that changes.</p></div></div>'; return; }
+    el.innerHTML = '<div class="rm-h"><div><h2>Jobs within reach</h2><p>Live ' + esc(r.roleName) + ' ' + (r.type === 'internship' ? 'internships' : 'jobs') + ' you’re Strong for today, then the stretches. Apply to these while you work on the plan.</p></div><button class="btn ghost sm" data-act="jobsearch">Open in Job Search</button></div>' +
+      '<div class="rm-jobs">' + jobs.map(function(j){
+        return '<div class="rm-job"><h4>' + esc(j.title) + '</h4><div class="o">' + esc([j.org, j.location || (j.mode === 'remote' ? 'Remote' : '')].filter(Boolean).join(' · ')) + '</div>' +
+          (j.stretch && j.why ? '<div class="w">Stretch: ' + esc(j.why) + '</div>' : '') +
+          '<div class="r"><span class="rm-fit" style="color:' + (j.stretch ? 'var(--gold)' : 'var(--aurora)') + '">' + (j.stretch ? 'Stretch · ' : 'Strong · ') + 'fit ' + esc(j.fit) + '</span>' + (j.applyUrl ? '<a class="rm-act" href="' + href(j.applyUrl) + '" target="_blank" rel="noopener noreferrer">Posting &#8599;</a>' : '') + '</div></div>';
+      }).join('') + '</div>';
+  }
+
+  /* ---- how it's built ---- */
+  function renderMethod(){
+    var el = $('rmMethod');
+    show('rmMethod', true);
+    el.innerHTML = '<details><summary>How this plan is built - and the research behind it</summary><div class="cols">' +
+      '<div><h4>What every number is</h4><ul>' +
+        '<li><b>Within reach</b> = jobs you’re Strong for (fit 70+, the same score as Job Search) plus <b>stretches</b>: jobs that would be Strong except for a years or level ask you’re less than three years (or one level) short of. Bigger gaps are never counted.</li>' +
+        '<li><b>A step’s worth</b> is an exact re-score: today’s jobs scored again with that skill added to your record, after the steps before it. “+2 Strong” means two real postings cross 70.</li>' +
+        '<li><b>The order</b>: until enough jobs are within reach to apply (3, or 5% of a big market), the step that gets you there fastest per hour comes first; after that, the one that moves the most jobs to Strong for its time.</li>' +
+        '<li><b>Verified</b> means your resume now shows the skill in use - Kaidostar finds the line and every fit counts it. Marking a step done yourself is shown as yours and never changes a count.</li>' +
+        '<li><b>Hours</b> are the only estimates: rough ranges to a working level, editable, and replaced by your own pace once you start and finish steps. About a quarter of your hours go to people and applications.</li>' +
+        '<li><b>Licenses and long credentials</b> (an RN license, the CPA, a bar exam) are never scheduled as weekly steps - they’re shown as a decision, with what holding one would change.</li>' +
+        '<li><b>Routes</b>: straight to the role; an internship first if you’re a student; or a stepping-stone role that asks for much of the same and that you can win sooner - recommended only when a year in it would beat the direct steps alone.</li>' +
+      '</ul></div>' +
+      '<div><h4>Why the plan works this way</h4><ul>' +
+        '<li>Writing a concrete job-search plan raised job offers by about 30% and employment by 26% in a randomized trial (Abel, Burger, Carranza &amp; Piraino) - <a href="https://www.voxdev.org/topic/labour-markets/effect-plan-making-prompts-job-search-and-employment-south-africa" target="_blank" rel="noopener noreferrer">VoxDev</a>.</li>' +
+        '<li>Across 47 studies, job-search programs raised the odds of employment 2.67×, but only when they built skills <i>and</i> motivation, such as goal setting (Liu, Huang &amp; Wang, <i>Psychological Bulletin</i>, 2014) - <a href="https://archive.news.ufl.edu/articles/2014/05/motivation-enhancement-key-for-success-in-job-training-programs-uf-study-says.html" target="_blank" rel="noopener noreferrer">University of Florida</a>.</li>' +
+        '<li>At one large US firm, referred candidates were 6% of applicants but 29% of hires - hence people from week one (Brown, Setren &amp; Topa) - <a href="https://www.newyorkfed.org/medialibrary/media/research/staff_reports/sr568.html" target="_blank" rel="noopener noreferrer">New York Fed Staff Report 568</a>.</li>' +
+        '<li>Showing job seekers related occupations raised their job interviews by 44% in an experiment with real job seekers - 75% for those who had been searching narrowly (Belot, Kircher &amp; Muller) - hence the stepping-stone routes - <a href="https://www.iza.org/publications/dp/10068" target="_blank" rel="noopener noreferrer">IZA DP 10068</a>.</li>' +
+        '<li>Graduates who did an internship were about 49% less likely to start out underemployed (Strada Institute &amp; Burning Glass Institute, <i>Talent Disrupted</i>) - <a href="https://www.insidehighered.com/node/141756" target="_blank" rel="noopener noreferrer">Inside Higher Ed</a>.</li>' +
+        '<li>61% of “entry-level” postings ask for 3+ years (TalentWorks, 95,363 postings), and employers raise those asks when applicants are plentiful and relax them when they’re scarce (Boston Fed) - <a href="https://nodesk.co/articles/the-science-of-the-job-search-part-iii-61-of-entry-level-jobs-require-3-years-of-experience/" target="_blank" rel="noopener noreferrer">TalentWorks</a>, <a href="https://www.bostonfed.org/-/media/Documents/Workingpapers/PDF/wp1417.pdf" target="_blank" rel="noopener noreferrer">Boston Fed WP 14-17</a>.</li>' +
+        '<li>The skills asked for in the average US job changed 37% between 2016 and 2021 (Lightcast, 15 million postings) - why this plan is rebuilt from live jobs every time, not a template - <a href="https://lightcast.io/resources/blog/new-report-measures-blazing-pace-of-skill-change" target="_blank" rel="noopener noreferrer">Lightcast</a>.</li>' +
+      '</ul></div></div></details>';
+  }
+
+  /* ============================================================ events */
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('[data-act]');
+    if(!t){ if(S.ui.pop && !e.target.closest('.rm-pop')){ S.ui.pop = false; renderBar(); } return; }
+    if(t.disabled) return;
+    var act = t.getAttribute('data-act'), id = t.getAttribute('data-id'), d = t.getAttribute('data-d'), st = t.getAttribute('data-st'), role = t.getAttribute('data-role');
+    // a box you were typing in applies first (the click has arrived, so re-drawing can't swallow it): "+" after typing
+    // 10 makes 11, and Re-check keeps what you typed
+    if(held.queue.length) flushHeld();
+    if(act === 'pop'){ S.ui.pop = !S.ui.pop; S.ui.popQ = ''; renderBar(); return; }
+    if(act === 'goal' && id){ setGoal(id); return; }
+    if(S.ui.pop && !t.closest('.rm-pop')){ S.ui.pop = false; renderBar(); }
+    if(act === 'hpw'){ var cur = (S.model && S.model.hoursPerWeek) || 6; setHpw(cur + Number(d)); return; }
+    if(act === 'tgt-clear'){ setTarget(''); return; }
+    if(act === 'recheck'){ recheck(false); return; }
+    if(act === 'route' && id){ setRoute(id); return; }
+    if(act === 'toggle' && id){ var fk1 = focusKey(); S.ui.open[id] = !S.ui.open[id]; renderPlan(); restoreFocus(fk1); var el = $('step-' + id.replace(/[^a-z0-9_-]/gi, '-')); if(el && S.ui.open[id] && el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
+    if(act === 'toggle-to' && id){
+      S.ui.open[id] = true; renderPlan();
+      var el2 = $('step-' + id.replace(/[^a-z0-9_-]/gi, '-'));
+      if(el2){ if(el2.scrollIntoView) el2.scrollIntoView({ block: 'start', behavior: 'smooth' }); var tb = el2.querySelector('[data-act="toggle"]'); if(tb){ try{ tb.focus({ preventScroll: true }); }catch(err){ tb.focus(); } } }
+      return;
+    }
+    if(act === 'status' && id){ setStatus(id, st || ''); return; }
+    if(act === 'up' && id){ moveStep(id, -1); return; }
+    if(act === 'down' && id){ moveStep(id, 1); return; }
+    if(act === 'remove' && id){ removeStep(id); return; }
+    if(act === 'add' && id){ addOffered(id); return; }
+    if(act === 'hours-clear' && id){ setHours(id, null); return; }
+    if(act === 'help' && id){ findHelp(id); return; }
+    if(act === 'jobs'){ var j = $('rmJobs'); if(j && j.scrollIntoView) j.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
+    if(act === 'jobsearch'){ openJobSearch(); return; }
+    if(act === 'interview'){ openInterview(role || ''); return; }
+  });
+  // Edits typed in a box apply a moment after it changes, so leaving it with Tab keeps your place on the next control -
+  // and when you leave it by clicking something, after that click (re-drawing the page under a pressed button would
+  // swallow the click).
+  var held = { down: false, queue: [], timer: null };
+  function flushHeld(){ clearTimeout(held.timer); held.timer = null; held.queue.splice(0).forEach(function(f){ try{ f(); }catch(err){} }); }
+  function afterEdit(fn){ if(held.down){ held.queue.push(fn); clearTimeout(held.timer); held.timer = setTimeout(flushHeld, 1500); } else setTimeout(fn, 0); }
+  document.addEventListener('pointerdown', function(){ held.down = true; }, true);
+  document.addEventListener('pointerup', function(){ held.down = false; if(held.queue.length){ clearTimeout(held.timer); held.timer = setTimeout(flushHeld, 400); } }, true);
+  document.addEventListener('pointercancel', function(){ held.down = false; if(held.queue.length) setTimeout(flushHeld, 0); }, true);
+  document.addEventListener('click', function(){ if(held.queue.length) setTimeout(flushHeld, 0); });   // after the click's own action
+  // A date typed with the keyboard is applied when you leave the box or press Enter - while you type, the browser
+  // reports every in-between date (year 0002, then 0020, … or a day you're about to change) and none of those is the
+  // date you mean. One picked from the calendar applies at once.
+  var dateKeyAt = 0;
+  document.addEventListener('keydown', function(e){
+    if(!e.target || e.target.id !== 'rmTarget') return;
+    dateKeyAt = Date.now();
+    if(e.key === 'Enter'){ e.preventDefault(); var t = e.target; if(t.validity && t.validity.badInput) return; var v = t.value; afterEdit(function(){ setTarget(v); }); }
+  }, true);
+  document.addEventListener('change', function(e){
+    var t = e.target, v = t.value;
+    if(t.id === 'rmHpw'){ afterEdit(function(){ setHpw(v); }); return; }
+    if(t.id === 'rmTarget'){ if(Date.now() - dateKeyAt < 2000) return; afterEdit(function(){ setTarget(v); }); return; }   // being typed (focus can't be trusted mid-date)
+    if(t.getAttribute && t.getAttribute('data-hours')){ var hid = t.getAttribute('data-hours'); afterEdit(function(){ setHours(hid, v); }); return; }
+    if(t.getAttribute && t.getAttribute('data-act') === 'budget'){ S.ui.budget = v; return; }
+  });
+  document.addEventListener('focusout', function(e){
+    var t = e.target;
+    if(t && t.id === 'rmTarget'){
+      // left half-typed: the date you had stays (a box you emptied on purpose clears it)
+      if(t.validity && t.validity.badInput){ afterEdit(function(){ var fk = focusKey(); renderBar(); restoreFocus(fk); toast('That date wasn’t finished - your “ready by” date is unchanged.'); }); return; }
+      var v = t.value, cur = S.plan && S.plan.targetAt ? localDay(S.plan.targetAt) : '';
+      if(v !== cur) afterEdit(function(){ setTarget(v); });
+    }
+  });
+  document.addEventListener('input', function(e){
+    if(e.target.id === 'rmPopQ'){ S.ui.popQ = e.target.value; var host = e.target.closest('.rm-pop'); if(host){ var tmp = document.createElement('div'); tmp.innerHTML = popHTML(); host.querySelector('.rm-pop-list').innerHTML = tmp.querySelector('.rm-pop-list').innerHTML; } }
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && S.ui.pop){ S.ui.pop = false; renderBar(); var b = document.querySelector('.rm-dest-btn'); if(b) b.focus(); }
+    if(e.key === 'Enter' && e.target.id === 'rmPopQ'){ var first = document.querySelector('.rm-pop-list [data-act="goal"]'); if(first){ e.preventDefault(); setGoal(first.getAttribute('data-id')); } }
+  });
+  // Another tab (or page) changed something this plan is built from. The plan itself is picked up at once; your
+  // record, settings and lists when you come back to this tab - only the ones that changed, joined with what your
+  // account sent on this load, so nothing the server knows is dropped.
+  var STORE_OF = { kaidostar_profile: 'profile', kaidostar_resume_entries: 'entries', kaidostar_job_prefs: 'prefs', kaidostar_job_owner: 'job',
+    kaidostar_job_applied: 'applied', kaidostar_dismissed_ids: 'dismissed', kaidostar_applications: 'apps', kaidostar_contacts: 'contacts', kaidostar_interview_sessions: 'sessions' };
+  window.addEventListener('storage', function(e){
+    // signed in or out in another tab: this page belongs to the old session - start over (nothing of it is saved)
+    if((e.key === null || e.key === 'kaidostar_session') && sessUid() !== S.uid){ clearTimeout(S.saveTimer); S.saveTimer = null; location.reload(); return; }
+    if(e.key === null){ S.staleKeys.all = 1; return; }   // storage cleared in another tab
+    if(e.key === K.PLAN){
+      if(S.loading || !S.profile) return;   // the load in progress reads it anyway
+      var stored = localPlan();
+      if(stored && (stored.changedAt || 0) > (S.plan.changedAt || 0)){
+        var fk = focusKey();
+        S.plan = mergePlans(S.plan, stored);
+        // a new destination there: its jobs are fetched here too
+        if(S.uid && quickGoal() !== S.poolRole){ recheck(true); return; }
+        // not saved from here: the tab that changed it saves it
+        analyze(); render(); restoreFocus(fk);
+      }
+      return;
+    }
+    if(STORE_OF[e.key]) S.staleKeys[STORE_OF[e.key]] = 1;
+  });
+  function refreshStores(w){
+    var L = localLists(), sv = S.server, all = !!w.all;
+    if(all || w.profile) S.profile = (typeof getProfile === 'function' && getProfile()) || null;
+    if(all || w.entries) S.entries = L.entries.length ? L.entries : ((sv.entries && sv.entries.length) ? sv.entries : []);
+    if(all || w.prefs || w.job) S.prefs = L.prefs || sv.prefs || null;
+    if(all || w.applied || w.job) S.applied = union(L.applied, sv.applied);
+    if(all || w.dismissed) S.dismissed = union(L.dismissed, sv.dismissed);
+    if(all || w.apps) S.apps = mergeById(L.apps, sv.apps);
+    if(all || w.contacts) S.contacts = mergeById(L.contacts, sv.contacts);
+    if(all || w.sessions) S.sessions = mergeById(L.sessions, sv.sessions);
+  }
+  // your other devices: when this tab comes back into view, the account's copy of the plan is checked (at most once a
+  // minute) - so a change made on your phone shows here before you edit, instead of being overwritten by it
+  async function syncFromAccount(){
+    if(!S.uid || S.loading || typeof apiGetRoadmapPlan !== 'function') return;
+    S.syncedAt = Date.now();
+    var sp = null; try{ sp = await apiGetRoadmapPlan(S.uid); }catch(e){ sp = null; }
+    if(!sp || !sp.plan || S.loading || sessUid() !== S.uid) return;
+    var before = S.plan.changedAt || 0;
+    adoptServerPlan(sp);
+    if((S.plan.changedAt || 0) <= before) return;   // nothing newer there (your own unsaved change, if any, still goes up)
+    if(quickGoal() !== S.poolRole){ recheck(true); return; }   // a new destination: its jobs first
+    var fk = focusKey();
+    analyze(); persist(); render(); restoreFocus(fk);
+    toast('Updated with the changes from your other device.');
+  }
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState !== 'visible') return;
+    if(sessUid() !== S.uid){ location.reload(); return; }   // signed in or out in another tab
+    if(S.loading) return;
+    var w = S.staleKeys; S.staleKeys = {};
+    var due = S.uid && S.source === 'live' && Date.now() - (S.syncedAt || 0) > 60000;
+    if(!Object.keys(w).length){ if(due) syncFromAccount(); return; }
+    // a profile made in another tab after this one opened without one: start over with it
+    if(!S.profile && (w.profile || w.all) && typeof getProfile === 'function' && getProfile()){ location.reload(); return; }
+    var fk = focusKey();
+    refreshStores(w);
+    var stored = localPlan(); if(stored && (stored.changedAt || 0) > (S.plan.changedAt || 0)) S.plan = mergePlans(S.plan, stored);
+    if(!S.profile){ render(); return; }
+    // new search settings can mean other jobs (a new place), and a new goal another destination: signed in, those
+    // jobs are fetched again (and your account's plan with them)
+    if(S.uid && (w.prefs || w.job || w.all || quickGoal() !== S.poolRole)){ recheck(true).then(function(){ if(S.model) toast('Updated with the changes you made elsewhere.'); }); return; }
+    resetMarket(); analyze(); persist(); render(); restoreFocus(fk);
+    toast('Updated with the changes you made elsewhere.');
+    if(due) syncFromAccount();
+  });
+
+  /* ============================================================ boot */
+  var unlocked = (typeof gateWholePage !== 'function') || gateWholePage('roadmap', '.page', 'Roadmap',
+    'Your Proof Plan: the route from what you can prove today to the role you want, built from live jobs where you’d work - every step scored by the jobs it would actually move. Part of Pro.');
+  if(!unlocked) return;
+  loadLocal();
+  if(!S.profile){ render(); return; }
+  (async function(){
+    render();
+    if(S.uid) await loadLive();
+    else { S.listings = demoPool(); S.source = 'demo'; S.poolAt = Date.now(); }
+    // let the page say what it's doing before the scoring (a large pool takes a moment)
+    var lm = $('rmLoadingMsg'); if(lm) lm.textContent = 'Scoring ' + plural(S.listings.length, S.source === 'live' ? 'live listing' : 'demo listing') + ' against your record…';
+    var ls = $('rmLoadingSub'); if(ls) ls.textContent = '';
+    await new Promise(function(r){ setTimeout(r, 30); });
+    S.loading = false;
+    // a plan another tab saved while this one was loading
+    var stored = localPlan(); if(stored && (stored.changedAt || 0) > (S.plan.changedAt || 0)) S.plan = mergePlans(S.plan, stored);
+    try{ resetMarket(); analyze(); persist(); }catch(err){ S.model = null; showDiagBanner('Roadmap error: ' + (err && err.message)); }
+    render();
+  })();
+})();
+</script>
+<script>
+if(typeof injectTierSwitcher === 'function'){ try{ injectTierSwitcher(); }catch(e){} }
+</script>
+</body>
+</html>
