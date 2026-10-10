@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kaidostar Autopilot</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #0f1115; color: #eef1f6;
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 28px 18px 40px; }
+  header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: #5b8cff; flex: 0 0 auto; }
+  .dot.on { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+  h1 { font-size: 18px; margin: 0; font-weight: 650; letter-spacing: .2px; }
+  .sub { color: #8b93a7; font-size: 12.5px; margin-left: auto; }
+  .card { background: #12151d; border: 1px solid #232838; border-radius: 13px; padding: 16px 18px; margin-bottom: 14px; }
+  .now { font-size: 15px; font-weight: 600; }
+  .now small { display: block; color: #aab2c5; font-weight: 400; font-size: 13px; margin-top: 3px; }
+  .counts { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 12px; font-size: 13px; color: #aab2c5; }
+  .counts b { color: #eef1f6; font-size: 16px; margin-right: 4px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: #8b93a7; margin: 0 0 10px; font-weight: 650; }
+  .log { display: flex; flex-direction: column; gap: 9px; }
+  .row { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; }
+  .tag { flex: 0 0 auto; font-size: 11px; font-weight: 650; border-radius: 6px; padding: 2px 7px; margin-top: 1px; }
+  .tag.sent { background: #12251c; color: #57d9a3; border: 1px solid #1d5c3f; }
+  .tag.needs { background: #2a2410; color: #f2c94c; border: 1px solid #5c4a12; }
+  .tag.unsure { background: #2a1416; color: #ff8a8a; border: 1px solid #5c1e22; }
+  .tag.yours { background: #12203a; color: #9dc0ff; border: 1px solid #1d3a6c; }
+  .row .t { font-weight: 600; }
+  .row .why { color: #aab2c5; }
+  .empty { color: #8b93a7; font-size: 13px; }
+  .note { background: #12203a; border: 1px solid #1d3a6c; color: #9dc0ff; padding: 9px 11px; border-radius: 9px; font-size: 13px; margin-top: 12px; }
+  button {
+    cursor: pointer; border: 0; border-radius: 9px; font-weight: 600; font-size: 13px; padding: 9px 14px;
+    background: #1b2130; color: #cdd4e3; border: 1px solid #2a3040;
+  }
+  button.stop { background: #2a1416; color: #ff8a8a; border-color: #5c1e22; }
+  button[hidden] { display: none; }
+  .btns { display: flex; gap: 9px; margin-top: 14px; flex-wrap: wrap; }
+  p.help { color: #8b93a7; font-size: 12.5px; margin: 0 0 8px; }
+  p.help:last-child { margin-bottom: 0; }
+  a { color: #9dc0ff; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="dot" id="dot"></span>
+      <h1>Kaidostar Apply · Autopilot</h1>
+      <span class="sub" id="sub"></span>
+    </header>
+
+    <div class="card">
+      <div class="now" id="now">Loading…</div>
+      <div class="counts" id="counts" hidden></div>
+      <div class="note" id="note" hidden></div>
+      <div class="btns">
+        <button class="stop" id="stop" hidden>Stop this run</button>
+        <button id="runNow" hidden>Run now</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="logTitle">This run</h2>
+      <div class="log" id="log"><div class="empty">Nothing yet.</div></div>
+    </div>
+
+    <div class="card">
+      <h2>How this window works</h2>
+      <p class="help">This window is Autopilot's. It applies here to the applications Kaidostar gives it - ones you (or Auto, after your undo window) approved, on employers' hiring systems, handed to it since you turned it on - one at a time, filling each from your profile, your resume and your answer bank. It submits only when every rule passes; anything that needs you (a question your answer bank doesn't cover, a CAPTCHA, a site check or sign-in, a company's own site) is left on the Auto page with the reason, and its tab closes. One it submitted but couldn't confirm stays here for you to check.</p>
+      <p class="help">Click or type in the tab it's applying in and that application is yours: Autopilot won't submit it on its own, and it stops for now so it never gets in your way. Using a tab it kept for you stops it after the one it's on. Close this window to stop this run; turn Autopilot off in the extension's popup to stop it altogether.</p>
+    </div>
+  </div>
+  <script src="autopilot.js"></script>
+</body>
+</html>
